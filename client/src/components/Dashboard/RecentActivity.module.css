@@ -1,0 +1,102 @@
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activityItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-background);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.activityItem:hover {
+  background-color: var(--color-highlight);
+}
+
+.activityIcon {
+  font-size: var(--font-xl);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-panel);
+  border-radius: var(--radius-sm);
+}
+
+.activityDetails {
+  flex: 1;
+}
+
+.description {
+  font-size: var(--font-md);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.symbol {
+  font-weight: 600;
+  color: var(--color-primary-light);
+}
+
+.timestamp {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+}
+
+.amount {
+  font-size: var(--font-md);
+  font-weight: 600;
+  text-align: right;
+  min-width: 100px;
+}
+
+.amount.positive {
+  color: var(--color-positive);
+}
+
+.amount.negative {
+  color: var(--color-negative);
+}
+
+.activityItemSkeleton {
+  height: 72px;
+  background-color: var(--color-background);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.emptyState,
+.errorState {
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+  color: var(--color-text-light);
+}
+
+.emptyState p {
+  margin-bottom: var(--spacing-sm);
+}
+
+.hint {
+  font-size: var(--font-sm);
+  opacity: 0.7;
+}

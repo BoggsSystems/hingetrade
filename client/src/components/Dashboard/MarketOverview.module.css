@@ -1,0 +1,141 @@
+.marketOverview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.marketStatus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-background);
+  border-radius: var(--radius-sm);
+}
+
+.statusLabel {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+}
+
+.status {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+}
+
+.status.open {
+  background-color: rgba(0, 177, 92, 0.15);
+  color: var(--color-positive);
+}
+
+.status.closed {
+  background-color: rgba(255, 59, 48, 0.15);
+  color: var(--color-negative);
+}
+
+.indices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.indexCard {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background-color: var(--color-background);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.indexCard:hover {
+  background-color: var(--color-highlight);
+}
+
+.indexName {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.indexValue {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.indexChange {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  text-align: right;
+}
+
+.indexChange.positive {
+  color: var(--color-positive);
+}
+
+.indexChange.negative {
+  color: var(--color-negative);
+}
+
+.changePercent {
+  opacity: 0.8;
+  margin-left: var(--spacing-xs);
+}
+
+.sectorPerformance {
+  margin-top: var(--spacing-md);
+}
+
+.sectorPerformance h4 {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sectorItem {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+
+.sectorItem:last-child {
+  border-bottom: none;
+}
+
+.positive {
+  color: var(--color-positive);
+  font-weight: 500;
+}
+
+.negative {
+  color: var(--color-negative);
+  font-weight: 500;
+}
+
+.indexCardSkeleton {
+  height: 60px;
+  background-color: var(--color-background);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}

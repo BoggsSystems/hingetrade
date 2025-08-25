@@ -1,0 +1,32 @@
+.chartContainer {
+  width: 100%;
+}
+
+.timeframeSelector {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+.timeframe {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: transparent;
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.timeframe:hover {
+  background-color: var(--color-highlight);
+  color: var(--color-text);
+}
+
+.timeframe.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
