@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { kycService } from '../../services/kycService';
 import { SwitchTransition, CSSTransition } from 'react-transition-group';
 import WelcomeScreen from './screens/WelcomeScreen';
+import WelcomeBackScreen from './screens/WelcomeBackScreen';
 import AccountCredentialsScreen from './screens/AccountCredentialsScreen';
 import type { AccountCredentialsData } from './screens/AccountCredentialsScreen';
 import PersonalInfoScreen from './screens/PersonalInfoScreen';
@@ -12,6 +14,7 @@ import FinancialProfileScreen from './screens/FinancialProfileScreen';
 import AgreementsScreen from './screens/AgreementsScreen';
 import BankAccountScreen from './screens/BankAccountScreen';
 import ReviewSubmitScreen from './screens/ReviewSubmitScreen';
+import { calculateKYCCompletionPercentage, getNextIncompleteStep } from '../../utils/kycHelpers';
 import './OnboardingModal.css';
 import './OnboardingModalTransitions.css';
 
@@ -95,22 +98,43 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
   onComplete,
   onRegister 
 }) => {
+  const { user, logout } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [kycData, setKYCData] = useState<KYCData>({});
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
+  const [savedProgress, setSavedProgress] = useState<any>(null);
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // Load saved progress when modal opens
   useEffect(() => {
     if (isOpen) {
-      loadSavedProgress();
+      // Only load progress if:
+      // 1. User is authenticated (has a user object)
+      // 2. We're not in fresh registration mode (onRegister is undefined)
+      // This prevents unnecessary API calls from the landing page
+      if (user && onRegister === undefined) {
+        loadSavedProgress();
+      } else if (onRegister) {
+        // Fresh registration - start from the beginning
+        setCurrentStep(0);
+        setKYCData({});
+        setIsLoadingProgress(false);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, user, onRegister]);
   
   const loadSavedProgress = async () => {
+    // Double-check we have a user before making API call
+    if (!user) {
+      setIsLoadingProgress(false);
+      return;
+    }
+    
     try {
       setIsLoadingProgress(true);
       const progress = await kycService.getProgress();
+      setSavedProgress(progress);
       
       if (progress.progress && Object.keys(progress.progress).length > 0) {
         // Restore saved data
@@ -155,16 +179,21 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
         };
         
         const savedStep = stepMap[progress.currentStep] || 0;
-        // If user has already registered, skip to personalInfo
-        setCurrentStep(savedStep > 1 ? savedStep : 2);
+        // If user has already registered and has progress, show welcome back
+        if (onRegister === undefined && progress.completedSteps.length > 0) {
+          setIsResuming(true);
+          setCurrentStep(0); // Show welcome back screen
+        } else {
+          setCurrentStep(savedStep > 1 ? savedStep : 2);
+        }
       } else {
         // No saved progress, start fresh
-        setCurrentStep(0);
+        setCurrentStep(onRegister ? 0 : 2);
         setKYCData({});
       }
     } catch (error) {
       console.error('Failed to load KYC progress:', error);
-      setCurrentStep(0);
+      setCurrentStep(onRegister ? 0 : 2);
       setKYCData({});
     } finally {
       setIsLoadingProgress(false);
@@ -209,10 +238,52 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
     }
   };
   
+  const handleContinueFromWelcomeBack = () => {
+    if (savedProgress) {
+      const nextStep = getNextIncompleteStep(savedProgress);
+      const stepMap: Record<string, number> = {
+        'accountCredentials': 1,
+        'personalInfo': 2,
+        'address': 3,
+        'identity': 4,
+        'documents': 5,
+        'financialProfile': 6,
+        'agreements': 7,
+        'bankAccount': 8,
+        'review': 9
+      };
+      setCurrentStep(stepMap[nextStep] || 2);
+    }
+  };
+
+  const handleStartOver = async () => {
+    if (confirm('Are you sure you want to start over? This will clear all your saved progress.')) {
+      try {
+        // TODO: Call reset endpoint when implemented
+        // await kycService.reset();
+        setKYCData({});
+        setCurrentStep(2); // Skip to personal info since user is already registered
+        setIsResuming(false);
+      } catch (error) {
+        console.error('Failed to reset KYC:', error);
+      }
+    }
+  };
+
   const steps = [
-    <WelcomeScreen 
-      onNext={() => setCurrentStep(1)} 
-    />,
+    isResuming ? (
+      <WelcomeBackScreen
+        onContinue={handleContinueFromWelcomeBack}
+        onStartOver={handleStartOver}
+        progress={savedProgress}
+        completionPercentage={savedProgress ? calculateKYCCompletionPercentage(savedProgress) : 0}
+        username={user?.username}
+      />
+    ) : (
+      <WelcomeScreen 
+        onNext={() => setCurrentStep(1)} 
+      />
+    ),
     <AccountCredentialsScreen
       onNext={handleAccountCredentials}
       data={kycData.accountCredentials}
@@ -291,9 +362,22 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
     // Prevent closing during KYC process
     event.preventDefault();
   };
+
+  const handleClose = async () => {
+    // Clear authentication data and redirect to landing page
+    try {
+      await logout();
+      onClose();
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Still close the modal even if logout fails
+      onClose();
+    }
+  };
   
   const canGoBack = currentStep > 0;
   const isLastStep = currentStep === steps.length - 1;
+  const canSaveAndExit = !isLastStep && (currentStep > 1 || (isResuming && currentStep === 0));
   
   if (isLoadingProgress) {
     return (
@@ -315,7 +399,7 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
           <h2>Open Trading Account</h2>
           <button 
             className="close-button" 
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close"
           >
             ×
@@ -357,10 +441,10 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
             </button>
           )}
           <div className="controls-right">
-            {!isLastStep && (
+            {canSaveAndExit && (
               <button 
                 className="btn-text" 
-                onClick={onClose}
+                onClick={handleClose}
               >
                 Save & Exit
               </button>
