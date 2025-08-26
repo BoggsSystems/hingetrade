@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { api } from '../services/api';
 import type { User } from '../types';
+import { debugLogger } from '../utils/debugLogger';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -114,10 +115,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (email: string, password: string, username: string) => {
     try {
+      debugLogger.info('AuthContext register called', { email, username });
+      
+      debugLogger.info('Making API call to /auth/register...');
       const response = await api.post<LoginResponse>('/auth/register', {
         email,
         password,
         username,
+      });
+      debugLogger.info('API call completed, processing response...');
+
+      debugLogger.info('Registration API call successful', { 
+        status: response.status, 
+        hasData: !!response.data,
+        hasUser: !!response.data.user 
       });
 
       const { accessToken, refreshToken, expiresIn, user: apiUser } = response.data;
@@ -140,10 +151,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         roles: apiUser.roles,
       };
 
+      debugLogger.info('About to save auth state', { userId: mappedUser.id, userEmail: mappedUser.email });
       saveAuthState(authTokens, mappedUser);
+      debugLogger.info('Auth state saved successfully');
+      
       return mappedUser;
     } catch (error) {
-      console.error('Registration error:', error);
+      debugLogger.error('Registration error in AuthContext', error);
       throw error;
     }
   };

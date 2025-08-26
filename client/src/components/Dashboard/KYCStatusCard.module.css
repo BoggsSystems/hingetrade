@@ -1,0 +1,201 @@
+.kycCard {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.iconWrapper {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: #4f46e5;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.textContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 12px;
+}
+
+.progressWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 200px;
+}
+
+.progressFill {
+  height: 100%;
+  background: #4f46e5;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.estimatedTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.clockIcon {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.primaryButton {
+  padding: 10px 20px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.primaryButton:hover {
+  background: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.dismissButton {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: #94a3b8;
+}
+
+.dismissButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #64748b;
+}
+
+.dismissButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.benefits {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.benefitsTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px;
+}
+
+.benefitsList {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.benefitsList li {
+  position: relative;
+  padding-left: 20px;
+}
+
+.benefitsList li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #22c55e;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .content {
+    flex-wrap: wrap;
+  }
+  
+  .actions {
+    width: 100%;
+    margin-top: 16px;
+    margin-left: 0;
+  }
+  
+  .primaryButton {
+    flex: 1;
+  }
+  
+  .benefitsList {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

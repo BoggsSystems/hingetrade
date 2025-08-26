@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useKycStatus } from '../../hooks/useKycStatus';
 import { usePortfolio } from '../../hooks';
@@ -8,12 +8,46 @@ import RecentActivity from '../../components/Dashboard/RecentActivity';
 import WatchlistWidget from '../../components/Dashboard/WatchlistWidget';
 import MarketOverview from '../../components/Dashboard/MarketOverview';
 import DashboardSkeleton from '../../components/Dashboard/DashboardSkeleton';
+import KYCStatusCard from '../../components/Dashboard/KYCStatusCard';
+import { kycService } from '../../services/kycService';
+import { calculateKYCCompletionPercentage } from '../../utils/kycHelpers';
 import styles from './DashboardPage.module.css';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { kycStatus } = useKycStatus();
   const { metrics, isLoading, error } = usePortfolio();
+  const [kycCompletionPercentage, setKycCompletionPercentage] = useState(0);
+  const [showKycCard, setShowKycCard] = useState(true);
+
+  useEffect(() => {
+    const fetchKycProgress = async () => {
+      if (kycStatus && kycStatus !== 'Approved') {
+        try {
+          const progress = await kycService.getProgress();
+          const percentage = calculateKYCCompletionPercentage(progress);
+          setKycCompletionPercentage(percentage);
+        } catch (error) {
+          console.error('Failed to fetch KYC progress:', error);
+        }
+      }
+    };
+
+    fetchKycProgress();
+  }, [kycStatus]);
+
+  useEffect(() => {
+    // Check if KYC card was previously dismissed
+    const dismissed = localStorage.getItem('kycCardDismissed');
+    if (dismissed === 'true' && kycStatus !== 'NotStarted') {
+      setShowKycCard(false);
+    }
+  }, [kycStatus]);
+
+  const handleDismissKycCard = () => {
+    setShowKycCard(false);
+    localStorage.setItem('kycCardDismissed', 'true');
+  };
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -33,12 +67,15 @@ const DashboardPage: React.FC = () => {
       <div className={styles.header}>
         <h1>Welcome back, {user?.username}!</h1>
         <p className={styles.subtitle}>Here's your portfolio overview</p>
-        {kycStatus && kycStatus !== 'Approved' && (
-          <div className={styles.kycWarning}>
-            <p>⚠️ KYC Status: {kycStatus}. Some features may be restricted.</p>
-          </div>
-        )}
       </div>
+
+      {kycStatus && kycStatus !== 'Approved' && showKycCard && (
+        <KYCStatusCard
+          kycStatus={kycStatus}
+          completionPercentage={kycCompletionPercentage}
+          onDismiss={kycStatus !== 'UnderReview' ? handleDismissKycCard : undefined}
+        />
+      )}
 
       <div className={styles.metricsGrid}>
         <MetricCard

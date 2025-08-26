@@ -77,13 +77,44 @@ const US_STATES = [
 ];
 
 const AddressScreen: React.FC<AddressScreenProps> = ({ onNext, data }) => {
+  // Generate test data for development
+  const generateTestData = (): Partial<AddressData> => {
+    const addresses = [
+      { street: '123 Main Street', city: 'New York', state: 'NY', zip: '10001' },
+      { street: '456 Oak Avenue', city: 'Los Angeles', state: 'CA', zip: '90001' },
+      { street: '789 Pine Road', city: 'Chicago', state: 'IL', zip: '60601' },
+      { street: '321 Elm Drive', city: 'Houston', state: 'TX', zip: '77001' },
+      { street: '654 Maple Lane', city: 'Phoenix', state: 'AZ', zip: '85001' },
+      { street: '987 Cedar Boulevard', city: 'Philadelphia', state: 'PA', zip: '19101' },
+      { street: '147 Birch Way', city: 'San Antonio', state: 'TX', zip: '78201' },
+      { street: '258 Spruce Court', city: 'San Diego', state: 'CA', zip: '92101' },
+      { street: '369 Willow Place', city: 'Dallas', state: 'TX', zip: '75201' },
+      { street: '741 Cherry Street', city: 'Austin', state: 'TX', zip: '78701' }
+    ];
+    
+    const randomAddress = addresses[Math.floor(Math.random() * addresses.length)];
+    const aptNumber = Math.random() > 0.7 ? `Apt ${Math.floor(Math.random() * 999) + 1}` : '';
+    
+    return {
+      streetAddress: randomAddress.street,
+      streetAddress2: aptNumber,
+      city: randomAddress.city,
+      state: randomAddress.state,
+      zipCode: randomAddress.zip,
+      country: 'USA',
+      isMailingSame: true
+    };
+  };
+
+  const testData = data?.streetAddress ? {} : generateTestData();
+
   const [formData, setFormData] = useState<AddressData>({
-    streetAddress: data?.streetAddress || '',
-    streetAddress2: data?.streetAddress2 || '',
-    city: data?.city || '',
-    state: data?.state || '',
-    zipCode: data?.zipCode || '',
-    country: data?.country || 'USA',
+    streetAddress: data?.streetAddress || testData.streetAddress || '',
+    streetAddress2: data?.streetAddress2 || testData.streetAddress2 || '',
+    city: data?.city || testData.city || '',
+    state: data?.state || testData.state || '',
+    zipCode: data?.zipCode || testData.zipCode || '',
+    country: data?.country || testData.country || 'USA',
     isMailingSame: data?.isMailingSame !== false,
     mailingAddress: data?.mailingAddress
   });

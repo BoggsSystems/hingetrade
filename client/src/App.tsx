@@ -5,6 +5,7 @@ import Layout from './components/Layout/Layout';
 import LandingPage from './pages/Landing/LandingPage';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
+import OnboardingPage from './pages/Onboarding/OnboardingPage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import DashboardPage from './pages/Dashboard/DashboardPage';
 import MarketsPage from './pages/Markets/MarketsPage';
@@ -33,6 +34,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/terms" element={<TermsOfServicePage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route element={<ProtectedRoute />}>

@@ -14,11 +14,37 @@ interface PersonalInfoData {
 }
 
 const PersonalInfoScreen: React.FC<PersonalInfoScreenProps> = ({ onNext, data }) => {
+  // Generate test data for development
+  const generateTestData = (): Partial<PersonalInfoData> => {
+    const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emily', 'Robert', 'Lisa'];
+    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
+    
+    const randomFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const randomLast = lastNames[Math.floor(Math.random() * lastNames.length)];
+    
+    // Generate a random birth date (between 25-65 years old)
+    const minAge = 25;
+    const maxAge = 65;
+    const randomAge = Math.floor(Math.random() * (maxAge - minAge + 1)) + minAge;
+    const birthYear = new Date().getFullYear() - randomAge;
+    const birthMonth = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+    const birthDay = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+    
+    return {
+      firstName: randomFirst,
+      lastName: randomLast,
+      dateOfBirth: `${birthYear}-${birthMonth}-${birthDay}`,
+      phoneNumber: `(555) ${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`
+    };
+  };
+
+  const testData = data?.firstName ? {} : generateTestData();
+
   const [formData, setFormData] = useState<PersonalInfoData>({
-    firstName: data?.firstName || '',
-    lastName: data?.lastName || '',
-    dateOfBirth: data?.dateOfBirth || '',
-    phoneNumber: data?.phoneNumber || '',
+    firstName: data?.firstName || testData.firstName || '',
+    lastName: data?.lastName || testData.lastName || '',
+    dateOfBirth: data?.dateOfBirth || testData.dateOfBirth || '',
+    phoneNumber: data?.phoneNumber || testData.phoneNumber || '',
     email: data?.email || ''
   });
   

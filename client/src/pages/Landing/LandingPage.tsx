@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import DebugPanel from '../../components/Debug/DebugPanel';
+import { debugLogger } from '../../utils/debugLogger';
 import styles from './LandingPage.module.css';
 
 interface MarketData {
@@ -21,7 +23,9 @@ const LandingPage: React.FC = () => {
   ]);
 
   useEffect(() => {
+    debugLogger.info('LandingPage useEffect triggered', { isAuthenticated });
     if (isAuthenticated) {
+      debugLogger.info('User is authenticated, navigating to dashboard');
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
@@ -172,6 +176,8 @@ const LandingPage: React.FC = () => {
           </button>
         </div>
       </section>
+      
+      <DebugPanel />
     </div>
   );
 };

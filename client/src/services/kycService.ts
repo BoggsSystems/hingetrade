@@ -30,8 +30,46 @@ class KycService {
   }
 
   async submitKyc(kycData: KYCData): Promise<{ success: boolean; message: string }> {
-    const response = await api.post('/kyc/submit', kycData);
+    // Convert document files to base64 before submission
+    const preparedData = { ...kycData };
+    
+    if (kycData.documents) {
+      const documents: any = {
+        idType: kycData.documents.idType
+      };
+      
+      // Convert files to base64
+      if (kycData.documents.idFront) {
+        documents.idFrontBase64 = await this.fileToBase64(kycData.documents.idFront);
+        documents.idFrontFileName = kycData.documents.idFront.name;
+        documents.idFrontFileType = kycData.documents.idFront.type;
+      }
+      
+      if (kycData.documents.idBack) {
+        documents.idBackBase64 = await this.fileToBase64(kycData.documents.idBack);
+        documents.idBackFileName = kycData.documents.idBack.name;
+        documents.idBackFileType = kycData.documents.idBack.type;
+      }
+      
+      preparedData.documents = documents;
+    }
+    
+    const response = await api.post('/kyc/submit', preparedData);
     return response.data;
+  }
+
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Extract base64 data without the data URL prefix
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   // Helper to check if user needs to complete KYC

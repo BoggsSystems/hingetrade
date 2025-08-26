@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { kycService } from '../../services/kycService';
+import { debugLogger } from '../../utils/debugLogger';
 import { SwitchTransition, CSSTransition } from 'react-transition-group';
 import WelcomeScreen from './screens/WelcomeScreen';
-import WelcomeBackScreen from './screens/WelcomeBackScreen';
 import AccountCredentialsScreen from './screens/AccountCredentialsScreen';
 import type { AccountCredentialsData } from './screens/AccountCredentialsScreen';
 import PersonalInfoScreen from './screens/PersonalInfoScreen';
@@ -14,15 +12,13 @@ import FinancialProfileScreen from './screens/FinancialProfileScreen';
 import AgreementsScreen from './screens/AgreementsScreen';
 import BankAccountScreen from './screens/BankAccountScreen';
 import ReviewSubmitScreen from './screens/ReviewSubmitScreen';
-import { calculateKYCCompletionPercentage, getNextIncompleteStep } from '../../utils/kycHelpers';
 import './OnboardingModal.css';
 import './OnboardingModalTransitions.css';
 
 interface KYCOnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: (data: any) => void;
-  onRegister?: (email: string, password: string, username: string) => Promise<any>;
+  onComplete: (data: KYCData) => void;
 }
 
 export interface KYCData {
@@ -95,195 +91,43 @@ export interface KYCData {
 const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({ 
   isOpen, 
   onClose, 
-  onComplete,
-  onRegister 
+  onComplete 
 }) => {
-  const { user, logout } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [kycData, setKYCData] = useState<KYCData>({});
-  const [isLoadingProgress, setIsLoadingProgress] = useState(false);
-  const [isResuming, setIsResuming] = useState(false);
-  const [savedProgress, setSavedProgress] = useState<any>(null);
   const nodeRef = useRef<HTMLDivElement>(null);
   
-  // Load saved progress when modal opens
+  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Only load progress if:
-      // 1. User is authenticated (has a user object)
-      // 2. We're not in fresh registration mode (onRegister is undefined)
-      // This prevents unnecessary API calls from the landing page
-      if (user && onRegister === undefined) {
-        loadSavedProgress();
-      } else if (onRegister) {
-        // Fresh registration - start from the beginning
-        setCurrentStep(0);
-        setKYCData({});
-        setIsLoadingProgress(false);
-      }
-    }
-  }, [isOpen, user, onRegister]);
-  
-  const loadSavedProgress = async () => {
-    // Double-check we have a user before making API call
-    if (!user) {
-      setIsLoadingProgress(false);
-      return;
-    }
-    
-    try {
-      setIsLoadingProgress(true);
-      const progress = await kycService.getProgress();
-      setSavedProgress(progress);
-      
-      if (progress.progress && Object.keys(progress.progress).length > 0) {
-        // Restore saved data
-        const restoredData: KYCData = {};
-        
-        if (progress.progress.personalInfo) {
-          restoredData.personalInfo = progress.progress.personalInfo;
-        }
-        if (progress.progress.address) {
-          restoredData.address = progress.progress.address;
-        }
-        if (progress.progress.identity) {
-          restoredData.identity = progress.progress.identity;
-        }
-        if (progress.progress.documents) {
-          restoredData.documents = progress.progress.documents;
-        }
-        if (progress.progress.financialProfile) {
-          restoredData.financialProfile = progress.progress.financialProfile;
-        }
-        if (progress.progress.agreements) {
-          restoredData.agreements = progress.progress.agreements;
-        }
-        if (progress.progress.bankAccount) {
-          restoredData.bankAccount = progress.progress.bankAccount;
-        }
-        
-        setKYCData(restoredData);
-        
-        // Set current step based on progress
-        const stepMap: Record<string, number> = {
-          'welcome': 0,
-          'accountCredentials': 1,
-          'personalInfo': 2,
-          'address': 3,
-          'identity': 4,
-          'documents': 5,
-          'financialProfile': 6,
-          'agreements': 7,
-          'bankAccount': 8,
-          'review': 9
-        };
-        
-        const savedStep = stepMap[progress.currentStep] || 0;
-        // If user has already registered and has progress, show welcome back
-        if (onRegister === undefined && progress.completedSteps.length > 0) {
-          setIsResuming(true);
-          setCurrentStep(0); // Show welcome back screen
-        } else {
-          setCurrentStep(savedStep > 1 ? savedStep : 2);
-        }
-      } else {
-        // No saved progress, start fresh
-        setCurrentStep(onRegister ? 0 : 2);
-        setKYCData({});
-      }
-    } catch (error) {
-      console.error('Failed to load KYC progress:', error);
-      setCurrentStep(onRegister ? 0 : 2);
+      debugLogger.info('KYC Modal opened - starting fresh');
+      setCurrentStep(0);
       setKYCData({});
-    } finally {
-      setIsLoadingProgress(false);
     }
-  };
+  }, [isOpen]);
+  
   
   if (!isOpen) return null;
   
-  const updateKYCData = async (section: keyof KYCData, data: any) => {
+  const updateKYCData = (section: keyof KYCData, data: any) => {
+    debugLogger.info('Updating KYC data section', { section, hasData: !!data });
     setKYCData(prev => ({
       ...prev,
       [section]: data
     }));
-    
-    // Save progress to backend
-    try {
-      const stepName = kycService.mapStepName(section);
-      await kycService.updateProgress(stepName, data);
-    } catch (error) {
-      console.error('Failed to save progress:', error);
-      // Continue anyway - don't block the user
-    }
   };
   
-  const handleAccountCredentials = async (data: AccountCredentialsData) => {
+  const handleAccountCredentials = (data: AccountCredentialsData) => {
+    debugLogger.info('Account credentials collected', { email: data.email, username: data.username });
     updateKYCData('accountCredentials', data);
-    
-    // If onRegister is provided, attempt registration
-    if (onRegister) {
-      try {
-        const user = await onRegister(data.email, data.password, data.username);
-        // Store the registered user data if needed
-        console.log('Registration successful:', user);
-        setCurrentStep(2);
-      } catch (error) {
-        console.error('Registration failed:', error);
-        // Handle error - show message, allow retry, etc.
-        throw error; // Re-throw to be handled by the screen
-      }
-    } else {
-      setCurrentStep(2);
-    }
+    setCurrentStep(2); // Move to personal info
   };
   
-  const handleContinueFromWelcomeBack = () => {
-    if (savedProgress) {
-      const nextStep = getNextIncompleteStep(savedProgress);
-      const stepMap: Record<string, number> = {
-        'accountCredentials': 1,
-        'personalInfo': 2,
-        'address': 3,
-        'identity': 4,
-        'documents': 5,
-        'financialProfile': 6,
-        'agreements': 7,
-        'bankAccount': 8,
-        'review': 9
-      };
-      setCurrentStep(stepMap[nextStep] || 2);
-    }
-  };
-
-  const handleStartOver = async () => {
-    if (confirm('Are you sure you want to start over? This will clear all your saved progress.')) {
-      try {
-        // TODO: Call reset endpoint when implemented
-        // await kycService.reset();
-        setKYCData({});
-        setCurrentStep(2); // Skip to personal info since user is already registered
-        setIsResuming(false);
-      } catch (error) {
-        console.error('Failed to reset KYC:', error);
-      }
-    }
-  };
 
   const steps = [
-    isResuming ? (
-      <WelcomeBackScreen
-        onContinue={handleContinueFromWelcomeBack}
-        onStartOver={handleStartOver}
-        progress={savedProgress}
-        completionPercentage={savedProgress ? calculateKYCCompletionPercentage(savedProgress) : 0}
-        username={user?.username}
-      />
-    ) : (
-      <WelcomeScreen 
-        onNext={() => setCurrentStep(1)} 
-      />
-    ),
+    <WelcomeScreen 
+      onNext={() => setCurrentStep(1)} 
+    />,
     <AccountCredentialsScreen
       onNext={handleAccountCredentials}
       data={kycData.accountCredentials}
@@ -343,16 +187,9 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
     />,
     <ReviewSubmitScreen 
       kycData={kycData}
-      onSubmit={async () => {
-        try {
-          // Submit KYC to backend
-          await kycService.submitKyc(kycData);
-          // Call the completion handler
-          onComplete(kycData);
-        } catch (error) {
-          console.error('Failed to submit KYC:', error);
-          throw error;
-        }
+      onSubmit={() => {
+        debugLogger.info('Final submit - completing onboarding with all data');
+        onComplete(kycData);
       }}
       onEdit={(step) => setCurrentStep(step)}
     />
@@ -363,34 +200,13 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
     event.preventDefault();
   };
 
-  const handleClose = async () => {
-    // Clear authentication data and redirect to landing page
-    try {
-      await logout();
-      onClose();
-    } catch (error) {
-      console.error('Error during logout:', error);
-      // Still close the modal even if logout fails
-      onClose();
-    }
+  const handleClose = () => {
+    debugLogger.info('KYC Modal closing - user quit onboarding');
+    onClose();
   };
   
   const canGoBack = currentStep > 0;
   const isLastStep = currentStep === steps.length - 1;
-  const canSaveAndExit = !isLastStep && (currentStep > 1 || (isResuming && currentStep === 0));
-  
-  if (isLoadingProgress) {
-    return (
-      <div className="onboarding-overlay">
-        <div className="onboarding-modal kyc-modal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div className="spinner" style={{ marginBottom: '16px' }}></div>
-            <p>Loading your progress...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="onboarding-overlay" onClick={handleOverlayClick}>
@@ -441,14 +257,7 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
             </button>
           )}
           <div className="controls-right">
-            {canSaveAndExit && (
-              <button 
-                className="btn-text" 
-                onClick={handleClose}
-              >
-                Save & Exit
-              </button>
-            )}
+            {/* No Save & Exit - users must complete the entire flow */}
           </div>
         </div>
       </div>

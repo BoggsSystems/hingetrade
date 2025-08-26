@@ -16,12 +16,25 @@ export interface AccountCredentialsData {
 }
 
 const AccountCredentialsScreen: React.FC<AccountCredentialsScreenProps> = ({ onNext, data }) => {
-  const [formData, setFormData] = useState<AccountCredentialsData>({
-    email: data?.email || '',
-    username: data?.username || '',
-    password: data?.password || '',
-    confirmPassword: data?.confirmPassword || ''
-  });
+  // Generate random test data for development
+  const generateTestData = () => {
+    const timestamp = Date.now();
+    const randomNum = Math.floor(Math.random() * 1000);
+    const testEmail = `testuser${timestamp}${randomNum}@example.com`;
+    const testUsername = `testuser${timestamp}${randomNum}`;
+    const testPassword = 'TestPassword123@';
+    
+    return {
+      email: testEmail,
+      username: testUsername,
+      password: testPassword,
+      confirmPassword: testPassword
+    };
+  };
+
+  const [formData, setFormData] = useState<AccountCredentialsData>(
+    data || generateTestData()
+  );
   
   const [errors, setErrors] = useState<Partial<AccountCredentialsData>>({});
   const [showPassword, setShowPassword] = useState(false);
