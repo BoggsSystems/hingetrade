@@ -6,6 +6,13 @@ import LandingPage from './pages/Landing/LandingPage';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import DashboardPage from './pages/Dashboard/DashboardPage';
+import MarketsPage from './pages/Markets/MarketsPage';
+import PortfolioPage from './pages/Portfolio/PortfolioPage';
+import TradingPage from './pages/Trading/TradingPage';
+import AlertsPage from './pages/Alerts/AlertsPage';
+import TermsOfServicePage from './pages/Legal/TermsOfServicePage';
+import PrivacyPolicyPage from './pages/Legal/PrivacyPolicyPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,13 +33,15 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/terms" element={<TermsOfServicePage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
-                <Route path="/dashboard" element={<div>Dashboard (TODO)</div>} />
-                <Route path="/markets" element={<div>Markets (TODO)</div>} />
-                <Route path="/portfolio" element={<div>Portfolio (TODO)</div>} />
-                <Route path="/trading" element={<div>Trading (TODO)</div>} />
-                <Route path="/alerts" element={<div>Alerts (TODO)</div>} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/markets" element={<MarketsPage />} />
+                <Route path="/portfolio" element={<PortfolioPage />} />
+                <Route path="/trading" element={<TradingPage />} />
+                <Route path="/alerts" element={<AlertsPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

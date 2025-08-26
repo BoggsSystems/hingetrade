@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 interface PersonalInfoScreenProps {
   onNext: (data: PersonalInfoData) => void;
-  data?: PersonalInfoData;
+  data?: Partial<PersonalInfoData>;
 }
 
 interface PersonalInfoData {

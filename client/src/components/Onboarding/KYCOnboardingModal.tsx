@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SwitchTransition, CSSTransition } from 'react-transition-group';
 import WelcomeScreen from './screens/WelcomeScreen';
+import AccountCredentialsScreen from './screens/AccountCredentialsScreen';
+import type { AccountCredentialsData } from './screens/AccountCredentialsScreen';
 import PersonalInfoScreen from './screens/PersonalInfoScreen';
 import AddressScreen from './screens/AddressScreen';
 import IdentityVerificationScreen from './screens/IdentityVerificationScreen';
@@ -16,9 +18,11 @@ interface KYCOnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (data: any) => void;
+  onRegister?: (email: string, password: string, username: string) => Promise<any>;
 }
 
 export interface KYCData {
+  accountCredentials?: AccountCredentialsData;
   personalInfo?: {
     firstName: string;
     lastName: string;
@@ -87,7 +91,8 @@ export interface KYCData {
 const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({ 
   isOpen, 
   onClose, 
-  onComplete 
+  onComplete,
+  onRegister 
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [kycData, setKYCData] = useState<KYCData>({});
@@ -110,56 +115,84 @@ const KYCOnboardingModal: React.FC<KYCOnboardingModalProps> = ({
     }));
   };
   
+  const handleAccountCredentials = async (data: AccountCredentialsData) => {
+    updateKYCData('accountCredentials', data);
+    
+    // If onRegister is provided, attempt registration
+    if (onRegister) {
+      try {
+        const user = await onRegister(data.email, data.password, data.username);
+        // Store the registered user data if needed
+        console.log('Registration successful:', user);
+        setCurrentStep(2);
+      } catch (error) {
+        console.error('Registration failed:', error);
+        // Handle error - show message, allow retry, etc.
+        throw error; // Re-throw to be handled by the screen
+      }
+    } else {
+      setCurrentStep(2);
+    }
+  };
+  
   const steps = [
     <WelcomeScreen 
       onNext={() => setCurrentStep(1)} 
     />,
+    <AccountCredentialsScreen
+      onNext={handleAccountCredentials}
+      data={kycData.accountCredentials}
+    />,
     <PersonalInfoScreen 
       onNext={(data) => {
         updateKYCData('personalInfo', data);
-        setCurrentStep(2);
+        setCurrentStep(3);
       }}
-      data={kycData.personalInfo}
+      data={{
+        ...kycData.personalInfo,
+        // Pre-fill email from account credentials
+        email: kycData.accountCredentials?.email || kycData.personalInfo?.email || ''
+      }}
     />,
     <AddressScreen 
       onNext={(data) => {
         updateKYCData('address', data);
-        setCurrentStep(3);
+        setCurrentStep(4);
       }}
       data={kycData.address}
     />,
     <IdentityVerificationScreen 
       onNext={(data) => {
         updateKYCData('identity', data);
-        setCurrentStep(4);
+        setCurrentStep(5);
       }}
       data={kycData.identity}
     />,
     <DocumentUploadScreen 
       onNext={(data) => {
         updateKYCData('documents', data);
-        setCurrentStep(5);
+        setCurrentStep(6);
       }}
       data={kycData.documents}
     />,
     <FinancialProfileScreen 
       onNext={(data) => {
         updateKYCData('financialProfile', data);
-        setCurrentStep(6);
+        setCurrentStep(7);
       }}
       data={kycData.financialProfile}
     />,
     <AgreementsScreen 
       onNext={(data) => {
         updateKYCData('agreements', data);
-        setCurrentStep(7);
+        setCurrentStep(8);
       }}
       data={kycData.agreements}
     />,
     <BankAccountScreen 
       onNext={(data) => {
         updateKYCData('bankAccount', data);
-        setCurrentStep(8);
+        setCurrentStep(9);
       }}
       data={kycData.bankAccount}
     />,

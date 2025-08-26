@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { KYCOnboardingModal } from '../../components/Onboarding';
@@ -8,220 +8,115 @@ import styles from './AuthPages.module.css';
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const [showKYCModal, setShowKYCModal] = useState(true);
+  const [registrationError, setRegistrationError] = useState<string>('');
   
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [showKYCModal, setShowKYCModal] = useState(false);
-  const [, setRegisteredUser] = useState<any>(null);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear field error when user starts typing
-    if (fieldErrors[name]) {
-      setFieldErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (!/^[a-zA-Z0-9._-]+$/.test(formData.username)) {
-      errors.username = 'Username can only contain letters, numbers, dots, underscores, and hyphens';
-    }
-
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-
+  // Open modal immediately when page loads
+  useEffect(() => {
+    setShowKYCModal(true);
+  }, []);
+  
+  const handleRegister = async (email: string, password: string, username: string) => {
     try {
-      const user = await register(formData.email, formData.password, formData.username);
-      setRegisteredUser(user);
-      // Show KYC modal after successful registration
-      setShowKYCModal(true);
+      setRegistrationError('');
+      const user = await register(email, password, username);
+      return user;
     } catch (err: any) {
+      // Extract error message
+      let errorMessage = 'Registration failed. Please try again.';
+      
       if (err.response?.data?.errors) {
         // Handle validation errors from the server
         const serverErrors = err.response.data.errors;
-        const fieldErrorMap: Record<string, string> = {};
+        const errorMessages = [];
         
         for (const [field, messages] of Object.entries(serverErrors)) {
-          fieldErrorMap[field.toLowerCase()] = Array.isArray(messages) ? messages[0] : messages;
+          const message = Array.isArray(messages) ? messages[0] : messages;
+          errorMessages.push(`${field}: ${message}`);
         }
         
-        setFieldErrors(fieldErrorMap);
-      } else {
-        setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        errorMessage = errorMessages.join(', ');
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
       }
-    } finally {
-      setIsLoading(false);
+      
+      setRegistrationError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
-
+  
   const handleKYCComplete = async (kycData: KYCData) => {
     try {
-      // TODO: Submit KYC data to backend
-      console.log('KYC Data:', kycData);
+      // TODO: Submit remaining KYC data to backend
+      console.log('Complete KYC Data:', kycData);
       
-      // For now, just navigate to dashboard
-      setShowKYCModal(false);
+      // Navigate to dashboard after completion
       navigate('/dashboard');
     } catch (err) {
       console.error('KYC submission failed:', err);
       // Handle error
     }
   };
-
+  
   const handleKYCClose = () => {
     setShowKYCModal(false);
-    // User can continue to dashboard without completing KYC
-    navigate('/dashboard');
+    // Navigate back to landing or login
+    navigate('/');
   };
-
+  
+  // Simple page that just shows a backdrop with the modal
   return (
-    <>
-      <div className={styles.authContainer}>
-        <div className={styles.authCard}>
-        <div className={styles.authHeader}>
-          <h1>Create Account</h1>
-          <p>Join HingeTrade and start trading today</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className={styles.authForm}>
-          <div className={styles.formGroup}>
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              autoComplete="email"
-              placeholder="john@example.com"
-            />
-            {fieldErrors.email && (
-              <span className={styles.fieldError}>{fieldErrors.email}</span>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              autoComplete="username"
-              placeholder="johndoe"
-            />
-            {fieldErrors.username && (
-              <span className={styles.fieldError}>{fieldErrors.username}</span>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              autoComplete="new-password"
-              placeholder="••••••••"
-            />
-            {fieldErrors.password && (
-              <span className={styles.fieldError}>{fieldErrors.password}</span>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              autoComplete="new-password"
-              placeholder="••••••••"
-            />
-            {fieldErrors.confirmPassword && (
-              <span className={styles.fieldError}>{fieldErrors.confirmPassword}</span>
-            )}
-          </div>
-
-          {error && (
-            <div className={styles.errorMessage}>
-              {error}
-            </div>
-          )}
-
-          <div className={styles.termsText}>
-            By creating an account, you agree to our{' '}
-            <a href="/terms" target="_blank" rel="noopener noreferrer">
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer">
-              Privacy Policy
-            </a>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
+    <div className={styles.authContainer}>
+      <div style={{ 
+        textAlign: 'center', 
+        marginTop: '100px',
+        color: '#999'
+      }}>
+        <h2 style={{ marginBottom: '16px' }}>Create Your Trading Account</h2>
+        <p>Complete our simple onboarding process to get started.</p>
+        
+        {!showKYCModal && (
+          <button 
+            onClick={() => setShowKYCModal(true)}
             className={styles.submitButton}
+            style={{ marginTop: '32px' }}
           >
-            {isLoading ? 'Creating account...' : 'Create Account'}
+            Start Onboarding
           </button>
-        </form>
-
-        <div className={styles.authFooter}>
+        )}
+        
+        <div className={styles.authFooter} style={{ marginTop: '48px' }}>
           <p>
             Already have an account?{' '}
             <Link to="/login">Sign in</Link>
           </p>
         </div>
       </div>
+      
+      <KYCOnboardingModal
+        isOpen={showKYCModal}
+        onClose={handleKYCClose}
+        onComplete={handleKYCComplete}
+        onRegister={handleRegister}
+      />
+      
+      {registrationError && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#f44336',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          zIndex: 1001
+        }}>
+          {registrationError}
+        </div>
+      )}
     </div>
-    
-    <KYCOnboardingModal
-      isOpen={showKYCModal}
-      onClose={handleKYCClose}
-      onComplete={handleKYCComplete}
-    />
-  </>
   );
 };
 
