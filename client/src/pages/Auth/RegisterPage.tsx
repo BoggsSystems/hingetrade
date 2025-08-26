@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { KYCOnboardingModal } from '../../components/Onboarding';
+import type { KYCData } from '../../components/Onboarding';
 import styles from './AuthPages.module.css';
 
 const RegisterPage: React.FC = () => {
@@ -16,6 +18,8 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showKYCModal, setShowKYCModal] = useState(false);
+  const [, setRegisteredUser] = useState<any>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -56,8 +60,10 @@ const RegisterPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await register(formData.email, formData.password, formData.username);
-      navigate('/dashboard');
+      const user = await register(formData.email, formData.password, formData.username);
+      setRegisteredUser(user);
+      // Show KYC modal after successful registration
+      setShowKYCModal(true);
     } catch (err: any) {
       if (err.response?.data?.errors) {
         // Handle validation errors from the server
@@ -77,9 +83,30 @@ const RegisterPage: React.FC = () => {
     }
   };
 
+  const handleKYCComplete = async (kycData: KYCData) => {
+    try {
+      // TODO: Submit KYC data to backend
+      console.log('KYC Data:', kycData);
+      
+      // For now, just navigate to dashboard
+      setShowKYCModal(false);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('KYC submission failed:', err);
+      // Handle error
+    }
+  };
+
+  const handleKYCClose = () => {
+    setShowKYCModal(false);
+    // User can continue to dashboard without completing KYC
+    navigate('/dashboard');
+  };
+
   return (
-    <div className={styles.authContainer}>
-      <div className={styles.authCard}>
+    <>
+      <div className={styles.authContainer}>
+        <div className={styles.authCard}>
         <div className={styles.authHeader}>
           <h1>Create Account</h1>
           <p>Join HingeTrade and start trading today</p>
@@ -188,6 +215,13 @@ const RegisterPage: React.FC = () => {
         </div>
       </div>
     </div>
+    
+    <KYCOnboardingModal
+      isOpen={showKYCModal}
+      onClose={handleKYCClose}
+      onComplete={handleKYCComplete}
+    />
+  </>
   );
 };
 
