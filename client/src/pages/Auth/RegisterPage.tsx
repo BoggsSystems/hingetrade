@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { KYCOnboardingModal } from '../../components/Onboarding';
 import type { KYCData } from '../../components/Onboarding';
@@ -7,20 +7,33 @@ import styles from './AuthPages.module.css';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
-  const [showKYCModal, setShowKYCModal] = useState(true);
+  const location = useLocation();
+  const { register, user, isAuthenticated } = useAuth();
+  const [showKYCModal, setShowKYCModal] = useState(false);
   const [registrationError, setRegistrationError] = useState<string>('');
+  const [isResuming, setIsResuming] = useState(false);
   
-  // Open modal immediately when page loads
+  // Check if we're resuming KYC for an existing user
   useEffect(() => {
-    setShowKYCModal(true);
-  }, []);
+    const state = location.state as any;
+    if (state?.resumeKyc && isAuthenticated && user) {
+      setIsResuming(true);
+      setShowKYCModal(true);
+    } else {
+      setShowKYCModal(true);
+    }
+  }, [location, isAuthenticated, user]);
   
   const handleRegister = async (email: string, password: string, username: string) => {
+    // Skip registration if resuming KYC
+    if (isResuming) {
+      return user;
+    }
+    
     try {
       setRegistrationError('');
-      const user = await register(email, password, username);
-      return user;
+      const newUser = await register(email, password, username);
+      return newUser;
     } catch (err: any) {
       // Extract error message
       let errorMessage = 'Registration failed. Please try again.';
@@ -97,7 +110,7 @@ const RegisterPage: React.FC = () => {
         isOpen={showKYCModal}
         onClose={handleKYCClose}
         onComplete={handleKYCComplete}
-        onRegister={handleRegister}
+        onRegister={isResuming ? undefined : handleRegister}
       />
       
       {registrationError && (

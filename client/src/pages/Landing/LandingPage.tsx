@@ -28,22 +28,49 @@ const LandingPage: React.FC = () => {
 
   const features = [
     {
-      icon: '🌍',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M12 3C12 3 8 8 8 12C8 16 12 21 12 21" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M12 3C12 3 16 8 16 12C16 16 12 21 12 21" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M3 12H21" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M4.5 8H19.5" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M4.5 16H19.5" stroke="currentColor" strokeWidth="1.5"/>
+        </svg>
+      ),
       title: 'Every Asset Class',
       description: 'Trade stocks, ETFs, and crypto all in one platform',
     },
     {
-      icon: '⚡',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
       title: 'Lightning Fast',
       description: 'Execute trades in milliseconds with our advanced infrastructure',
     },
     {
-      icon: '🛡️',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L3.5 7.5V12C3.5 16.5 6.5 20.74 12 22C17.5 20.74 20.5 16.5 20.5 12V7.5L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
       title: 'Bank-Level Security',
       description: 'Your assets are protected with institutional-grade security',
     },
     {
-      icon: '📊',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M7 14L10 11L13 13L17 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="17" cy="9" r="1" fill="currentColor"/>
+          <circle cx="13" cy="13" r="1" fill="currentColor"/>
+          <circle cx="10" cy="11" r="1" fill="currentColor"/>
+          <circle cx="7" cy="14" r="1" fill="currentColor"/>
+        </svg>
+      ),
       title: 'Advanced Analytics',
       description: 'Make informed decisions with real-time data and insights',
     },

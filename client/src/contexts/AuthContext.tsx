@@ -7,7 +7,7 @@ interface AuthContextType {
   isLoading: boolean;
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
+  register: (email: string, password: string, username: string) => Promise<User>;
   logout: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
   refreshAccessToken: () => Promise<void>;
@@ -24,11 +24,15 @@ interface LoginResponse {
   refreshToken: string;
   expiresIn: number;
   user: {
-    id: number;
+    id: string;
     email: string;
     username: string;
     emailVerified: boolean;
     roles: string[];
+    kycStatus: string;
+    kycSubmittedAt?: string;
+    kycApprovedAt?: string;
+    createdAt: string;
   };
 }
 
@@ -92,12 +96,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const mappedUser: User = {
         id: apiUser.id.toString(),
         email: apiUser.email,
-        name: apiUser.username,
+        username: apiUser.username,
         emailVerified: apiUser.emailVerified,
-        picture: undefined,
-        alpacaAccountId: undefined,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        kycStatus: apiUser.kycStatus as any,
+        kycSubmittedAt: apiUser.kycSubmittedAt,
+        kycApprovedAt: apiUser.kycApprovedAt,
+        createdAt: apiUser.createdAt,
+        roles: apiUser.roles,
       };
 
       saveAuthState(authTokens, mappedUser);
@@ -126,15 +131,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const mappedUser: User = {
         id: apiUser.id.toString(),
         email: apiUser.email,
-        name: apiUser.username,
+        username: apiUser.username,
         emailVerified: apiUser.emailVerified,
-        picture: undefined,
-        alpacaAccountId: undefined,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        kycStatus: apiUser.kycStatus as any,
+        kycSubmittedAt: apiUser.kycSubmittedAt,
+        kycApprovedAt: apiUser.kycApprovedAt,
+        createdAt: apiUser.createdAt,
+        roles: apiUser.roles,
       };
 
       saveAuthState(authTokens, mappedUser);
+      return mappedUser;
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -180,12 +187,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const mappedUser: User = {
         id: apiUser.id.toString(),
         email: apiUser.email,
-        name: apiUser.username,
+        username: apiUser.username,
         emailVerified: apiUser.emailVerified,
-        picture: undefined,
-        alpacaAccountId: undefined,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        kycStatus: apiUser.kycStatus as any,
+        kycSubmittedAt: apiUser.kycSubmittedAt,
+        kycApprovedAt: apiUser.kycApprovedAt,
+        createdAt: apiUser.createdAt,
+        roles: apiUser.roles,
       };
 
       saveAuthState(authTokens, mappedUser);

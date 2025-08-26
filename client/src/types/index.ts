@@ -184,15 +184,18 @@ export interface PortfolioAnalytics {
 }
 
 // User types
+export type KycStatus = 'NotStarted' | 'InProgress' | 'UnderReview' | 'Approved' | 'Rejected' | 'Expired';
+
 export interface User {
   id: string;
   email: string;
-  name: string;
+  username: string;
   emailVerified: boolean;
-  picture?: string;
-  alpacaAccountId?: string;
+  kycStatus: KycStatus;
+  kycSubmittedAt?: string;
+  kycApprovedAt?: string;
   createdAt: string;
-  updatedAt: string;
+  roles: string[];
 }
 
 // Form types

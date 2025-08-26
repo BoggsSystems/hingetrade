@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useKycStatus } from '../../hooks/useKycStatus';
 import { usePortfolio } from '../../hooks';
 import MetricCard from '../../components/Common/MetricCard';
 import PortfolioChart from '../../components/Dashboard/PortfolioChart';
@@ -11,6 +12,7 @@ import styles from './DashboardPage.module.css';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const { kycStatus } = useKycStatus();
   const { metrics, isLoading, error } = usePortfolio();
 
   if (isLoading) {
@@ -29,8 +31,13 @@ const DashboardPage: React.FC = () => {
   return (
     <div className={styles.dashboard}>
       <div className={styles.header}>
-        <h1>Welcome back, {user?.name}!</h1>
+        <h1>Welcome back, {user?.username}!</h1>
         <p className={styles.subtitle}>Here's your portfolio overview</p>
+        {kycStatus && kycStatus !== 'Approved' && (
+          <div className={styles.kycWarning}>
+            <p>⚠️ KYC Status: {kycStatus}. Some features may be restricted.</p>
+          </div>
+        )}
       </div>
 
       <div className={styles.metricsGrid}>

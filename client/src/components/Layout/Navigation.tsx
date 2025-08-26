@@ -41,11 +41,11 @@ const Navigation: React.FC = () => {
           {user && (
             <div className={styles.userInfo}>
               <img
-                src={user.picture || `https://ui-avatars.com/api/?name=${user.name}`}
-                alt={user.name}
+                src={`https://ui-avatars.com/api/?name=${user.username}`}
+                alt={user.username}
                 className={styles.avatar}
               />
-              <span className={styles.userName}>{user.name}</span>
+              <span className={styles.userName}>{user.username}</span>
             </div>
           )}
           <button onClick={logout} className={styles.logoutButton}>
@@ -84,11 +84,11 @@ const Navigation: React.FC = () => {
           {user && (
             <div className={styles.userInfo}>
               <img
-                src={user.picture || `https://ui-avatars.com/api/?name=${user.name}`}
-                alt={user.name}
+                src={`https://ui-avatars.com/api/?name=${user.username}`}
+                alt={user.username}
                 className={styles.avatar}
               />
-              <span className={styles.userName}>{user.name}</span>
+              <span className={styles.userName}>{user.username}</span>
             </div>
           )}
           <button onClick={logout} className={styles.logoutButton}>
