@@ -208,7 +208,13 @@ const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({ onNext, dat
                 onMouseDown={(e) => e.stopPropagation()}
                 style={{ cursor: 'pointer', position: 'relative', zIndex: 10 }}
               >
-                <div className="upload-icon">📷</div>
+                <div className="upload-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M8 6V5C8 4.44772 8.44772 4 9 4H15C15.5523 4 16 4.44772 16 5V6" stroke="currentColor" strokeWidth="1.5"/>
+                  </svg>
+                </div>
                 <p>Click to upload or drag and drop</p>
                 <p className="upload-hint">JPG, PNG or PDF (max 10MB)</p>
               </div>
@@ -219,7 +225,14 @@ const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({ onNext, dat
                 <img src={formData.idFrontPreview} alt="ID Front" />
               ) : (
                 <div className="pdf-preview">
-                  <div className="pdf-icon">📄</div>
+                  <div className="pdf-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V9L13 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M13 2V9H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 13H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M9 17H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
                   <p>{formData.idFront.name}</p>
                 </div>
               )}
@@ -262,7 +275,13 @@ const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({ onNext, dat
                   onMouseDown={(e) => e.stopPropagation()}
                   style={{ cursor: 'pointer', position: 'relative', zIndex: 10 }}
                 >
-                  <div className="upload-icon">📷</div>
+                  <div className="upload-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                      <path d="M8 6V5C8 4.44772 8.44772 4 9 4H15C15.5523 4 16 4.44772 16 5V6" stroke="currentColor" strokeWidth="1.5"/>
+                    </svg>
+                  </div>
                   <p>Click to upload or drag and drop</p>
                   <p className="upload-hint">JPG, PNG or PDF (max 10MB)</p>
                 </div>
@@ -273,7 +292,14 @@ const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({ onNext, dat
                   <img src={formData.idBackPreview} alt="ID Back" />
                 ) : (
                   <div className="pdf-preview">
-                    <div className="pdf-icon">📄</div>
+                    <div className="pdf-icon">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V9L13 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M13 2V9H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M9 13H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M9 17H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    </div>
                     <p>{formData.idBack.name}</p>
                   </div>
                 )}
@@ -292,7 +318,15 @@ const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({ onNext, dat
       </div>
       
       <div className="info-box" style={{ marginTop: '24px' }}>
-        <h4>📋 Document Requirements:</h4>
+        <h4>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}>
+            <rect x="5" y="4" width="14" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M9 9H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M9 13H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M9 17H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          Document Requirements:
+        </h4>
         <ul>
           <li>Must be valid and not expired</li>
           <li>Full document must be visible</li>

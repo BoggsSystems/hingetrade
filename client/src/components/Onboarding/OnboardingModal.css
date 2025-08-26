@@ -376,6 +376,13 @@
   font-size: 48px;
   color: #666;
   margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-icon svg {
+  color: #666;
 }
 
 .agreement-content {
@@ -634,6 +641,13 @@
 .pdf-icon {
   font-size: 48px;
   margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pdf-icon svg {
+  color: #9ca3af;
 }
 
 .pdf-preview p {
