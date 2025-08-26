@@ -411,7 +411,7 @@ const IdentityVerificationScreen: React.FC<IdentityVerificationScreenProps> = ({
         </div>
       </div>
       
-      <style jsx>{`
+      <style>{`
         .form-section {
           margin-bottom: 32px;
         }

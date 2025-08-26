@@ -22,10 +22,26 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate(from, { replace: true });
+      
+      // Give a moment for the auth state to update
+      setTimeout(() => {
+        const currentUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
+        
+        if (currentUser.kycStatus === 'UnderReview') {
+          setError('Your KYC application is under review. You will receive an email once it is approved.');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (currentUser.kycStatus !== 'Approved') {
+          navigate('/onboarding');
+          return;
+        }
+        
+        navigate(from, { replace: true });
+      }, 100);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password');
-    } finally {
       setIsLoading(false);
     }
   };

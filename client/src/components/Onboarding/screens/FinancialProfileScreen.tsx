@@ -324,7 +324,7 @@ const FinancialProfileScreen: React.FC<FinancialProfileScreenProps> = ({ onNext,
         <p>Financial regulators require us to collect this information to ensure investment recommendations are suitable for your financial situation. This helps protect you from taking on inappropriate levels of risk.</p>
       </div>
       
-      <style jsx>{`
+      <style>{`
         .form-section {
           margin-bottom: 32px;
         }

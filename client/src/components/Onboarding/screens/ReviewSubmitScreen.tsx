@@ -1,16 +1,18 @@
 import React from 'react';
-import type { KYCData } from '../KYCOnboardingModal';
+import type { KYCData } from '../../../pages/Onboarding/OnboardingPage';
 
 interface ReviewSubmitScreenProps {
   kycData: KYCData;
   onSubmit: () => void;
   onEdit: (step: number) => void;
+  isSubmitting?: boolean;
 }
 
 const ReviewSubmitScreen: React.FC<ReviewSubmitScreenProps> = ({ 
   kycData, 
   onSubmit, 
-  onEdit 
+  onEdit,
+  isSubmitting = false
 }) => {
   return (
     <div className="screen-content">
@@ -82,12 +84,12 @@ const ReviewSubmitScreen: React.FC<ReviewSubmitScreenProps> = ({
               <span className="review-value">***-**-{kycData.identity.ssn.slice(-4)}</span>
             </div>
             <div className="review-item">
-              <span className="review-label">Citizenship</span>
-              <span className="review-value">{kycData.identity.citizenship}</span>
+              <span className="review-label">Tax ID Type</span>
+              <span className="review-value">{kycData.identity.taxIdType}</span>
             </div>
             <div className="review-item">
               <span className="review-label">Employment</span>
-              <span className="review-value">{kycData.identity.employmentStatus}</span>
+              <span className="review-value">{kycData.identity.employment.status}</span>
             </div>
           </>
         )}
@@ -101,8 +103,18 @@ const ReviewSubmitScreen: React.FC<ReviewSubmitScreenProps> = ({
       </div>
       
       <div className="onboarding-screen-footer">
-        <button className="btn-primary" onClick={onSubmit}>
-          Submit Application
+        <button 
+          className="btn-primary" 
+          onClick={onSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <span className="spinner" /> Submitting...
+            </>
+          ) : (
+            'Submit Application'
+          )}
         </button>
       </div>
     </div>

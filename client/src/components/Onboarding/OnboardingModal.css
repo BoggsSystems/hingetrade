@@ -839,3 +839,152 @@
     padding: 24px 16px;
   }
 }
+
+/* Loading spinner for buttons */
+.btn-primary .spinner,
+.btn-secondary .spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin-right: 8px;
+}
+
+.btn-secondary .spinner {
+  border-color: #334155;
+  border-right-color: transparent;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Submission Success Screen */
+.submission-success {
+  text-align: center;
+}
+
+.submission-success .success-icon {
+  margin-bottom: 24px;
+}
+
+.submission-success h1 {
+  color: #10B981;
+  margin-bottom: 24px;
+}
+
+.submission-success .success-message {
+  text-align: left;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.submission-success .info-box {
+  background-color: #F3F4F6;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 24px 0;
+}
+
+.submission-success .info-box h4 {
+  margin-bottom: 12px;
+  color: #111827;
+  font-size: 14px;
+}
+
+.submission-success .info-box ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.submission-success .info-box li {
+  padding: 4px 0;
+  font-size: 14px;
+  color: #6B7280;
+  position: relative;
+  padding-left: 20px;
+}
+
+.submission-success .info-box li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #10B981;
+}
+
+.submission-success .note {
+  font-size: 14px;
+  color: #6B7280;
+  padding: 12px;
+  background-color: #FEF3C7;
+  border-radius: 6px;
+  margin-top: 16px;
+}
+
+/* Submission Error Screen */
+.submission-error {
+  text-align: center;
+}
+
+.submission-error .error-icon {
+  margin-bottom: 24px;
+}
+
+.submission-error h1 {
+  color: #EF4444;
+  margin-bottom: 24px;
+}
+
+.submission-error .error-message {
+  text-align: left;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.submission-error .error-details {
+  margin: 24px 0;
+}
+
+.submission-error .error-details details {
+  background-color: #FEF2F2;
+  border: 1px solid #FEE2E2;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.submission-error .error-details summary {
+  cursor: pointer;
+  color: #991B1B;
+  font-weight: 500;
+}
+
+.submission-error .error-details pre {
+  margin-top: 8px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #7F1D1D;
+}
+
+.submission-error .help-text {
+  background-color: #F3F4F6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.submission-error .help-text h4 {
+  margin-bottom: 8px;
+  color: #111827;
+  font-size: 14px;
+}
+
+.submission-error .help-text p {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0;
+}

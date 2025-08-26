@@ -308,7 +308,7 @@ The Internal Revenue Service does not require your consent to any provision of t
         </ul>
       </div>
       
-      <style jsx>{`
+      <style>{`
         .agreements-container {
           margin: 24px 0;
         }

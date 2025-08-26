@@ -21,10 +21,10 @@ interface AuthTokens {
 }
 
 interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  user: {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  user?: {
     id: string;
     email: string;
     username: string;
@@ -34,6 +34,21 @@ interface LoginResponse {
     kycSubmittedAt?: string;
     kycApprovedAt?: string;
     createdAt: string;
+  };
+  // PascalCase fields (from .NET API)
+  AccessToken?: string;
+  RefreshToken?: string;
+  ExpiresIn?: number;
+  User?: {
+    Id: string;
+    Email: string;
+    Username: string;
+    EmailVerified: boolean;
+    Roles: string[];
+    KycStatus: string;
+    KycSubmittedAt?: string;
+    KycApprovedAt?: string;
+    CreatedAt: string;
   };
 }
 
@@ -86,7 +101,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password,
       });
 
-      const { accessToken, refreshToken, expiresIn, user: apiUser } = response.data;
+      // Handle both camelCase and PascalCase responses
+      const data = response.data;
+      const accessToken = data.accessToken || data.AccessToken;
+      const refreshToken = data.refreshToken || data.RefreshToken;
+      const expiresIn = data.expiresIn || data.ExpiresIn || 900;
+      const apiUser = data.user || data.User;
+
+      if (!accessToken || !refreshToken || !apiUser) {
+        throw new Error('Invalid response from server');
+      }
 
       const authTokens: AuthTokens = {
         accessToken,
@@ -95,15 +119,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       const mappedUser: User = {
-        id: apiUser.id.toString(),
-        email: apiUser.email,
-        username: apiUser.username,
-        emailVerified: apiUser.emailVerified,
-        kycStatus: apiUser.kycStatus as any,
-        kycSubmittedAt: apiUser.kycSubmittedAt,
-        kycApprovedAt: apiUser.kycApprovedAt,
-        createdAt: apiUser.createdAt,
-        roles: apiUser.roles,
+        id: ((apiUser as any).id || (apiUser as any).Id || '').toString(),
+        email: (apiUser as any).email || (apiUser as any).Email,
+        username: (apiUser as any).username || (apiUser as any).Username,
+        emailVerified: (apiUser as any).emailVerified || (apiUser as any).EmailVerified,
+        kycStatus: ((apiUser as any).kycStatus || (apiUser as any).KycStatus) as any,
+        kycSubmittedAt: (apiUser as any).kycSubmittedAt || (apiUser as any).KycSubmittedAt,
+        kycApprovedAt: (apiUser as any).kycApprovedAt || (apiUser as any).KycApprovedAt,
+        createdAt: (apiUser as any).createdAt || (apiUser as any).CreatedAt,
+        roles: (apiUser as any).roles || (apiUser as any).Roles || [],
       };
 
       saveAuthState(authTokens, mappedUser);
@@ -131,7 +155,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         hasUser: !!response.data.user 
       });
 
-      const { accessToken, refreshToken, expiresIn, user: apiUser } = response.data;
+      // Handle both camelCase and PascalCase responses
+      const data = response.data;
+      const accessToken = data.accessToken || data.AccessToken;
+      const refreshToken = data.refreshToken || data.RefreshToken;
+      const expiresIn = data.expiresIn || data.ExpiresIn || 900;
+      const apiUser = data.user || data.User;
+
+      if (!accessToken || !refreshToken || !apiUser) {
+        throw new Error('Invalid response from server');
+      }
 
       const authTokens: AuthTokens = {
         accessToken,
@@ -140,15 +173,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       const mappedUser: User = {
-        id: apiUser.id.toString(),
-        email: apiUser.email,
-        username: apiUser.username,
-        emailVerified: apiUser.emailVerified,
-        kycStatus: apiUser.kycStatus as any,
-        kycSubmittedAt: apiUser.kycSubmittedAt,
-        kycApprovedAt: apiUser.kycApprovedAt,
-        createdAt: apiUser.createdAt,
-        roles: apiUser.roles,
+        id: ((apiUser as any).id || (apiUser as any).Id || '').toString(),
+        email: (apiUser as any).email || (apiUser as any).Email,
+        username: (apiUser as any).username || (apiUser as any).Username,
+        emailVerified: (apiUser as any).emailVerified || (apiUser as any).EmailVerified,
+        kycStatus: ((apiUser as any).kycStatus || (apiUser as any).KycStatus) as any,
+        kycSubmittedAt: (apiUser as any).kycSubmittedAt || (apiUser as any).KycSubmittedAt,
+        kycApprovedAt: (apiUser as any).kycApprovedAt || (apiUser as any).KycApprovedAt,
+        createdAt: (apiUser as any).createdAt || (apiUser as any).CreatedAt,
+        roles: (apiUser as any).roles || (apiUser as any).Roles || [],
       };
 
       debugLogger.info('About to save auth state', { userId: mappedUser.id, userEmail: mappedUser.email });
@@ -190,7 +223,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         refreshToken: parsedTokens.refreshToken,
       });
 
-      const { accessToken, refreshToken, expiresIn, user: apiUser } = response.data;
+      // Handle both camelCase and PascalCase responses
+      const data = response.data;
+      const accessToken = data.accessToken || data.AccessToken;
+      const refreshToken = data.refreshToken || data.RefreshToken;
+      const expiresIn = data.expiresIn || data.ExpiresIn || 900;
+      const apiUser = data.user || data.User;
+
+      if (!accessToken || !refreshToken || !apiUser) {
+        throw new Error('Invalid response from server');
+      }
 
       const authTokens: AuthTokens = {
         accessToken,
@@ -199,15 +241,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       const mappedUser: User = {
-        id: apiUser.id.toString(),
-        email: apiUser.email,
-        username: apiUser.username,
-        emailVerified: apiUser.emailVerified,
-        kycStatus: apiUser.kycStatus as any,
-        kycSubmittedAt: apiUser.kycSubmittedAt,
-        kycApprovedAt: apiUser.kycApprovedAt,
-        createdAt: apiUser.createdAt,
-        roles: apiUser.roles,
+        id: ((apiUser as any).id || (apiUser as any).Id || '').toString(),
+        email: (apiUser as any).email || (apiUser as any).Email,
+        username: (apiUser as any).username || (apiUser as any).Username,
+        emailVerified: (apiUser as any).emailVerified || (apiUser as any).EmailVerified,
+        kycStatus: ((apiUser as any).kycStatus || (apiUser as any).KycStatus) as any,
+        kycSubmittedAt: (apiUser as any).kycSubmittedAt || (apiUser as any).KycSubmittedAt,
+        kycApprovedAt: (apiUser as any).kycApprovedAt || (apiUser as any).KycApprovedAt,
+        createdAt: (apiUser as any).createdAt || (apiUser as any).CreatedAt,
+        roles: (apiUser as any).roles || (apiUser as any).Roles || [],
       };
 
       saveAuthState(authTokens, mappedUser);

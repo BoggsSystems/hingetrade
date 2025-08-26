@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { debugLogger } from '../../utils/debugLogger';
 import { kycService } from '../../services/kycService';
@@ -17,6 +17,8 @@ import FinancialProfileScreen from '../../components/Onboarding/screens/Financia
 import AgreementsScreen from '../../components/Onboarding/screens/AgreementsScreen';
 import BankAccountScreen from '../../components/Onboarding/screens/BankAccountScreen';
 import ReviewSubmitScreen from '../../components/Onboarding/screens/ReviewSubmitScreen';
+import SubmissionSuccessScreen from '../../components/Onboarding/screens/SubmissionSuccessScreen';
+import SubmissionErrorScreen from '../../components/Onboarding/screens/SubmissionErrorScreen';
 
 // Import styles
 import '../../components/Onboarding/OnboardingModal.css';
@@ -97,10 +99,12 @@ export interface KYCData {
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { register } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [kycData, setKycData] = useState<KYCData>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const nodeRef = useRef<HTMLDivElement>(null);
   
   const handleClose = () => {
@@ -110,6 +114,8 @@ const OnboardingPage: React.FC = () => {
   
   const handleComplete = async () => {
     try {
+      setIsSubmitting(true);
+      setSubmissionError(null);
       debugLogger.info('Completing onboarding process', { kycData });
       
       // First register the user
@@ -129,13 +135,17 @@ const OnboardingPage: React.FC = () => {
       
       if (kycResponse.success) {
         debugLogger.info('KYC submitted successfully');
-        navigate('/dashboard');
+        setSubmissionSuccess(true);
+        setCurrentStep(steps.length); // Move to success screen
       } else {
         throw new Error(kycResponse.message || 'KYC submission failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       debugLogger.error('Onboarding completion error:', error);
-      alert('Failed to complete onboarding. Please try again.');
+      setSubmissionError(error.message || 'Failed to complete onboarding');
+      setCurrentStep(steps.length + 1); // Move to error screen
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -185,19 +195,43 @@ const OnboardingPage: React.FC = () => {
     />,
     <ReviewSubmitScreen 
       onSubmit={() => handleComplete()}
-      data={kycData}
+      kycData={kycData as any}
       onEdit={(step) => {
-        const stepIndex = [
-          'welcome', 'accountCredentials', 'personalInfo', 'address', 
-          'identity', 'documents', 'financialProfile', 'agreements', 'bankAccount'
-        ].indexOf(step);
-        if (stepIndex > 0) setCurrentStep(stepIndex);
+        if (step >= 0) setCurrentStep(step);
       }}
+      isSubmitting={isSubmitting}
     />
   ];
   
-  const canGoBack = currentStep > 0;
+  // Add success and error screens dynamically based on state
+  const getCurrentScreen = () => {
+    if (submissionSuccess && currentStep === steps.length) {
+      return (
+        <SubmissionSuccessScreen 
+          onContinue={() => navigate('/dashboard')} 
+        />
+      );
+    }
+    
+    if (submissionError && currentStep === steps.length + 1) {
+      return (
+        <SubmissionErrorScreen 
+          error={submissionError}
+          onRetry={() => {
+            setSubmissionError(null);
+            setCurrentStep(steps.length - 1); // Go back to review screen
+          }}
+          onClose={handleClose}
+        />
+      );
+    }
+    
+    return steps[currentStep];
+  };
+  
+  const canGoBack = currentStep > 0 && !submissionSuccess && !submissionError;
   const isLastStep = currentStep === steps.length - 1;
+  const showProgress = !submissionSuccess && !submissionError;
 
   return (
     <div className="onboarding-page">
@@ -214,15 +248,17 @@ const OnboardingPage: React.FC = () => {
           </button>
         </div>
         
-        <div className="onboarding-progress">
-          {steps.map((_, index) => (
-            <div 
-              key={index} 
-              className={`progress-dot ${currentStep >= index ? 'active' : ''} ${currentStep === index ? 'current' : ''}`}
-              title={`Step ${index + 1}`}
-            />
-          ))}
-        </div>
+        {showProgress && (
+          <div className="onboarding-progress">
+            {steps.map((_, index) => (
+              <div 
+                key={index} 
+                className={`progress-dot ${currentStep >= index ? 'active' : ''} ${currentStep === index ? 'current' : ''}`}
+                title={`Step ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
         
         <div className="onboarding-screen-wrapper">
           <SwitchTransition mode="out-in">
@@ -233,7 +269,7 @@ const OnboardingPage: React.FC = () => {
               classNames="slide"
             >
               <div ref={nodeRef} className="onboarding-screen">
-                {steps[currentStep]}
+                {getCurrentScreen()}
               </div>
             </CSSTransition>
           </SwitchTransition>
