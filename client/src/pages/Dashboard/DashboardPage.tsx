@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../../contexts/AuthContext.dev';
+import { useAuth } from '../../contexts/AuthContext';
 import { usePortfolio } from '../../hooks';
 import MetricCard from '../../components/Common/MetricCard';
 import PortfolioChart from '../../components/Dashboard/PortfolioChart';

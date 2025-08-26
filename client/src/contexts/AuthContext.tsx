@@ -1,14 +1,35 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { api } from '../services/api';
 import type { User } from '../types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
-  login: () => void;
-  logout: () => void;
-  getAccessToken: () => Promise<string>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, username: string) => Promise<void>;
+  logout: () => Promise<void>;
+  getAccessToken: () => Promise<string | null>;
+  refreshAccessToken: () => Promise<void>;
+}
+
+interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+}
+
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: {
+    id: number;
+    email: string;
+    username: string;
+    emailVerified: boolean;
+    roles: string[];
+  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,74 +46,245 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+const TOKEN_KEY = 'auth_tokens';
+const USER_KEY = 'auth_user';
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const {
-    isAuthenticated,
-    isLoading,
-    user: auth0User,
-    loginWithRedirect,
-    logout: auth0Logout,
-    getAccessTokenSilently,
-  } = useAuth0();
-
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [tokens, setTokens] = useState<AuthTokens | null>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  useEffect(() => {
-    if (isAuthenticated && auth0User) {
-      // Map Auth0 user to our User type
-      const mappedUser: User = {
-        id: auth0User.sub || '',
-        email: auth0User.email || '',
-        name: auth0User.name || '',
-        emailVerified: auth0User.email_verified || false,
-        picture: auth0User.picture,
-        alpacaAccountId: auth0User['alpaca_account_id'],
-        createdAt: auth0User.created_at || new Date().toISOString(),
-        updatedAt: auth0User.updated_at || new Date().toISOString(),
-      };
-      setUser(mappedUser);
-
-      // Store the access token for API requests
-      getAccessTokenSilently().then((token) => {
-        localStorage.setItem('authToken', token);
-      });
-    } else {
-      setUser(null);
-      localStorage.removeItem('authToken');
-    }
-  }, [isAuthenticated, auth0User, getAccessTokenSilently]);
-
-  const login = () => {
-    loginWithRedirect({
-      appState: { returnTo: window.location.pathname },
-    });
+  const clearAuthState = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    delete api.defaults.headers.common['Authorization'];
+    setTokens(null);
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
-  const logout = () => {
-    auth0Logout({
-      logoutParams: {
-        returnTo: window.location.origin,
-      },
-    });
+  const saveAuthState = (authTokens: AuthTokens, authUser: User) => {
+    localStorage.setItem(TOKEN_KEY, JSON.stringify(authTokens));
+    localStorage.setItem(USER_KEY, JSON.stringify(authUser));
+    api.defaults.headers.common['Authorization'] = `Bearer ${authTokens.accessToken}`;
+    setTokens(authTokens);
+    setUser(authUser);
+    setIsAuthenticated(true);
   };
 
-  const getAccessToken = async () => {
+  const login = async (email: string, password: string) => {
     try {
-      const token = await getAccessTokenSilently();
-      return token;
+      const response = await api.post<LoginResponse>('/auth/login', {
+        emailOrUsername: email,
+        password,
+      });
+
+      const { accessToken, refreshToken, expiresIn, user: apiUser } = response.data;
+
+      const authTokens: AuthTokens = {
+        accessToken,
+        refreshToken,
+        expiresAt: Date.now() + expiresIn * 1000,
+      };
+
+      const mappedUser: User = {
+        id: apiUser.id.toString(),
+        email: apiUser.email,
+        name: apiUser.username,
+        emailVerified: apiUser.emailVerified,
+        picture: undefined,
+        alpacaAccountId: undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      saveAuthState(authTokens, mappedUser);
     } catch (error) {
-      console.error('Error getting access token:', error);
+      console.error('Login error:', error);
       throw error;
     }
   };
+
+  const register = async (email: string, password: string, username: string) => {
+    try {
+      const response = await api.post<LoginResponse>('/auth/register', {
+        email,
+        password,
+        username,
+      });
+
+      const { accessToken, refreshToken, expiresIn, user: apiUser } = response.data;
+
+      const authTokens: AuthTokens = {
+        accessToken,
+        refreshToken,
+        expiresAt: Date.now() + expiresIn * 1000,
+      };
+
+      const mappedUser: User = {
+        id: apiUser.id.toString(),
+        email: apiUser.email,
+        name: apiUser.username,
+        emailVerified: apiUser.emailVerified,
+        picture: undefined,
+        alpacaAccountId: undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      saveAuthState(authTokens, mappedUser);
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Call logout endpoint to invalidate refresh token
+      if (tokens?.refreshToken) {
+        await api.post('/auth/logout', {
+          refreshToken: tokens.refreshToken,
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      clearAuthState();
+    }
+  };
+
+  const refreshAccessToken = useCallback(async () => {
+    try {
+      const storedTokens = localStorage.getItem(TOKEN_KEY);
+      if (!storedTokens) {
+        throw new Error('No refresh token available');
+      }
+
+      const parsedTokens = JSON.parse(storedTokens) as AuthTokens;
+      
+      const response = await api.post<LoginResponse>('/auth/refresh', {
+        refreshToken: parsedTokens.refreshToken,
+      });
+
+      const { accessToken, refreshToken, expiresIn, user: apiUser } = response.data;
+
+      const authTokens: AuthTokens = {
+        accessToken,
+        refreshToken,
+        expiresAt: Date.now() + expiresIn * 1000,
+      };
+
+      const mappedUser: User = {
+        id: apiUser.id.toString(),
+        email: apiUser.email,
+        name: apiUser.username,
+        emailVerified: apiUser.emailVerified,
+        picture: undefined,
+        alpacaAccountId: undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      saveAuthState(authTokens, mappedUser);
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      clearAuthState();
+      throw error;
+    }
+  }, []);
+
+  const getAccessToken = async () => {
+    if (!tokens) {
+      return null;
+    }
+
+    // Check if token is expired
+    if (tokens.expiresAt <= Date.now() + 60000) { // Refresh if expiring in 1 minute
+      await refreshAccessToken();
+    }
+
+    return tokens?.accessToken || null;
+  };
+
+  // Set up axios interceptor for token refresh
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          try {
+            await refreshAccessToken();
+            const newToken = await getAccessToken();
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            return api(originalRequest);
+          } catch (refreshError) {
+            clearAuthState();
+            window.location.href = '/';
+            return Promise.reject(refreshError);
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      api.interceptors.response.eject(interceptor);
+    };
+  }, [refreshAccessToken, getAccessToken]);
+
+  // Load auth state from localStorage on mount
+  useEffect(() => {
+    const loadAuthState = () => {
+      try {
+        const storedTokens = localStorage.getItem(TOKEN_KEY);
+        const storedUser = localStorage.getItem(USER_KEY);
+
+        if (storedTokens && storedUser) {
+          const parsedTokens = JSON.parse(storedTokens) as AuthTokens;
+          const parsedUser = JSON.parse(storedUser) as User;
+
+          // Check if token is expired
+          if (parsedTokens.expiresAt > Date.now()) {
+            setTokens(parsedTokens);
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+            
+            // Set authorization header
+            api.defaults.headers.common['Authorization'] = `Bearer ${parsedTokens.accessToken}`;
+          } else {
+            // Token expired, clear state
+            clearAuthState();
+          }
+        }
+      } catch (error) {
+        console.error('Error loading auth state:', error);
+        clearAuthState();
+      } finally {
+        setIsLoading(false);
+        setInitialLoadComplete(true);
+      }
+    };
+
+    loadAuthState();
+  }, []);
 
   const value: AuthContextType = {
     isAuthenticated,
     isLoading,
     user,
     login,
+    register,
     logout,
     getAccessToken,
+    refreshAccessToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

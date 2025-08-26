@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext.dev';
+import { useAuth } from '../../contexts/AuthContext';
 import styles from './LandingPage.module.css';
 
 interface MarketData {
@@ -12,7 +12,7 @@ interface MarketData {
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [marketData] = useState<MarketData[]>([
     { symbol: 'SPY', price: 478.32, change: 2.45, changePercent: 0.51 },
     { symbol: 'QQQ', price: 402.18, change: -1.23, changePercent: -0.30 },
@@ -80,10 +80,10 @@ const LandingPage: React.FC = () => {
             Built for traders who demand more.
           </p>
           <div className={styles.heroActions}>
-            <button onClick={login} className={`btn btn-primary btn-large ${styles.getStarted}`}>
+            <button onClick={() => navigate('/register')} className={`btn btn-primary btn-large ${styles.getStarted}`}>
               Get Started
             </button>
-            <button onClick={login} className={`btn btn-secondary btn-large ${styles.signIn}`}>
+            <button onClick={() => navigate('/login')} className={`btn btn-secondary btn-large ${styles.signIn}`}>
               Sign In
             </button>
           </div>
@@ -140,7 +140,7 @@ const LandingPage: React.FC = () => {
           <p className={styles.ctaDescription}>
             Join thousands of traders who trust HingeTrade for their investment needs.
           </p>
-          <button onClick={login} className={`btn btn-primary btn-large ${styles.ctaButton}`}>
+          <button onClick={() => navigate('/register')} className={`btn btn-primary btn-large ${styles.ctaButton}`}>
             Create Free Account
           </button>
         </div>

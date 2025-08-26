@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -142,4 +142,5 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+export const api = apiClient.instance;
 export default apiClient;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext.dev';
+import { useAuth } from '../../contexts/AuthContext';
 import styles from './Navigation.module.css';
 
 const Navigation: React.FC = () => {
