@@ -59,6 +59,9 @@
 .icon {
   font-size: var(--font-lg);
   margin-right: var(--spacing-md);
+  color: var(--color-positive);
+  display: flex;
+  align-items: center;
 }
 
 .label {
