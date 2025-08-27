@@ -1,0 +1,19 @@
+
+> client@0.0.0 dev
+> vite --port 3001
+
+You are using Node.js 20.17.0. Vite requires Node.js version 20.19+ or 22.12+. Please upgrade your Node.js version.
+
+  VITE v7.1.3  ready in 125 ms
+
+  ➜  Local:   http://localhost:3001/
+  ➜  Network: use --host to expose
+6:44:32 PM [vite] (client) hmr update /src/contexts/AuthContext.tsx
+6:44:32 PM [vite] (client) hmr invalidate /src/contexts/AuthContext.tsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:44:32 PM [vite] (client) hmr update /src/App.tsx, /src/components/Auth/ProtectedRoute.tsx, /src/pages/Auth/LoginPage.tsx, /src/pages/Landing/LandingPage.tsx, /src/pages/Onboarding/OnboardingPage.tsx, /src/pages/Dashboard/DashboardPage.tsx, /src/components/Layout/Navigation.tsx
+6:58:27 PM [vite] (client) hmr update /src/contexts/AuthContext.tsx
+6:58:28 PM [vite] (client) hmr invalidate /src/contexts/AuthContext.tsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:28 PM [vite] (client) hmr update /src/App.tsx, /src/components/Auth/ProtectedRoute.tsx, /src/pages/Auth/LoginPage.tsx, /src/pages/Landing/LandingPage.tsx, /src/pages/Onboarding/OnboardingPage.tsx, /src/pages/Dashboard/DashboardPage.tsx, /src/components/Layout/Navigation.tsx
+6:58:57 PM [vite] (client) hmr update /src/contexts/AuthContext.tsx
+6:58:57 PM [vite] (client) hmr invalidate /src/contexts/AuthContext.tsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:57 PM [vite] (client) hmr update /src/App.tsx, /src/components/Auth/ProtectedRoute.tsx, /src/pages/Auth/LoginPage.tsx, /src/pages/Landing/LandingPage.tsx, /src/pages/Onboarding/OnboardingPage.tsx, /src/pages/Dashboard/DashboardPage.tsx, /src/components/Layout/Navigation.tsx

@@ -1,130 +1,209 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useKycStatus } from '../../hooks/useKycStatus';
-import { usePortfolio } from '../../hooks';
-import MetricCard from '../../components/Common/MetricCard';
-import PortfolioChart from '../../components/Dashboard/PortfolioChart';
-import RecentActivity from '../../components/Dashboard/RecentActivity';
-import WatchlistWidget from '../../components/Dashboard/WatchlistWidget';
-import MarketOverview from '../../components/Dashboard/MarketOverview';
-import DashboardSkeleton from '../../components/Dashboard/DashboardSkeleton';
-import KYCStatusCard from '../../components/Dashboard/KYCStatusCard';
-import { kycService } from '../../services/kycService';
-import { calculateKYCCompletionPercentage } from '../../utils/kycHelpers';
+import useLayoutStore from '../../store/layoutStore';
+import LayoutContainer from '../../components/Layout/LayoutContainer';
+import type { Panel } from '../../types/layout';
 import styles from './DashboardPage.module.css';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { kycStatus } = useKycStatus();
-  const { metrics, isLoading, error } = usePortfolio();
-  const [kycCompletionPercentage, setKycCompletionPercentage] = useState(0);
-  const [showKycCard, setShowKycCard] = useState(true);
+  const { 
+    layouts, 
+    activeLayoutId, 
+    createLayout, 
+    addPanel, 
+    setActiveLayout,
+    createLinkGroup,
+    unsavedChanges,
+    saveLayout,
+    saveLayoutAs
+  } = useLayoutStore();
 
+  // Initialize with default layout on first load
   useEffect(() => {
-    const fetchKycProgress = async () => {
-      if (kycStatus && kycStatus !== 'Approved') {
-        try {
-          const progress = await kycService.getProgress();
-          const percentage = calculateKYCCompletionPercentage(progress);
-          setKycCompletionPercentage(percentage);
-        } catch (error) {
-          console.error('Failed to fetch KYC progress:', error);
-        }
-      }
-    };
-
-    fetchKycProgress();
-  }, [kycStatus]);
-
-  useEffect(() => {
-    // Check if KYC card was previously dismissed
-    const dismissed = localStorage.getItem('kycCardDismissed');
-    if (dismissed === 'true' && kycStatus !== 'NotStarted') {
-      setShowKycCard(false);
+    if (layouts.length === 0) {
+      const layoutId = createLayout('Main Workspace');
+      setActiveLayout(layoutId);
+      
+      // Create default link groups
+      createLinkGroup('Primary', '#4CAF50');
+      createLinkGroup('Secondary', '#2196F3');
+      createLinkGroup('Tertiary', '#FF9800');
+      
+      // Add default trading panels
+      const defaultPanels: Panel[] = [
+        {
+          id: `panel-${Date.now()}-1`,
+          position: { x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
+          config: { type: 'watchlist', title: 'Watchlist' }
+        },
+        {
+          id: `panel-${Date.now()}-2`,
+          position: { x: 3, y: 0, w: 6, h: 6, minW: 4, minH: 4 },
+          config: { type: 'chart', title: 'Price Chart' }
+        },
+        {
+          id: `panel-${Date.now()}-3`,
+          position: { x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
+          config: { type: 'quote', title: 'Quote' }
+        },
+        {
+          id: `panel-${Date.now()}-4`,
+          position: { x: 0, y: 4, w: 3, h: 5, minW: 2, minH: 3 },
+          config: { type: 'portfolio', title: 'Portfolio Overview' }
+        },
+        {
+          id: `panel-${Date.now()}-5`,
+          position: { x: 3, y: 6, w: 6, h: 4, minW: 4, minH: 3 },
+          config: { type: 'positions', title: 'Positions' }
+        },
+        {
+          id: `panel-${Date.now()}-6`,
+          position: { x: 9, y: 4, w: 3, h: 6, minW: 2, minH: 4 },
+          config: { type: 'trade', title: 'Order Entry' }
+        },
+        {
+          id: `panel-${Date.now()}-7`,
+          position: { x: 0, y: 9, w: 4, h: 4, minW: 3, minH: 3 },
+          config: { type: 'market-overview', title: 'Market Overview' }
+        },
+        {
+          id: `panel-${Date.now()}-8`,
+          position: { x: 4, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
+          config: { type: 'recent-activity', title: 'Recent Activity' }
+        },
+        {
+          id: `panel-${Date.now()}-9`,
+          position: { x: 8, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
+          config: { type: 'news', title: 'Market News' }
+        },
+      ];
+      
+      defaultPanels.forEach(panel => addPanel(panel));
     }
-  }, [kycStatus]);
+  }, []);
 
-  const handleDismissKycCard = () => {
-    setShowKycCard(false);
-    localStorage.setItem('kycCardDismissed', 'true');
+  const handleCreateLayout = () => {
+    const name = prompt('Enter layout name:');
+    if (name) {
+      const layoutId = createLayout(name);
+      setActiveLayout(layoutId);
+    }
   };
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
+  const handleSaveLayout = () => {
+    if (activeLayoutId) {
+      saveLayout();
+    }
+  };
 
-  if (error) {
-    return (
-      <div className={styles.error}>
-        <h2>Unable to load portfolio data</h2>
-        <p>Please check your connection and try again.</p>
-      </div>
-    );
-  }
+  const handleSaveLayoutAs = () => {
+    const name = prompt('Save layout as:');
+    if (name) {
+      saveLayoutAs(name);
+    }
+  };
+
+  const handleAddPanel = (type: string) => {
+    if (!activeLayoutId) return;
+    
+    const panelTypeNames: Record<string, string> = {
+      'watchlist': 'Watchlist',
+      'chart': 'Chart',
+      'quote': 'Quote',
+      'trade': 'Trade',
+      'positions': 'Positions',
+      'news': 'News',
+      'portfolio': 'Portfolio',
+      'market-overview': 'Market Overview',
+      'recent-activity': 'Recent Activity'
+    };
+    
+    const newPanel: Panel = {
+      id: `panel-${Date.now()}`,
+      position: { 
+        x: 0, 
+        y: 0, 
+        w: 4, 
+        h: 6, 
+        minW: 2, 
+        minH: 3 
+      },
+      config: { 
+        type, 
+        title: panelTypeNames[type] || type 
+      }
+    };
+    
+    addPanel(newPanel);
+  };
 
   return (
     <div className={styles.dashboard}>
-      <div className={styles.header}>
-        <h1>Welcome back, {user?.username}!</h1>
-        <p className={styles.subtitle}>Here's your portfolio overview</p>
-      </div>
-
-      {kycStatus && kycStatus !== 'Approved' && showKycCard && (
-        <KYCStatusCard
-          kycStatus={kycStatus}
-          completionPercentage={kycCompletionPercentage}
-          onDismiss={kycStatus !== 'UnderReview' ? handleDismissKycCard : undefined}
-        />
-      )}
-
-      <div className={styles.metricsGrid}>
-        <MetricCard
-          title="Portfolio Value"
-          value={`$${metrics.portfolioValue.toLocaleString()}`}
-          change={metrics.dayChange}
-          changePercent={metrics.dayChangePercent}
-        />
-        <MetricCard
-          title="Day's Gain/Loss"
-          value={`$${Math.abs(metrics.dayChange).toLocaleString()}`}
-          change={metrics.dayChange}
-          changePercent={metrics.dayChangePercent}
-          showSign
-        />
-        <MetricCard
-          title="Total Return"
-          value={`$${metrics.totalUnrealizedPL.toLocaleString()}`}
-          subtitle={`${metrics.totalReturnPercent > 0 ? '+' : ''}${metrics.totalReturnPercent.toFixed(2)}%`}
-          isPositive={metrics.totalUnrealizedPL > 0}
-        />
-        <MetricCard
-          title="Buying Power"
-          value={`$${metrics.buyingPower.toLocaleString()}`}
-          subtitle="Available to trade"
-        />
-      </div>
-
-      <div className={styles.mainContent}>
-        <div className={styles.leftColumn}>
-          <div className={styles.card}>
-            <h2>Portfolio Performance</h2>
-            <PortfolioChart />
+      <div className={styles.layoutHeader}>
+        <div className={styles.welcomeSection}>
+          <h1>Welcome back, {user?.username}!</h1>
+          <p className={styles.subtitle}>Your Trading Workspace</p>
+        </div>
+        
+        <div className={styles.layoutControls}>
+          <div className={styles.layoutSelector}>
+            <select 
+              value={activeLayoutId || ''} 
+              onChange={(e) => setActiveLayout(e.target.value)}
+              className={styles.layoutSelect}
+            >
+              {layouts.map(layout => (
+                <option key={layout.id} value={layout.id}>
+                  {layout.name}
+                </option>
+              ))}
+            </select>
+            <button onClick={handleCreateLayout} className={styles.iconButton} title="New Layout">
+              +
+            </button>
           </div>
-          <div className={styles.card}>
-            <h2>Recent Activity</h2>
-            <RecentActivity />
+          
+          <div className={styles.layoutActions}>
+            {unsavedChanges && (
+              <span className={styles.unsavedIndicator}>●</span>
+            )}
+            <button onClick={handleSaveLayout} className={styles.actionButton}>
+              Save
+            </button>
+            <button onClick={handleSaveLayoutAs} className={styles.actionButton}>
+              Save As
+            </button>
+          </div>
+
+          <div className={styles.panelAdder}>
+            <select 
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleAddPanel(e.target.value);
+                  e.target.value = '';
+                }
+              }}
+              className={styles.addPanelSelect}
+              defaultValue=""
+            >
+              <option value="" disabled>Add Panel...</option>
+              <option value="watchlist">Watchlist</option>
+              <option value="chart">Chart</option>
+              <option value="quote">Quote</option>
+              <option value="trade">Trade</option>
+              <option value="positions">Positions</option>
+              <option value="portfolio">Portfolio</option>
+              <option value="news">News</option>
+              <option value="market-overview">Market Overview</option>
+              <option value="recent-activity">Recent Activity</option>
+            </select>
           </div>
         </div>
-        <div className={styles.rightColumn}>
-          <div className={styles.card}>
-            <h2>Watchlist</h2>
-            <WatchlistWidget />
-          </div>
-          <div className={styles.card}>
-            <h2>Market Overview</h2>
-            <MarketOverview />
-          </div>
-        </div>
+      </div>
+      
+      <div className={styles.layoutContainer}>
+        <LayoutContainer />
       </div>
     </div>
   );

@@ -1,0 +1,166 @@
+.panel-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.panel-wrapper.minimized {
+  max-height: 36px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-primary);
+  cursor: move;
+  user-select: none;
+  min-height: 36px;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.panel-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.panel-controls button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.panel-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.panel-link {
+  font-size: 12px !important;
+}
+
+.panel-link.linked {
+  color: var(--primary) !important;
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.panel-minimize {
+  font-size: 16px !important;
+  line-height: 1;
+}
+
+.panel-maximize {
+  font-size: 13px !important;
+}
+
+.panel-close {
+  font-size: 18px !important;
+  font-weight: 300;
+}
+
+.panel-close:hover {
+  background-color: rgba(244, 67, 54, 0.2) !important;
+  color: #f44336 !important;
+}
+
+.panel-content {
+  flex: 1;
+  overflow: auto;
+  background-color: var(--bg-secondary);
+}
+
+.panel-error {
+  border-color: var(--error);
+}
+
+.panel-error .panel-header {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-bottom-color: var(--error);
+}
+
+.panel-error .panel-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Linked panel visual indicators */
+.panel-wrapper[style*="border-color"] {
+  box-shadow: 0 0 0 1px var(--border-primary), 
+              0 0 8px 0 rgba(33, 150, 243, 0.3);
+}
+
+.panel-wrapper[style*="border-color"] .panel-header {
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.panel-wrapper[style*="border-color"] .panel-controls button {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.panel-wrapper[style*="border-color"] .panel-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Drag handle styles */
+.panel-header:active {
+  cursor: grabbing;
+}
+
+/* Prevent text selection during drag */
+.react-draggable-dragging .panel-header {
+  cursor: grabbing !important;
+}
+
+.react-draggable-dragging * {
+  user-select: none !important;
+}
+
+/* Animation for minimize/maximize */
+.panel-wrapper {
+  transition: max-height 0.2s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .panel-header {
+    padding: 6px 8px;
+  }
+  
+  .panel-controls button {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+  
+  .panel-title {
+    font-size: 12px;
+  }
+}
