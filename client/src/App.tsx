@@ -12,6 +12,7 @@ import MarketsPage from './pages/Markets/MarketsPage';
 import PortfolioPage from './pages/Portfolio/PortfolioPage';
 import TradingPage from './pages/Trading/TradingPage';
 import AlertsPage from './pages/Alerts/AlertsPage';
+import AccountPage from './pages/Account/AccountPage';
 import TermsOfServicePage from './pages/Legal/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/Legal/PrivacyPolicyPage';
 
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/portfolio" element={<PortfolioPage />} />
                 <Route path="/trading" element={<TradingPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/account" element={<AccountPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
