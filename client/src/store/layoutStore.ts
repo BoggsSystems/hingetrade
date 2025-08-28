@@ -44,25 +44,61 @@ interface LayoutStore {
 
 // Convert backend panel format to frontend format
 const convertPanelFromApi = (panel: any): Panel => {
-  console.log('convertPanelFromApi input:', panel);
+  console.log('=== convertPanelFromApi START ===');
+  console.log('Input panel:', panel);
+  
   const id = panel.id || panel.Id;
   if (!id) {
     console.warn('Panel missing ID:', panel);
   }
+  
+  // Log all position-related properties
+  console.log('Position property checks:');
+  console.log('  panel.Position:', panel.Position);
+  console.log('  panel.position:', panel.position);
+  console.log('  panel.x:', panel.x);
+  console.log('  panel.y:', panel.y);
+  console.log('  panel.X:', panel.X);
+  console.log('  panel.Y:', panel.Y);
+  if (panel.Position) {
+    console.log('  panel.Position.X:', panel.Position.X);
+    console.log('  panel.Position.Y:', panel.Position.Y);
+    console.log('  panel.Position.x:', panel.Position.x);
+    console.log('  panel.Position.y:', panel.Position.y);
+  }
+  
+  // Step-by-step position extraction
+  const x_step1 = panel.Position?.X;
+  const x_step2 = x_step1 ?? panel.Position?.x;
+  const x_step3 = x_step2 ?? panel.position?.x;
+  const x_final = x_step3 ?? 0;
+  console.log(`  X calculation: Position.X(${panel.Position?.X}) ?? Position.x(${panel.Position?.x}) ?? position.x(${panel.position?.x}) ?? 0 = ${x_final}`);
+  
+  const y_step1 = panel.Position?.Y;
+  const y_step2 = y_step1 ?? panel.Position?.y;
+  const y_step3 = y_step2 ?? panel.position?.y;
+  const y_final = y_step3 ?? 0;
+  console.log(`  Y calculation: Position.Y(${panel.Position?.Y}) ?? Position.y(${panel.Position?.y}) ?? position.y(${panel.position?.y}) ?? 0 = ${y_final}`);
+  
+  const position = {
+    x: panel.Position?.X ?? panel.Position?.x ?? panel.position?.x ?? panel.position?.X ?? 0,
+    y: panel.Position?.Y ?? panel.Position?.y ?? panel.position?.y ?? panel.position?.Y ?? 0,
+    w: panel.Position?.W ?? panel.Position?.w ?? panel.position?.w ?? panel.position?.W ?? 4,
+    h: panel.Position?.H ?? panel.Position?.h ?? panel.position?.h ?? panel.position?.H ?? 4,
+    minW: panel.Position?.MinW ?? panel.Position?.minW ?? panel.position?.minW ?? panel.position?.MinW ?? 1,
+    minH: panel.Position?.MinH ?? panel.Position?.minH ?? panel.position?.minH ?? panel.position?.MinH ?? 1,
+  };
+  
+  console.log('Final position object:', position);
+  console.log(`=== convertPanelFromApi END for panel ${id} ===`);
+  
   return {
     id: id,
-    position: {
-      x: panel.Position?.x ?? panel.position?.x ?? 0,
-      y: panel.Position?.y ?? panel.position?.y ?? 0,
-      w: panel.Position?.w ?? panel.position?.w ?? 4,
-      h: panel.Position?.h ?? panel.position?.h ?? 4,
-      minW: panel.Position?.minW ?? panel.position?.minW ?? 1,
-      minH: panel.Position?.minH ?? panel.position?.minH ?? 1,
-    },
+    position: position,
     config: {
       type: panel.Type ?? panel.type,
       title: panel.Title ?? panel.title,
-      ...panel.Config ?? panel.config,
+      ...(panel.Config ?? panel.config ?? {}),
       linkGroup: panel.LinkGroupId ?? panel.linkGroupId,
     },
   };
