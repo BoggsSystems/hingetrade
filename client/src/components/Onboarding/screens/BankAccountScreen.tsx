@@ -303,7 +303,15 @@ const BankAccountScreen: React.FC<BankAccountScreenProps> = ({ onNext, data }) =
           
           <div className="account-details">
             <div className="account-card">
-              <div className="bank-icon">🏦</div>
+              <div className="bank-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 21H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 21V7L12 2L19 7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9 21V12H15V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10 9H10.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 9H14.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               <div className="account-info">
                 <h4>{linkedAccount.bankName}</h4>
                 <p>{linkedAccount.name}</p>
@@ -339,7 +347,15 @@ const BankAccountScreen: React.FC<BankAccountScreenProps> = ({ onNext, data }) =
           
           <div className="account-details">
             <div className="account-card">
-              <div className="bank-icon">🏦</div>
+              <div className="bank-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 21H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 21V7L12 2L19 7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9 21V12H15V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10 9H10.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 9H14.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               <div className="account-info">
                 <h4>{formData.bankName}</h4>
                 <p>{formData.accountType === 'checking' ? 'Checking' : 'Savings'} Account</p>
@@ -511,7 +527,19 @@ const BankAccountScreen: React.FC<BankAccountScreenProps> = ({ onNext, data }) =
         }
         
         .bank-icon {
-          font-size: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+          background-color: rgba(76, 175, 80, 0.1);
+          border-radius: 12px;
+          color: #4caf50;
+        }
+        
+        .bank-icon svg {
+          width: 28px;
+          height: 28px;
         }
         
         .account-info {

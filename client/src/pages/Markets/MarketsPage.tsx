@@ -30,7 +30,11 @@ const MarketsPage: React.FC = () => {
 
       <div className={styles.searchSection}>
         <div className={styles.searchBar}>
-          <span className={styles.searchIcon}>🔍</span>
+          <span className={styles.searchIcon}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
           <input
             type="text"
             placeholder="Search stocks, ETFs, crypto..."
@@ -57,7 +61,12 @@ const MarketsPage: React.FC = () => {
 
       <div className={styles.marketMovers}>
         <div className={styles.moversSection}>
-          <h2>🚀 Top Gainers</h2>
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px', verticalAlign: 'text-bottom' }}>
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
+            </svg>
+            Top Gainers
+          </h2>
           <div className={styles.moversList}>
             {moversLoading ? (
               <>
@@ -91,7 +100,12 @@ const MarketsPage: React.FC = () => {
         </div>
 
         <div className={styles.moversSection}>
-          <h2>📉 Top Losers</h2>
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px', verticalAlign: 'text-bottom' }}>
+              <path d="M7 14L12 9L17 14M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Top Losers
+          </h2>
           <div className={styles.moversList}>
             {moversLoading ? (
               <>

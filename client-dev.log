@@ -46,3 +46,14 @@ You are using Node.js 20.17.0. Vite requires Node.js version 20.19+ or 22.12+. P
 10:00:59 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
 10:01:11 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
 10:01:20 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:05:57 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:06:05 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:06:32 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:06:42 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:06:49 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:07:45 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:08:58 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:09:51 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:10:14 PM [vite] (client) hmr update /src/pages/Account/AccountPage.tsx
+11:17:52 PM [vite] (client) ✨ new dependencies optimized: react-plaid-link
+11:17:52 PM [vite] (client) ✨ optimized dependencies changed. reloading

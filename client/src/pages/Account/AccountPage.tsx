@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { fundingService, BankAccount, Transfer } from '../../services/fundingService';
+import { fundingService } from '../../services/fundingService';
+import type { BankAccount, Transfer } from '../../services/fundingService';
+import { PlaidLinkButton } from '../../components/PlaidLink/PlaidLinkButton';
 import styles from './AccountPage.module.css';
 
 type TabType = 'profile' | 'banking' | 'settings';
@@ -55,12 +57,6 @@ const AccountPage: React.FC = () => {
                   {user?.kycStatus || 'Not Started'}
                 </p>
               </div>
-              {user?.alpacaAccountId && (
-                <div className={styles.infoItem}>
-                  <label>Account Number</label>
-                  <p>{user.alpacaAccountId}</p>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -82,7 +78,7 @@ const AccountPage: React.FC = () => {
 
 // Banking Section Component
 const BankingSection: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Currently not used but may be needed later
   const [showDepositForm, setShowDepositForm] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -115,9 +111,12 @@ const BankingSection: React.FC = () => {
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!depositAmount || parseFloat(depositAmount) <= 0) return;
+
+    // Find active bank account
+    const activeBank = bankAccounts.find(bank => bank.status === 'ACTIVE') || bankAccounts[0];
     
-    if (bankAccounts.length === 0) {
-      alert('Please link a bank account first');
+    if (!activeBank) {
+      alert('No active bank account found. Please link a bank account first.');
       return;
     }
 
@@ -126,17 +125,23 @@ const BankingSection: React.FC = () => {
       const result = await fundingService.initiateAchTransfer({
         amount: parseFloat(depositAmount),
         direction: 'INCOMING',
-        relationshipId: bankAccounts[0]?.id // Use first bank account
+        relationshipId: activeBank.id
       });
       
-      alert(result.message);
+      // Show success message
+      if (result.message) {
+        alert(result.message);
+      }
+      
       setDepositAmount('');
       setShowDepositForm(false);
+      
       // Reload transfers
       loadBankingData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Deposit failed:', error);
-      alert('Failed to initiate deposit. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to initiate deposit. Please try again.';
+      alert(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -146,12 +151,24 @@ const BankingSection: React.FC = () => {
     <div className={styles.bankingSection}>
       <div className={styles.bankingHeader}>
         <h2>Banking & Funding</h2>
-        <button 
-          className={styles.primaryButton}
-          onClick={() => setShowDepositForm(!showDepositForm)}
-        >
-          {showDepositForm ? 'Cancel' : 'Deposit Funds'}
-        </button>
+        {bankAccounts.length > 0 ? (
+          <button 
+            className={styles.primaryButton}
+            onClick={() => setShowDepositForm(!showDepositForm)}
+          >
+            {showDepositForm ? 'Cancel' : 'Deposit Funds'}
+          </button>
+        ) : (
+          <PlaidLinkButton 
+            onSuccess={() => {
+              loadBankingData();
+              setShowDepositForm(false);
+            }}
+            onExit={() => {
+              console.log('Plaid Link exited');
+            }}
+          />
+        )}
       </div>
 
       {showDepositForm && (
@@ -176,18 +193,12 @@ const BankingSection: React.FC = () => {
           </div>
           
           <div className={styles.bankInfo}>
-            {bankAccounts.length > 0 ? (
-              <>
-                <p><strong>From:</strong> {bankAccounts[0].nickname || 'Bank Account'} ****{bankAccounts[0].bankAccountNumber.slice(-4)}</p>
-                <p className={styles.disclaimer}>
-                  ACH transfers typically take 3-5 business days to complete.
-                </p>
-              </>
-            ) : (
-              <p className={styles.disclaimer}>
-                Please link a bank account to enable deposits.
-              </p>
+            {bankAccounts.length > 0 && (
+              <p><strong>From:</strong> {bankAccounts[0].nickname || 'Bank Account'} ****{bankAccounts[0].bankAccountNumber?.slice(-4) || ''}</p>
             )}
+            <p className={styles.disclaimer}>
+              ACH transfers typically take 3-5 business days to complete.
+            </p>
           </div>
 
           <div className={styles.formActions}>
@@ -209,9 +220,17 @@ const BankingSection: React.FC = () => {
         ) : bankAccounts.length === 0 ? (
           <div className={styles.noBankAccounts}>
             <p>No bank accounts linked yet</p>
-            <button className={styles.addBankButton}>
-              + Link Your First Bank Account
-            </button>
+            <div className={styles.plaidLinkWrapper}>
+              <PlaidLinkButton 
+                onSuccess={() => {
+                  loadBankingData();
+                  setShowDepositForm(false);
+                }}
+                onExit={() => {
+                  console.log('Plaid Link exited');
+                }}
+              />
+            </div>
           </div>
         ) : (
           <>
@@ -226,7 +245,7 @@ const BankingSection: React.FC = () => {
                 <div className={styles.bankDetails}>
                   <p className={styles.bankName}>{account.nickname || 'Bank Account'}</p>
                   <p className={styles.accountNumber}>
-                    {account.bankAccountType} ****{account.bankAccountNumber.slice(-4)}
+                    {account.bankAccountType} ****{account.bankAccountNumber?.slice(-4) || ''}
                   </p>
                 </div>
                 <div className={styles.bankActions}>
@@ -236,9 +255,16 @@ const BankingSection: React.FC = () => {
                 </div>
               </div>
             ))}
-            <button className={styles.addBankButton}>
-              + Add Another Bank Account
-            </button>
+            <div className={styles.addBankWrapper}>
+              <PlaidLinkButton 
+                onSuccess={() => {
+                  loadBankingData();
+                }}
+                onExit={() => {
+                  console.log('Plaid Link exited');
+                }}
+              />
+            </div>
           </>
         )}
       </div>

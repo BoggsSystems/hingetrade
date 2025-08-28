@@ -3,7 +3,6 @@ import type { IPanelComponentProps } from '../../types/panel';
 import './MockPanels.css';
 
 const MockQuotePanel: React.FC<IPanelComponentProps> = ({
-  id,
   config,
   symbol = 'AAPL',
   onSymbolChange,

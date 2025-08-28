@@ -3,7 +3,6 @@ import type { IPanelComponentProps } from '../../types/panel';
 import './MockPanels.css';
 
 const MockPositionsPanel: React.FC<IPanelComponentProps> = ({
-  id,
   config,
   onReady,
 }) => {

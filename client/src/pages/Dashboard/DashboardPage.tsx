@@ -19,89 +19,113 @@ const DashboardPage: React.FC = () => {
     createLinkGroup,
     unsavedChanges,
     saveLayout,
-    saveLayoutAs
+    saveLayoutAs,
+    loadLayouts,
+    isLoading,
+    error
   } = useLayoutStore();
 
-  // Initialize with default layout on first load
+  // Load layouts on mount
   useEffect(() => {
-    if (layouts.length === 0) {
-      const layoutId = createLayout('Main Workspace');
-      setActiveLayout(layoutId);
+    loadLayouts();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Create default layout if none exist after loading
+  useEffect(() => {
+    if (!isLoading && layouts.length === 0) {
+      const createDefaultLayout = async () => {
+        try {
+          const layoutId = await createLayout('Main Workspace');
+          setActiveLayout(layoutId);
+          
+          // Create default link groups
+          createLinkGroup('Primary', '#4CAF50');
+          createLinkGroup('Secondary', '#2196F3');
+          createLinkGroup('Tertiary', '#FF9800');
+          
+          // Add default trading panels with unique timestamps
+          const timestamp = Date.now();
+          const defaultPanels: Panel[] = [
+            {
+              id: `panel-${timestamp}-1`,
+              position: { x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
+              config: { type: 'watchlist', title: 'Watchlist' }
+            },
+            {
+              id: `panel-${timestamp}-2`,
+              position: { x: 3, y: 0, w: 6, h: 6, minW: 4, minH: 4 },
+              config: { type: 'chart', title: 'Price Chart' }
+            },
+            {
+              id: `panel-${timestamp}-3`,
+              position: { x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
+              config: { type: 'quote', title: 'Quote' }
+            },
+            {
+              id: `panel-${timestamp}-4`,
+              position: { x: 0, y: 4, w: 3, h: 5, minW: 2, minH: 3 },
+              config: { type: 'portfolio', title: 'Portfolio Overview' }
+            },
+            {
+              id: `panel-${timestamp}-5`,
+              position: { x: 3, y: 6, w: 6, h: 4, minW: 4, minH: 3 },
+              config: { type: 'positions', title: 'Positions' }
+            },
+            {
+              id: `panel-${timestamp}-6`,
+              position: { x: 9, y: 4, w: 3, h: 6, minW: 2, minH: 4 },
+              config: { type: 'trade', title: 'Order Entry' }
+            },
+            {
+              id: `panel-${timestamp}-7`,
+              position: { x: 0, y: 9, w: 4, h: 4, minW: 3, minH: 3 },
+              config: { type: 'market-overview', title: 'Market Overview' }
+            },
+            {
+              id: `panel-${timestamp}-8`,
+              position: { x: 4, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
+              config: { type: 'recent-activity', title: 'Recent Activity' }
+            },
+            {
+              id: `panel-${timestamp}-9`,
+              position: { x: 8, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
+              config: { type: 'news', title: 'Market News' }
+            },
+          ];
+          
+          defaultPanels.forEach((panel, index) => {
+            setTimeout(() => addPanel(panel), index * 10);
+          });
+        } catch (error) {
+          console.error('Failed to create default layout:', error);
+        }
+      };
       
-      // Create default link groups
-      createLinkGroup('Primary', '#4CAF50');
-      createLinkGroup('Secondary', '#2196F3');
-      createLinkGroup('Tertiary', '#FF9800');
-      
-      // Add default trading panels with unique timestamps
-      const timestamp = Date.now();
-      const defaultPanels: Panel[] = [
-        {
-          id: `panel-${timestamp}-1`,
-          position: { x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
-          config: { type: 'watchlist', title: 'Watchlist' }
-        },
-        {
-          id: `panel-${timestamp}-2`,
-          position: { x: 3, y: 0, w: 6, h: 6, minW: 4, minH: 4 },
-          config: { type: 'chart', title: 'Price Chart' }
-        },
-        {
-          id: `panel-${timestamp}-3`,
-          position: { x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
-          config: { type: 'quote', title: 'Quote' }
-        },
-        {
-          id: `panel-${timestamp}-4`,
-          position: { x: 0, y: 4, w: 3, h: 5, minW: 2, minH: 3 },
-          config: { type: 'portfolio', title: 'Portfolio Overview' }
-        },
-        {
-          id: `panel-${timestamp}-5`,
-          position: { x: 3, y: 6, w: 6, h: 4, minW: 4, minH: 3 },
-          config: { type: 'positions', title: 'Positions' }
-        },
-        {
-          id: `panel-${timestamp}-6`,
-          position: { x: 9, y: 4, w: 3, h: 6, minW: 2, minH: 4 },
-          config: { type: 'trade', title: 'Order Entry' }
-        },
-        {
-          id: `panel-${timestamp}-7`,
-          position: { x: 0, y: 9, w: 4, h: 4, minW: 3, minH: 3 },
-          config: { type: 'market-overview', title: 'Market Overview' }
-        },
-        {
-          id: `panel-${timestamp}-8`,
-          position: { x: 4, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
-          config: { type: 'recent-activity', title: 'Recent Activity' }
-        },
-        {
-          id: `panel-${timestamp}-9`,
-          position: { x: 8, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
-          config: { type: 'news', title: 'Market News' }
-        },
-      ];
-      
-      defaultPanels.forEach((panel, index) => {
-        setTimeout(() => addPanel(panel), index * 10);
-      });
+      createDefaultLayout();
     }
-  }, [layouts.length, createLayout, setActiveLayout, createLinkGroup, addPanel]);
+  }, [isLoading, layouts.length, createLayout, setActiveLayout, createLinkGroup, addPanel]);
 
   const handleCreateLayout = () => {
     setShowNewLayoutModal(true);
   };
 
-  const handleConfirmNewLayout = (name: string) => {
-    const layoutId = createLayout(name);
-    setActiveLayout(layoutId);
-    setShowNewLayoutModal(false);
+  const handleConfirmNewLayout = async (name: string) => {
+    try {
+      const layoutId = await createLayout(name);
+      setActiveLayout(layoutId);
+      setShowNewLayoutModal(false);
+    } catch (error) {
+      console.error('Failed to create layout:', error);
+    }
   };
 
-  const handleSaveLayout = () => {
+  const handleSaveLayout = async () => {
     if (activeLayoutId) {
-      saveLayout();
+      try {
+        await saveLayout();
+      } catch (error) {
+        console.error('Failed to save layout:', error);
+      }
     }
   };
 
@@ -109,9 +133,13 @@ const DashboardPage: React.FC = () => {
     setShowSaveLayoutModal(true);
   };
 
-  const handleConfirmSaveAs = (name: string) => {
-    saveLayoutAs(name);
-    setShowSaveLayoutModal(false);
+  const handleConfirmSaveAs = async (name: string) => {
+    try {
+      await saveLayoutAs(name);
+      setShowSaveLayoutModal(false);
+    } catch (error) {
+      console.error('Failed to save layout as:', error);
+    }
   };
 
   const handleAddPanel = (type: string) => {
@@ -147,6 +175,37 @@ const DashboardPage: React.FC = () => {
     
     addPanel(newPanel);
   };
+
+  // Auto-save layout changes
+  useEffect(() => {
+    const saveTimeout = setTimeout(() => {
+      if (unsavedChanges && activeLayoutId) {
+        saveLayout();
+      }
+    }, 2000); // Auto-save after 2 seconds of inactivity
+    
+    return () => clearTimeout(saveTimeout);
+  }, [unsavedChanges, activeLayoutId, saveLayout]);
+
+  if (isLoading) {
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.loadingContainer}>
+          <p>Loading layouts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.errorContainer}>
+          <p>Error: {error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.dashboard}>

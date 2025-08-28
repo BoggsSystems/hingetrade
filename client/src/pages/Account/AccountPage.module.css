@@ -221,6 +221,16 @@
   color: var(--color-text-secondary);
 }
 
+.noAccountsMessage {
+  padding: 1rem;
+  text-align: center;
+}
+
+.noAccountsMessage p {
+  margin-bottom: 1rem;
+  color: var(--color-text-secondary);
+}
+
 .formActions {
   display: flex;
   justify-content: flex-end;
@@ -339,6 +349,14 @@
 .bankStatus.inactive {
   background: var(--color-text-tertiary);
   color: var(--color-text-secondary);
+}
+
+.plaidLinkWrapper {
+  margin-top: 1rem;
+}
+
+.addBankWrapper {
+  margin-top: 1rem;
 }
 
 .addBankButton {

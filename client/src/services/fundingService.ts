@@ -42,6 +42,28 @@ export interface AchTransferResponse {
   message: string;
 }
 
+export interface PlaidLinkTokenRequest {
+  userId: string;
+  userEmail: string;
+}
+
+export interface PlaidLinkTokenResponse {
+  link_token: string;
+  linkToken?: string;
+  expiration: string;
+}
+
+export interface PlaidAchRelationshipRequest {
+  publicToken: string;
+  accountId: string;
+}
+
+export interface PlaidAchRelationshipResponse {
+  relationshipId: string;
+  status: string;
+  message: string;
+}
+
 export const fundingService = {
   async getBankAccounts(): Promise<BankAccount[]> {
     const response = await api.get<BankAccount[]>('/funding/bank-accounts');
@@ -62,4 +84,14 @@ export const fundingService = {
     const response = await api.get<Transfer>(`/funding/transfers/${transferId}`);
     return response.data;
   },
+
+  async createPlaidLinkToken(request: PlaidLinkTokenRequest): Promise<PlaidLinkTokenResponse> {
+    const response = await api.post<PlaidLinkTokenResponse>('/funding/plaid/link-token', request);
+    return response.data;
+  },
+
+  async createAchRelationship(request: PlaidAchRelationshipRequest): Promise<PlaidAchRelationshipResponse> {
+    const response = await api.post<PlaidAchRelationshipResponse>('/funding/plaid/create-ach-relationship', request);
+    return response.data;
+  }
 };
