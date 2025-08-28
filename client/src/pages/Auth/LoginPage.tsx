@@ -25,18 +25,20 @@ const LoginPage: React.FC = () => {
       
       // Give a moment for the auth state to update
       setTimeout(() => {
-        const currentUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
+        // const currentUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
         
-        if (currentUser.kycStatus === 'UnderReview') {
-          setError('Your KYC application is under review. You will receive an email once it is approved.');
-          setIsLoading(false);
-          return;
-        }
+        // Temporarily disabled KYC under review check
+        // if (currentUser.kycStatus === 'UnderReview') {
+        //   setError('Your KYC application is under review. You will receive an email once it is approved.');
+        //   setIsLoading(false);
+        //   return;
+        // }
         
-        if (currentUser.kycStatus !== 'Approved') {
-          navigate('/onboarding');
-          return;
-        }
+        // Temporarily disabled KYC approval check
+        // if (currentUser.kycStatus !== 'Approved') {
+        //   navigate('/onboarding');
+        //   return;
+        // }
         
         navigate(from, { replace: true });
       }, 100);
