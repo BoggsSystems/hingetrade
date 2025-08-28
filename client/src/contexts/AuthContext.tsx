@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { api } from '../services/api';
 import type { User } from '../types';
 import { debugLogger } from '../utils/debugLogger';
+import useLayoutStore from '../store/layoutStore';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -83,6 +84,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setTokens(null);
     setUser(null);
     setIsAuthenticated(false);
+    // Reset layout store to prevent cross-user data leakage
+    useLayoutStore.getState().resetStore();
   };
 
   const saveAuthState = (authTokens: AuthTokens, authUser: User) => {

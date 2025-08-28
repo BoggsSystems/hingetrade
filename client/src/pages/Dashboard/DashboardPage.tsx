@@ -25,13 +25,22 @@ const DashboardPage: React.FC = () => {
     error
   } = useLayoutStore();
 
-  // Load layouts on mount
+  // Load layouts on mount and when user changes
   useEffect(() => {
-    loadLayouts();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    console.log('DashboardPage: useEffect - loading layouts for user:', user?.id);
+    if (user?.id) {
+      loadLayouts();
+    }
+    
+    return () => {
+      console.log('DashboardPage: cleanup - component unmounting');
+    };
+  }, [user?.id, loadLayouts]);
 
   // Create default layout if none exist after loading
   useEffect(() => {
+    console.log('DashboardPage: createDefaultLayout logic COMMENTED OUT');
+    return;
     if (!isLoading && layouts.length === 0) {
       const createDefaultLayout = async () => {
         try {
@@ -176,16 +185,7 @@ const DashboardPage: React.FC = () => {
     addPanel(newPanel);
   };
 
-  // Auto-save layout changes
-  useEffect(() => {
-    const saveTimeout = setTimeout(() => {
-      if (unsavedChanges && activeLayoutId) {
-        saveLayout();
-      }
-    }, 2000); // Auto-save after 2 seconds of inactivity
-    
-    return () => clearTimeout(saveTimeout);
-  }, [unsavedChanges, activeLayoutId, saveLayout]);
+  // Removed auto-save - now only saves when user clicks Save button
 
   if (isLoading) {
     return (
@@ -225,11 +225,14 @@ const DashboardPage: React.FC = () => {
               {layouts.length === 0 && (
                 <option value="">No layouts</option>
               )}
-              {layouts.map(layout => (
-                <option key={layout.id} value={layout.id}>
-                  {layout.name}
-                </option>
-              ))}
+              {layouts.map(layout => {
+                console.log('Layout in dropdown:', layout);
+                return (
+                  <option key={layout.id} value={layout.id}>
+                    {layout.name || 'Unnamed Layout'}
+                  </option>
+                );
+              })}
             </select>
             <button onClick={handleCreateLayout} className={styles.iconButton} title="New Layout">
               +

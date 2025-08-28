@@ -43,23 +43,30 @@ interface LayoutStore {
 
 
 // Convert backend panel format to frontend format
-const convertPanelFromApi = (panel: any): Panel => ({
-  id: panel.id,
-  position: {
-    x: panel.position.x,
-    y: panel.position.y,
-    w: panel.position.w,
-    h: panel.position.h,
-    minW: panel.position.minW,
-    minH: panel.position.minH,
-  },
-  config: {
-    type: panel.type,
-    title: panel.title,
-    ...panel.config,
-    linkGroup: panel.linkGroupId,
-  },
-});
+const convertPanelFromApi = (panel: any): Panel => {
+  console.log('convertPanelFromApi input:', panel);
+  const id = panel.id || panel.Id;
+  if (!id) {
+    console.warn('Panel missing ID:', panel);
+  }
+  return {
+    id: id,
+    position: {
+      x: panel.Position?.x ?? panel.position?.x ?? 0,
+      y: panel.Position?.y ?? panel.position?.y ?? 0,
+      w: panel.Position?.w ?? panel.position?.w ?? 4,
+      h: panel.Position?.h ?? panel.position?.h ?? 4,
+      minW: panel.Position?.minW ?? panel.position?.minW ?? 1,
+      minH: panel.Position?.minH ?? panel.position?.minH ?? 1,
+    },
+    config: {
+      type: panel.Type ?? panel.type,
+      title: panel.Title ?? panel.title,
+      ...panel.Config ?? panel.config,
+      linkGroup: panel.LinkGroupId ?? panel.linkGroupId,
+    },
+  };
+};
 
 // Convert frontend panel format to backend format
 const convertPanelToApi = (panel: Panel) => {
@@ -88,26 +95,33 @@ const convertPanelToApi = (panel: Panel) => {
 
 // Convert backend layout format to frontend format
 const convertLayoutFromApi = (layout: any): Layout => ({
-  id: layout.id,
-  name: layout.name,
-  panels: layout.panels.map(convertPanelFromApi),
-  gridConfig: {
-    cols: layout.gridConfig.columns,
-    rowHeight: layout.gridConfig.rowHeight,
+  id: layout.id || layout.Id,
+  name: layout.name || layout.Name,
+  panels: (layout.panels || layout.Panels || []).map(convertPanelFromApi),
+  gridConfig: (layout.gridConfig || layout.GridConfig) ? {
+    cols: (layout.gridConfig || layout.GridConfig).columns || (layout.gridConfig || layout.GridConfig).Columns || 12,
+    rowHeight: (layout.gridConfig || layout.GridConfig).rowHeight || (layout.gridConfig || layout.GridConfig).RowHeight || 30,
     margin: [10, 10],
     containerPadding: [10, 10],
-    compactType: layout.gridConfig.compactType || 'vertical',
+    compactType: (layout.gridConfig || layout.GridConfig).compactType || (layout.gridConfig || layout.GridConfig).CompactType || 'vertical',
+    preventCollision: false,
+  } : {
+    cols: 12,
+    rowHeight: 30,
+    margin: [10, 10],
+    containerPadding: [10, 10],
+    compactType: 'vertical',
     preventCollision: false,
   },
-  linkGroups: layout.linkGroups.map((group: any) => ({
-    id: group.id,
-    name: group.name,
-    color: group.color,
-    symbol: group.symbol,
+  linkGroups: (layout.linkGroups || layout.LinkGroups || []).map((group: any) => ({
+    id: group.id || group.Id,
+    name: group.name || group.Name,
+    color: group.color || group.Color,
+    symbol: group.symbol || group.Symbol,
   })),
-  createdAt: new Date(layout.createdAt),
-  updatedAt: new Date(layout.updatedAt),
-  isDefault: layout.isDefault,
+  createdAt: new Date(layout.createdAt || layout.CreatedAt),
+  updatedAt: new Date(layout.updatedAt || layout.UpdatedAt),
+  isDefault: layout.isDefault || layout.IsDefault || false,
 });
 
 const useLayoutStore = create<LayoutStore>((set, get) => ({
@@ -120,8 +134,18 @@ const useLayoutStore = create<LayoutStore>((set, get) => ({
 
   // Layout CRUD actions
   loadLayouts: async () => {
+    console.log('layoutStore: loadLayouts called');
+    const state = get();
+    
+    // Prevent concurrent requests
+    if (state.isLoading) {
+      console.log('layoutStore: already loading, skipping');
+      return;
+    }
+    
     set({ isLoading: true, error: null });
     try {
+      console.log('layoutStore: calling layoutService.getLayouts()');
       const layouts = await layoutService.getLayouts();
       const convertedLayouts = layouts.map(convertLayoutFromApi);
       
@@ -176,6 +200,8 @@ const useLayoutStore = create<LayoutStore>((set, get) => ({
       }
       
       if (updates.panels !== undefined) {
+        console.log('updateLayout: Converting panels to API format. Panel count:', updates.panels.length);
+        console.log('updateLayout: Panel IDs:', updates.panels.map(p => p.id));
         request.panels = updates.panels.map(p => convertPanelToApi(p));
       }
       
@@ -199,6 +225,7 @@ const useLayoutStore = create<LayoutStore>((set, get) => ({
         };
       }
 
+      console.log('Sending update layout request:', JSON.stringify(request, null, 2));
       const updatedLayout = await layoutService.updateLayout(layoutId, request);
       const convertedLayout = convertLayoutFromApi(updatedLayout);
       
@@ -248,7 +275,15 @@ const useLayoutStore = create<LayoutStore>((set, get) => ({
     const activeLayout = state.layouts.find(l => l.id === state.activeLayoutId);
     if (!activeLayout) return;
 
-    await get().updateLayout(activeLayout.id, activeLayout);
+    console.log('saveLayout: activeLayout panels:', activeLayout.panels);
+    console.log('saveLayout: activeLayout linkGroups:', activeLayout.linkGroups);
+    
+    // Pass only the fields that updateLayout expects
+    await get().updateLayout(activeLayout.id, {
+      panels: activeLayout.panels,
+      linkGroups: activeLayout.linkGroups,
+      gridConfig: activeLayout.gridConfig,
+    });
   },
 
   saveLayoutAs: async (name: string) => {
@@ -550,6 +585,7 @@ const useLayoutStore = create<LayoutStore>((set, get) => ({
   },
 
   resetStore: () => {
+    console.log('layoutStore: resetStore called - clearing all layout data');
     set({
       layouts: [],
       activeLayoutId: null,

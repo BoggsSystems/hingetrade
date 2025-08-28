@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -16,9 +16,16 @@ class ApiClient {
     // Request interceptor to add auth token
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        const authTokensStr = localStorage.getItem('auth_tokens');
+        if (authTokensStr) {
+          try {
+            const authTokens = JSON.parse(authTokensStr);
+            if (authTokens.accessToken) {
+              config.headers.Authorization = `Bearer ${authTokens.accessToken}`;
+            }
+          } catch (e) {
+            console.error('Failed to parse auth tokens:', e);
+          }
         }
         return config;
       },
@@ -33,7 +40,8 @@ class ApiClient {
       async (error) => {
         if (error.response?.status === 401) {
           // Handle unauthorized access
-          localStorage.removeItem('authToken');
+          localStorage.removeItem('auth_tokens');
+          localStorage.removeItem('auth_user');
           window.location.href = '/login';
         }
         return Promise.reject(error);
