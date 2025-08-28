@@ -85,6 +85,17 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-notification: 1080;
+
+  /* Background color variables for consistent theming */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --border-primary: #333333;
+  --text-primary: #e6e6e6;
+  --text-secondary: #a0a0a0;
+  --border-color: #333333;
+  --primary: #00b15c;
+  --accent-primary: #00b15c;
+  --error: #ff3b30;
 }
 
 * {
