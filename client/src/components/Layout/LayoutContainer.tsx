@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import GridLayout from 'react-grid-layout';
 import type { Layout as GridLayoutItem } from 'react-grid-layout';
-import useLayoutStore from '../../store/layoutStore';
+import useLayoutStore, { useActiveLayout } from '../../store/layoutStore';
 import PanelWrapper from './PanelWrapper';
 import type { Panel } from '../../types/layout';
 import 'react-grid-layout/css/styles.css';
@@ -22,7 +22,8 @@ const LayoutContainer: React.FC = () => {
     window.addEventListener('resize', updateWidth);
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
-  const { activeLayout, updatePanelPositions } = useLayoutStore();
+  const { updatePanelPositions } = useLayoutStore();
+  const activeLayout = useActiveLayout();
 
   const gridLayouts: GridLayoutItem[] = useMemo(() => {
     if (!activeLayout) return [];
@@ -77,7 +78,7 @@ const LayoutContainer: React.FC = () => {
         isDraggable={true}
         isResizable={true}
         onLayoutChange={handleLayoutChange}
-        draggableHandle=".panel-header"
+        draggableHandle=".panel-drag-handle"
         resizeHandles={['s', 'e', 'se']}
       >
         {activeLayout.panels.map((panel: Panel) => (

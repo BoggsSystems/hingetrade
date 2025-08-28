@@ -1,15 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import useLayoutStore from '../../store/layoutStore';
 import LayoutContainer from '../../components/Layout/LayoutContainer';
+import SaveLayoutModal from '../../components/Common/SaveLayoutModal';
 import type { Panel } from '../../types/layout';
 import styles from './DashboardPage.module.css';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const [showSaveLayoutModal, setShowSaveLayoutModal] = useState(false);
+  const [showNewLayoutModal, setShowNewLayoutModal] = useState(false);
   const { 
     layouts, 
-    activeLayoutId, 
+    activeLayoutId,
     createLayout, 
     addPanel, 
     setActiveLayout,
@@ -30,65 +33,70 @@ const DashboardPage: React.FC = () => {
       createLinkGroup('Secondary', '#2196F3');
       createLinkGroup('Tertiary', '#FF9800');
       
-      // Add default trading panels
+      // Add default trading panels with unique timestamps
+      const timestamp = Date.now();
       const defaultPanels: Panel[] = [
         {
-          id: `panel-${Date.now()}-1`,
+          id: `panel-${timestamp}-1`,
           position: { x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
           config: { type: 'watchlist', title: 'Watchlist' }
         },
         {
-          id: `panel-${Date.now()}-2`,
+          id: `panel-${timestamp}-2`,
           position: { x: 3, y: 0, w: 6, h: 6, minW: 4, minH: 4 },
           config: { type: 'chart', title: 'Price Chart' }
         },
         {
-          id: `panel-${Date.now()}-3`,
+          id: `panel-${timestamp}-3`,
           position: { x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 3 },
           config: { type: 'quote', title: 'Quote' }
         },
         {
-          id: `panel-${Date.now()}-4`,
+          id: `panel-${timestamp}-4`,
           position: { x: 0, y: 4, w: 3, h: 5, minW: 2, minH: 3 },
           config: { type: 'portfolio', title: 'Portfolio Overview' }
         },
         {
-          id: `panel-${Date.now()}-5`,
+          id: `panel-${timestamp}-5`,
           position: { x: 3, y: 6, w: 6, h: 4, minW: 4, minH: 3 },
           config: { type: 'positions', title: 'Positions' }
         },
         {
-          id: `panel-${Date.now()}-6`,
+          id: `panel-${timestamp}-6`,
           position: { x: 9, y: 4, w: 3, h: 6, minW: 2, minH: 4 },
           config: { type: 'trade', title: 'Order Entry' }
         },
         {
-          id: `panel-${Date.now()}-7`,
+          id: `panel-${timestamp}-7`,
           position: { x: 0, y: 9, w: 4, h: 4, minW: 3, minH: 3 },
           config: { type: 'market-overview', title: 'Market Overview' }
         },
         {
-          id: `panel-${Date.now()}-8`,
+          id: `panel-${timestamp}-8`,
           position: { x: 4, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
           config: { type: 'recent-activity', title: 'Recent Activity' }
         },
         {
-          id: `panel-${Date.now()}-9`,
+          id: `panel-${timestamp}-9`,
           position: { x: 8, y: 10, w: 4, h: 3, minW: 3, minH: 2 },
           config: { type: 'news', title: 'Market News' }
         },
       ];
       
-      defaultPanels.forEach(panel => addPanel(panel));
+      defaultPanels.forEach((panel, index) => {
+        setTimeout(() => addPanel(panel), index * 10);
+      });
     }
-  }, []);
+  }, [layouts.length, createLayout, setActiveLayout, createLinkGroup, addPanel]);
 
   const handleCreateLayout = () => {
-    const name = prompt('Enter layout name:');
-    if (name) {
-      const layoutId = createLayout(name);
-      setActiveLayout(layoutId);
-    }
+    setShowNewLayoutModal(true);
+  };
+
+  const handleConfirmNewLayout = (name: string) => {
+    const layoutId = createLayout(name);
+    setActiveLayout(layoutId);
+    setShowNewLayoutModal(false);
   };
 
   const handleSaveLayout = () => {
@@ -98,10 +106,12 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleSaveLayoutAs = () => {
-    const name = prompt('Save layout as:');
-    if (name) {
-      saveLayoutAs(name);
-    }
+    setShowSaveLayoutModal(true);
+  };
+
+  const handleConfirmSaveAs = (name: string) => {
+    saveLayoutAs(name);
+    setShowSaveLayoutModal(false);
   };
 
   const handleAddPanel = (type: string) => {
@@ -153,6 +163,9 @@ const DashboardPage: React.FC = () => {
               onChange={(e) => setActiveLayout(e.target.value)}
               className={styles.layoutSelect}
             >
+              {layouts.length === 0 && (
+                <option value="">No layouts</option>
+              )}
               {layouts.map(layout => (
                 <option key={layout.id} value={layout.id}>
                   {layout.name}
@@ -205,6 +218,26 @@ const DashboardPage: React.FC = () => {
       <div className={styles.layoutContainer}>
         <LayoutContainer />
       </div>
+
+      <SaveLayoutModal
+        isOpen={showSaveLayoutModal}
+        title="Save layout as:"
+        placeholder="Enter layout name"
+        confirmText="OK"
+        cancelText="Cancel"
+        onConfirm={handleConfirmSaveAs}
+        onCancel={() => setShowSaveLayoutModal(false)}
+      />
+
+      <SaveLayoutModal
+        isOpen={showNewLayoutModal}
+        title="Enter layout name:"
+        placeholder="New layout name"
+        confirmText="OK"
+        cancelText="Cancel"
+        onConfirm={handleConfirmNewLayout}
+        onCancel={() => setShowNewLayoutModal(false)}
+      />
     </div>
   );
 };

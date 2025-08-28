@@ -1,0 +1,152 @@
+.save-layout-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.save-layout-modal {
+  position: relative;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  min-width: 320px;
+  max-width: 480px;
+  margin: auto;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.save-layout-modal-header {
+  padding: var(--spacing-lg, 24px);
+  padding-bottom: var(--spacing-md, 16px);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.save-layout-modal-header h3 {
+  margin: 0;
+  font-size: var(--font-lg, 1.25rem);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.save-layout-modal-body {
+  padding: var(--spacing-lg, 24px);
+}
+
+.save-layout-input {
+  width: 100%;
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  font-size: var(--font-md, 1rem);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm, 4px);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.save-layout-input:focus {
+  border-color: var(--primary, #00b15c);
+  box-shadow: 0 0 0 2px rgba(0, 177, 92, 0.2);
+}
+
+.save-layout-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.save-layout-modal-footer {
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm, 8px);
+  border-top: 1px solid var(--border-primary);
+}
+
+.save-layout-btn {
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  font-size: var(--font-sm, 0.875rem);
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  min-width: 80px;
+}
+
+.save-layout-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.5);
+}
+
+.save-layout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.save-layout-btn-cancel {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+.save-layout-btn-cancel:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--text-secondary);
+}
+
+.save-layout-btn-confirm {
+  background-color: var(--primary, #00b15c);
+  color: white;
+  border-color: var(--primary, #00b15c);
+}
+
+.save-layout-btn-confirm:hover:not(:disabled) {
+  background-color: #009d52;
+  border-color: #009d52;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .save-layout-modal {
+    min-width: 280px;
+    margin: 0 var(--spacing-md, 16px);
+  }
+  
+  .save-layout-modal-header,
+  .save-layout-modal-body {
+    padding: var(--spacing-md, 16px);
+  }
+  
+  .save-layout-modal-footer {
+    padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  }
+}

@@ -20,10 +20,6 @@ const MockChartPanel: React.FC<IPanelComponentProps> = ({
 
   return (
     <div className="mock-panel mock-chart-panel">
-      <div className="mock-panel-header">
-        <h3>Chart Panel</h3>
-        <span className="panel-id">{id}</span>
-      </div>
       <div className="mock-panel-content">
         <div className="symbol-input">
           <label>Symbol:</label>

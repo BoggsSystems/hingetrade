@@ -1,34 +1,11 @@
 .mock-panel {
   height: 100%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: 4px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.mock-panel-header {
-  padding: 12px;
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.mock-panel-header h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.panel-id {
-  font-size: 10px;
-  color: var(--text-secondary);
-  font-family: monospace;
-}
+/* Removed mock-panel-header styles - headers are now handled by PanelWrapper */
 
 .mock-panel-content {
   padding: 16px;

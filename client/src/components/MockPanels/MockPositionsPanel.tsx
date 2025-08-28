@@ -19,10 +19,6 @@ const MockPositionsPanel: React.FC<IPanelComponentProps> = ({
 
   return (
     <div className="mock-panel mock-positions-panel">
-      <div className="mock-panel-header">
-        <h3>Positions Panel</h3>
-        <span className="panel-id">{id}</span>
-      </div>
       <div className="mock-panel-content">
         <table className="mock-table">
           <thead>

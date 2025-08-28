@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import useLayoutStore from '../../store/layoutStore';
+import useLayoutStore, { useActiveLayout } from '../../store/layoutStore';
 import type { Panel } from '../../types/layout';
 import type { IPanelComponentProps } from '../../types/panel';
 import {
@@ -15,6 +15,7 @@ import {
   MarketOverviewPanel,
   RecentActivityPanel,
 } from '../Panels';
+import ConfirmModal from '../Common/ConfirmModal';
 import './PanelWrapper.css';
 
 interface PanelWrapperProps {
@@ -42,12 +43,14 @@ const PanelWrapper: React.FC<PanelWrapperProps> = ({ panel }) => {
     removePanel, 
     updatePanel,
     assignPanelToLinkGroup,
-    activeLayout,
     propagateSymbol
   } = useLayoutStore();
   
+  const activeLayout = useActiveLayout();
+  
   const [isMinimized, setIsMinimized] = useState(false);
   const [localSymbol, setLocalSymbol] = useState('');
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   // Get the linked symbol from the link group if panel is linked
   const linkedSymbol = React.useMemo(() => {
@@ -57,10 +60,17 @@ const PanelWrapper: React.FC<PanelWrapperProps> = ({ panel }) => {
   }, [panel.config.linkGroup, activeLayout, localSymbol]);
 
   const handleClose = useCallback(() => {
-    if (window.confirm('Are you sure you want to close this panel?')) {
-      removePanel(panel.id);
-    }
+    setShowCloseConfirm(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    removePanel(panel.id);
+    setShowCloseConfirm(false);
   }, [panel.id, removePanel]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowCloseConfirm(false);
+  }, []);
 
   const handleMinimize = useCallback(() => {
     setIsMinimized(!isMinimized);
@@ -113,7 +123,10 @@ const PanelWrapper: React.FC<PanelWrapperProps> = ({ panel }) => {
     return (
       <div className="panel-wrapper panel-error">
         <div className="panel-header">
-          <span>Unknown Panel Type: {panel.config.type}</span>
+          <div className="panel-drag-handle">
+            <span className="drag-icon">⋮⋮</span>
+          </div>
+          <span className="panel-title">Unknown Panel Type: {panel.config.type}</span>
           <button onClick={handleClose} className="panel-close">×</button>
         </div>
         <div className="panel-content">
@@ -136,6 +149,9 @@ const PanelWrapper: React.FC<PanelWrapperProps> = ({ panel }) => {
       }}
     >
       <div className="panel-header" style={{ backgroundColor: linkGroupColor || undefined }}>
+        <div className="panel-drag-handle">
+          <span className="drag-icon">⋮⋮</span>
+        </div>
         <span className="panel-title">{panel.config.title || PanelComponent.displayName || 'Panel'}</span>
         <div className="panel-controls">
           <button 
@@ -163,6 +179,17 @@ const PanelWrapper: React.FC<PanelWrapperProps> = ({ panel }) => {
           />
         </div>
       )}
+      
+      <ConfirmModal
+        isOpen={showCloseConfirm}
+        title="Close Panel"
+        message="Are you sure you want to close this panel?"
+        confirmText="Close"
+        cancelText="Cancel"
+        variant="warning"
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+      />
     </div>
   );
 };
