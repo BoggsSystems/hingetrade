@@ -54,7 +54,7 @@ struct MainTabView: View {
             }
         case .accounts:
             if appState.isAuthenticated {
-                AccountsPlaceholderView()
+                AccountsDashboardView()
             } else {
                 AuthenticationRequiredView(tabName: tab.rawValue)
             }
