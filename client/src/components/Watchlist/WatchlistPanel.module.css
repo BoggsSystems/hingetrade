@@ -1,0 +1,234 @@
+.watchlistPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.watchlistPanel.linked {
+  border-left: 4px solid currentColor;
+}
+
+/* Header */
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 52px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Symbol input is now handled by SymbolAutocomplete component */
+
+.linkIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--color-panel);
+  flex-shrink: 0;
+}
+
+.settingsButton {
+  background: none;
+  border: none;
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.settingsButton:hover {
+  background-color: var(--color-highlight);
+  color: var(--color-text);
+}
+
+/* Performance Bar */
+.performanceBar {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.performanceIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-sm);
+  font-weight: 500;
+}
+
+.performanceIndicator.positive {
+  color: var(--color-positive);
+}
+
+.performanceIndicator.negative {
+  color: var(--color-negative);
+}
+
+.performanceValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.performancePercent {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.performanceIcon {
+  font-size: var(--font-xs);
+}
+
+/* Grid Container */
+.gridContainer {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dataTable {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+}
+
+/* Footer removed - symbols are now added via the autocomplete input */
+
+/* Empty State */
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) var(--spacing-md);
+  text-align: center;
+  min-height: 200px;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.6;
+}
+
+.emptyText {
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.emptyHint {
+  color: var(--color-text-light);
+  font-size: var(--font-xs);
+  margin: 0;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Empty action button removed - using autocomplete instead */
+
+/* Panel Size Adaptations */
+@container (max-width: 300px) {
+  .panelHeader {
+    padding: var(--spacing-sm);
+  }
+  
+  .panelTitle {
+    font-size: var(--font-sm);
+  }
+  
+  .symbolCount {
+    font-size: var(--font-xs);
+  }
+  
+  .performanceBar {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  .performanceIndicator {
+    font-size: var(--font-xs);
+  }
+  
+  /* Footer removed */
+}
+
+@container (max-height: 400px) {
+  .performanceBar {
+    display: none;
+  }
+  
+  .emptyState {
+    min-height: 120px;
+    padding: var(--spacing-md);
+  }
+  
+  .emptyIcon {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+  }
+}
+
+/* Loading States */
+.gridContainer.loading {
+  opacity: 0.7;
+}
+
+.panelHeader.loading,
+.performanceBar.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Focus States */
+.settingsButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .watchlistPanel {
+    border-width: 2px;
+  }
+  
+  .positive {
+    color: #00ff00 !important;
+  }
+  
+  .negative {
+    color: #ff0000 !important;
+  }
+  
+  .linkIndicator {
+    border-width: 3px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .settingsButton {
+    transition: none;
+  }
+}

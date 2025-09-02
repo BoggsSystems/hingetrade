@@ -1,0 +1,387 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-panel);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-md);
+}
+
+.symbolInput {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  position: relative;
+}
+
+.symbolDisplay {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.currentSymbol {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.symbolAutocomplete {
+  min-width: 200px;
+}
+
+.chartTypeSelector {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin: 0 var(--spacing-md);
+}
+
+.chartTypeButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chartTypeButton:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text);
+}
+
+.chartTypeButton.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.chartTypeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chartTypeLabel {
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+
+.volumeToggle {
+  display: flex;
+}
+
+.volumeButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.volumeButton:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text);
+}
+
+.volumeButton.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.volumeIcon {
+  display: flex;
+  align-items: center;
+}
+
+.volumeLabel {
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+
+.scaleToggle {
+  display: flex;
+}
+
+.scaleButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scaleButton:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text);
+}
+
+.scaleButton.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.scaleLabel {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  min-width: 32px;
+  text-align: center;
+}
+
+.indicatorDropdown {
+  display: flex;
+}
+
+.indicatorSelect {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 150px;
+}
+
+.indicatorSelect:hover {
+  border-color: var(--color-primary);
+}
+
+.indicatorSelect:focus {
+  border-color: var(--color-primary);
+}
+
+.indicatorSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-md);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+/* Legacy button styles - kept for potential future use
+.timeframeSelector {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.timeframeButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.timeframeButton:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text);
+}
+
+.timeframeButton.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+*/
+
+.chartWrapper {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.mainChart {
+  flex: 3;
+  position: relative;
+  min-height: 300px;
+}
+
+.volumeChart {
+  flex: 1;
+  position: relative;
+  min-height: 80px;
+  max-height: 120px;
+}
+
+.drawingToolbar {
+  display: flex;
+  justify-content: center;
+  margin: var(--spacing-sm) 0;
+  padding: 0 var(--spacing-md);
+}
+
+
+.loadingIndicator {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  margin-left: var(--spacing-sm);
+}
+
+.errorMessage {
+  padding: var(--spacing-sm);
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: var(--radius-sm);
+  color: #f44336;
+  font-size: var(--font-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.noDataMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--color-text-light);
+  font-size: var(--font-md);
+  text-align: center;
+}
+
+.loadingMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--color-text-light);
+  font-size: var(--font-md);
+  text-align: center;
+}
+
+.input:disabled,
+.indicatorItem input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Legacy interval button styles - kept for potential future use
+.intervalSelector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-md);
+  padding-left: var(--spacing-md);
+  border-left: 1px solid var(--color-border);
+}
+
+.intervalLabel {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  margin-right: var(--spacing-xs);
+}
+
+.intervalButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.intervalButton:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text);
+}
+
+.intervalButton.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.intervalButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+*/
+
+.periodDropdown,
+.intervalDropdown {
+  display: flex;
+}
+
+.periodSelect,
+.intervalSelect {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  padding-right: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 80px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-xs) center;
+}
+
+.periodSelect:hover,
+.intervalSelect:hover {
+  border-color: var(--color-primary);
+}
+
+.periodSelect:focus,
+.intervalSelect:focus {
+  border-color: var(--color-primary);
+}
+
+.periodSelect:disabled,
+.intervalSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

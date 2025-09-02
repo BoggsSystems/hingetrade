@@ -1,0 +1,608 @@
+.video-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1a1a1a;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.video-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #333;
+  background: #2a2a2a;
+  flex-shrink: 0;
+}
+
+.video-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.feed-selector {
+  display: flex;
+  align-items: center;
+}
+
+.feed-select {
+  background: #333;
+  border: 1px solid #555;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
+.feed-select:focus {
+  border-color: #4caf50;
+}
+
+.feed-select option {
+  background: #333;
+  color: #ffffff;
+}
+
+/* Loading and Error States */
+.video-panel-loading, .video-panel-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 32px;
+  text-align: center;
+}
+
+.video-panel-loading p {
+  margin-top: 16px;
+  color: #888;
+}
+
+.video-panel-error p {
+  color: #f44336;
+  margin-bottom: 16px;
+}
+
+.video-panel-error button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #333;
+  border-top: 2px solid #4caf50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Video Feed - TikTok Style Scrolling */
+.video-feed {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-feed::-webkit-scrollbar {
+  width: 4px;
+}
+
+.video-feed::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.video-feed::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 2px;
+}
+
+.video-feed::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Video Item - TikTok Style */
+.video-item {
+  position: relative;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  min-height: 100%;
+}
+
+.video-item.active {
+  background: #222;
+}
+
+.video-content {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Video Player Container - Full Height */
+.video-player {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 400px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+/* Trading Overlays */
+.trading-overlays {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.symbol-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.symbol-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.symbol-chip:hover {
+  background: rgba(76, 175, 80, 1);
+}
+
+.symbol-chip .symbol {
+  font-weight: 700;
+}
+
+.symbol-chip .price {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+/* Video Info - Positioned at bottom edge of video */
+.video-info {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  padding: 20px 16px 16px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  color: #ffffff;
+  z-index: 3;
+  flex-shrink: 0;
+}
+
+.creator-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.creator-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.creator-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #888;
+}
+
+.creator-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.creator-name {
+  font-weight: 600;
+  color: #ffffff;
+  display: block;
+  font-size: 14px;
+}
+
+.video-meta {
+  color: #888;
+  font-size: 12px;
+  display: block;
+  margin-top: 2px;
+}
+
+/* Video Description */
+.video-description {
+  margin-bottom: 12px;
+}
+
+.video-description h4 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.description-text {
+  color: #ccc;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0 0 8px 0;
+}
+
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  color: #4caf50;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Video Actions - TikTok Style Sidebar */
+.video-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 4;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.action-btn span {
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.action-btn.active {
+  color: #4caf50;
+}
+
+.like-btn.active {
+  color: #f44336;
+}
+
+.save-btn.active {
+  color: #ffc107;
+}
+
+/* Loading More */
+.video-loading-more {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.video-loading-more .spinner {
+  width: 20px;
+  height: 20px;
+}
+
+/* Mobile-First Responsive Design */
+@media (max-width: 768px) {
+  .video-item {
+    height: 100%;
+    border-radius: 0;
+  }
+  
+  .video-player {
+    border-radius: 8px;
+    min-height: 350px;
+  }
+  
+  .video-panel-header {
+    padding: 8px 12px;
+  }
+  
+  .video-panel-header h3 {
+    font-size: 14px;
+  }
+  
+  .feed-select {
+    font-size: 13px;
+    padding: 4px 8px;
+  }
+  
+  .video-info {
+    bottom: 2px;
+    padding: 16px 12px 12px;
+  }
+  
+  .video-actions {
+    right: 8px;
+    bottom: 60px;
+    gap: 12px;
+  }
+  
+  .action-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+    padding: 10px;
+  }
+  
+  .action-btn span {
+    font-size: 9px;
+  }
+  
+  .creator-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .creator-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  
+  .video-description h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  
+  .description-text {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  
+  .symbol-chip {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* Large screens - maintain aspect ratio */
+@media (min-width: 1024px) {
+  .video-item {
+    height: calc(100vh - 100px);
+    max-height: 700px;
+  }
+  
+  .video-player {
+    max-width: 400px;
+    margin: 0 auto;
+    aspect-ratio: 9/16;
+  }
+  
+  .video-actions {
+    right: max(16px, calc((100% - 400px) / 2 - 60px));
+  }
+}
+
+/* TikTok-Style Navigation Arrows */
+.video-navigation-arrows {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.nav-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.nav-arrow:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.nav-arrow:active {
+  transform: scale(0.95);
+}
+
+.nav-arrow.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.nav-arrow svg {
+  transition: transform 0.2s ease;
+}
+
+.nav-arrow:hover:not(.disabled) svg {
+  transform: scale(1.2);
+}
+
+/* Arrow positioning adjustments */
+.nav-arrow-up {
+  animation: pulseUp 2s ease-in-out infinite;
+}
+
+.nav-arrow-down {
+  animation: pulseDown 2s ease-in-out infinite;
+}
+
+@keyframes pulseUp {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; transform: translateY(-2px); }
+}
+
+@keyframes pulseDown {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; transform: translateY(2px); }
+}
+
+/* Mobile responsive navigation arrows */
+@media (max-width: 768px) {
+  .video-navigation-arrows {
+    right: 12px;
+    gap: 16px;
+  }
+  
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    border-width: 1px;
+  }
+  
+  .nav-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Large screen adjustments */
+@media (min-width: 1024px) {
+  .video-navigation-arrows {
+    right: max(24px, calc((100% - 400px) / 2 - 80px));
+  }
+  
+  .nav-arrow {
+    width: 52px;
+    height: 52px;
+  }
+  
+  .nav-arrow svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .video-panel {
+    background: #0d1117;
+  }
+  
+  .video-panel-header {
+    background: #161b22;
+    border-bottom-color: #30363d;
+  }
+  
+  .feed-select {
+    background: #21262d;
+    border-color: #30363d;
+  }
+  
+  .video-item {
+    background: #0d1117;
+    border-bottom-color: #30363d;
+  }
+  
+  .video-placeholder {
+    background: #21262d;
+  }
+  
+  .nav-arrow {
+    background: rgba(33, 38, 45, 0.8);
+    border-color: rgba(48, 54, 61, 0.6);
+  }
+  
+  .nav-arrow:hover {
+    background: rgba(33, 38, 45, 0.9);
+    border-color: rgba(48, 54, 61, 0.8);
+  }
+}

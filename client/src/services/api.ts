@@ -102,23 +102,48 @@ class ApiClient {
 
   // Watchlist endpoints
   async getWatchlists() {
-    const response = await this.axiosInstance.get('/watchlists');
-    return response.data;
+    try {
+      const response = await this.axiosInstance.get('/watchlists');
+      return response.data;
+    } catch (error) {
+      // Fallback to local storage service
+      console.warn('⚠️ [ApiClient] Watchlist API failed, using local storage service');
+      const { watchlistService } = await import('./watchlistService');
+      return await watchlistService.getWatchlists();
+    }
   }
 
   async createWatchlist(name: string) {
-    const response = await this.axiosInstance.post('/watchlists', { name });
-    return response.data;
+    try {
+      const response = await this.axiosInstance.post('/watchlists', { name });
+      return response.data;
+    } catch (error) {
+      console.warn('⚠️ [ApiClient] Create watchlist API failed, using local storage service');
+      const { watchlistService } = await import('./watchlistService');
+      return await watchlistService.createWatchlist(name);
+    }
   }
 
   async addToWatchlist(watchlistId: string, symbol: string) {
-    const response = await this.axiosInstance.post(`/watchlists/${watchlistId}/items`, { symbol });
-    return response.data;
+    try {
+      const response = await this.axiosInstance.post(`/watchlists/${watchlistId}/items`, { symbol });
+      return response.data;
+    } catch (error) {
+      console.warn('⚠️ [ApiClient] Add to watchlist API failed, using local storage service');
+      const { watchlistService } = await import('./watchlistService');
+      return await watchlistService.addToWatchlist(watchlistId, symbol);
+    }
   }
 
   async removeFromWatchlist(watchlistId: string, symbol: string) {
-    const response = await this.axiosInstance.delete(`/watchlists/${watchlistId}/items/${symbol}`);
-    return response.data;
+    try {
+      const response = await this.axiosInstance.delete(`/watchlists/${watchlistId}/items/${symbol}`);
+      return response.data;
+    } catch (error) {
+      console.warn('⚠️ [ApiClient] Remove from watchlist API failed, using local storage service');
+      const { watchlistService } = await import('./watchlistService');
+      return await watchlistService.removeFromWatchlist(watchlistId, symbol);
+    }
   }
 
   // Price alerts endpoints

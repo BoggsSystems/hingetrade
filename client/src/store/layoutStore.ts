@@ -42,6 +42,22 @@ interface LayoutStore {
 }
 
 
+// Panel title normalization mapping
+const normalizedPanelTitles: Record<string, string> = {
+  'watchlist': 'Watchlist',
+  'chart': 'Chart',
+  'quote': 'Quote',
+  'trade': 'Trade',
+  'orders': 'Orders',
+  'positions': 'Positions',
+  'account': 'Accounts',
+  'news': 'News',
+  'portfolio': 'Portfolio',
+  'market-overview': 'Market Overview',
+  'recent-activity': 'Recent Activity',
+  'video': 'Video Feed'
+};
+
 // Convert backend panel format to frontend format
 const convertPanelFromApi = (panel: any): Panel => {
   console.log('=== convertPanelFromApi START ===');
@@ -92,12 +108,18 @@ const convertPanelFromApi = (panel: any): Panel => {
   console.log('Final position object:', position);
   console.log(`=== convertPanelFromApi END for panel ${id} ===`);
   
+  const panelType = panel.Type ?? panel.type;
+  const originalTitle = panel.Title ?? panel.title;
+  
+  // Normalize the title if it's a known panel type
+  const normalizedTitle = normalizedPanelTitles[panelType] || originalTitle || panelType;
+  
   return {
     id: id,
     position: position,
     config: {
-      type: panel.Type ?? panel.type,
-      title: panel.Title ?? panel.title,
+      type: panelType,
+      title: normalizedTitle,
       ...(panel.Config ?? panel.config ?? {}),
       linkGroup: panel.LinkGroupId ?? panel.linkGroupId,
     },
@@ -135,14 +157,14 @@ const convertLayoutFromApi = (layout: any): Layout => ({
   name: layout.name || layout.Name,
   panels: (layout.panels || layout.Panels || []).map(convertPanelFromApi),
   gridConfig: (layout.gridConfig || layout.GridConfig) ? {
-    cols: (layout.gridConfig || layout.GridConfig).columns || (layout.gridConfig || layout.GridConfig).Columns || 12,
+    cols: (layout.gridConfig || layout.GridConfig).columns || (layout.gridConfig || layout.GridConfig).Columns || 24,
     rowHeight: (layout.gridConfig || layout.GridConfig).rowHeight || (layout.gridConfig || layout.GridConfig).RowHeight || 30,
     margin: [10, 10],
     containerPadding: [10, 10],
     compactType: (layout.gridConfig || layout.GridConfig).compactType || (layout.gridConfig || layout.GridConfig).CompactType || 'vertical',
     preventCollision: false,
   } : {
-    cols: 12,
+    cols: 24,
     rowHeight: 30,
     margin: [10, 10],
     containerPadding: [10, 10],

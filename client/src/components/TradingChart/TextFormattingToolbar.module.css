@@ -1,0 +1,195 @@
+.toolbar {
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  min-width: 300px;
+  position: relative;
+}
+
+
+.toolbarRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.actionRow {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 6px;
+  border-top: 1px solid #333;
+}
+
+.fontSelect,
+.sizeSelect {
+  background: rgba(40, 40, 40, 0.9);
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  padding: 4px 6px;
+  font-size: 11px;
+  min-width: 80px;
+}
+
+.fontSelect {
+  min-width: 90px;
+}
+
+.sizeSelect {
+  min-width: 50px;
+}
+
+.formatButton {
+  background: rgba(60, 60, 60, 0.8);
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.formatButton:hover {
+  background: rgba(80, 80, 80, 0.9);
+  border-color: #666;
+}
+
+.formatButton.active {
+  background: #ff6b35;
+  border-color: #ff8c5a;
+}
+
+.colorPickerContainer {
+  position: relative;
+}
+
+.colorButton {
+  background: rgba(60, 60, 60, 0.8);
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.colorPreview {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  border: 1px solid #333;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.colorPalette {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  z-index: 1003;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.colorSwatch {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #555;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.1);
+  border-color: #ff6b35;
+}
+
+.customColorPicker {
+  grid-column: span 2;
+  width: 100%;
+  height: 20px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.alignmentGroup {
+  display: flex;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.actionButton {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.applyButton {
+  background: #4CAF50;
+  color: white;
+}
+
+.applyButton:hover {
+  background: #45a049;
+}
+
+.cancelButton {
+  background: rgba(60, 60, 60, 0.8);
+  color: #fff;
+  border: 1px solid #555;
+}
+
+.cancelButton:hover {
+  background: rgba(80, 80, 80, 0.9);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .toolbar {
+    min-width: 280px;
+    padding: 6px;
+  }
+  
+  .toolbarRow {
+    gap: 4px;
+  }
+  
+  .formatButton {
+    min-width: 24px;
+    height: 24px;
+    padding: 4px 6px;
+  }
+}

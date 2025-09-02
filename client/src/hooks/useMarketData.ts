@@ -13,14 +13,51 @@ export const useAsset = (symbol: string, enabled = true) => {
   });
 };
 
+// Mock data for development
+const createMockAsset = (symbol: string) => ({
+  id: symbol,
+  symbol,
+  name: `${symbol} Mock Company`,
+  exchange: 'NASDAQ',
+  class: 'us_equity',
+  status: 'active',
+  tradable: true,
+  marginable: true,
+  shortable: true,
+  easyToBorrow: true,
+  fractionable: true,
+  price: Math.random() * 200 + 50, // Random price between 50-250
+  changePercent: (Math.random() - 0.5) * 10, // Random change between -5% and +5%
+  volume: Math.floor(Math.random() * 1000000) + 100000,
+  avgVolume: Math.floor(Math.random() * 2000000) + 500000,
+  dayHigh: 0,
+  dayLow: 0,
+  timestamp: new Date().toISOString(),
+});
+
 // Hook to get multiple assets (for watchlist or portfolio)
 export const useAssets = (symbols: string[]) => {
   return useQueries({
     queries: symbols.map(symbol => ({
       queryKey: ['asset', symbol],
-      queryFn: () => apiClient.getAsset(symbol),
-      staleTime: 5 * 1000,
-      refetchInterval: 10 * 1000,
+      queryFn: async () => {
+        console.log(`🔍 [useAssets] Fetching asset data for: ${symbol}`);
+        try {
+          const asset = await apiClient.getAsset(symbol);
+          console.log(`✅ [useAssets] Got real data for ${symbol}:`, asset);
+          return asset;
+        } catch (error) {
+          console.warn(`⚠️ [useAssets] API failed for ${symbol}, using mock data:`, error);
+          // Return mock data for development
+          const mockAsset = createMockAsset(symbol);
+          console.log(`🎭 [useAssets] Using mock data for ${symbol}:`, mockAsset);
+          return mockAsset;
+        }
+      },
+      staleTime: 30 * 1000, // Increase stale time to reduce refetching
+      refetchInterval: false, // Disable automatic refetching for now
+      refetchOnWindowFocus: false, // Don't refetch when window gains focus
+      retry: 1, // Only retry once before falling back to mock
     })),
   });
 };

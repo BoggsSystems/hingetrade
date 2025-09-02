@@ -1,15 +1,9 @@
 import React from 'react';
 import type { IPanelComponentProps } from '../../types/panel';
-import WatchlistWidget from '../Dashboard/WatchlistWidget';
+import WatchlistPanelComponent from '../Watchlist/WatchlistPanel';
 
-const WatchlistPanel: React.FC<IPanelComponentProps> = ({
-  onReady,
-}) => {
-  React.useEffect(() => {
-    onReady?.();
-  }, [onReady]);
-
-  return <WatchlistWidget />;
+const WatchlistPanel: React.FC<IPanelComponentProps> = (props) => {
+  return <WatchlistPanelComponent {...props} />;
 };
 
 WatchlistPanel.displayName = 'Watchlist';

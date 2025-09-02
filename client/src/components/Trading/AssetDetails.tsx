@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Asset } from '../../types';
+import SymbolAutocomplete from '../Common/SymbolAutocomplete';
 import styles from './AssetDetails.module.css';
 
 interface AssetDetailsProps {
@@ -15,14 +16,6 @@ const AssetDetails: React.FC<AssetDetailsProps> = ({
   asset,
   isLoading
 }) => {
-  const [searchInput, setSearchInput] = useState(symbol);
-
-  const handleSymbolSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      onSymbolChange(searchInput.toUpperCase());
-    }
-  };
 
   const formatNumber = (num: number | string | null | undefined) => {
     if (!num) return '0.00';
@@ -36,18 +29,15 @@ const AssetDetails: React.FC<AssetDetailsProps> = ({
 
   return (
     <div className={styles.assetDetails}>
-      <form className={styles.symbolSearch} onSubmit={handleSymbolSubmit}>
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Enter symbol (e.g., AAPL, BTC/USD)"
+      <div className={styles.symbolSearch}>
+        <SymbolAutocomplete
+          value={symbol}
+          onChange={onSymbolChange}
+          placeholder="Search for a symbol (e.g., AAPL, BTC/USD)"
+          mode="immediate"
           className={styles.symbolInput}
         />
-        <button type="submit" className={styles.searchButton}>
-          Search
-        </button>
-      </form>
+      </div>
 
       {isLoading && (
         <div className={styles.loading}>

@@ -159,11 +159,14 @@ const DashboardPage: React.FC = () => {
       'chart': 'Chart',
       'quote': 'Quote',
       'trade': 'Trade',
+      'orders': 'Orders',
       'positions': 'Positions',
+      'account': 'Accounts',
       'news': 'News',
       'portfolio': 'Portfolio',
       'market-overview': 'Market Overview',
-      'recent-activity': 'Recent Activity'
+      'recent-activity': 'Recent Activity',
+      'video': 'Video Feed'
     };
     
     const newPanel: Panel = {
@@ -267,11 +270,14 @@ const DashboardPage: React.FC = () => {
               <option value="chart">Chart</option>
               <option value="quote">Quote</option>
               <option value="trade">Trade</option>
+              <option value="orders">Orders</option>
               <option value="positions">Positions</option>
+              <option value="account">Account</option>
               <option value="portfolio">Portfolio</option>
               <option value="news">News</option>
               <option value="market-overview">Market Overview</option>
               <option value="recent-activity">Recent Activity</option>
+              <option value="video">Video Feed</option>
             </select>
           </div>
         </div>

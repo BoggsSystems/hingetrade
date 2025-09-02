@@ -1,0 +1,251 @@
+.signupPage {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  padding: 3rem 0;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 0 var(--spacing-lg);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.headerContent {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.logoIcon {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background-color: var(--color-positive);
+}
+
+.logoText {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.subtitle {
+  color: var(--color-text-light);
+}
+
+.content {
+  display: grid;
+  gap: 3rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .content {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.formSection {
+  max-width: 28rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.cardTitle {
+  font-size: var(--font-xl) !important;
+  color: var(--color-text) !important;
+}
+
+.cardDescription {
+  color: var(--color-text-light) !important;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.nameGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.passwordHint {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-xs);
+  color: var(--color-text-light);
+}
+
+.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.checkboxInput {
+  height: 1rem;
+  width: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.checkboxInput:checked {
+  background-color: var(--color-positive);
+  border-color: var(--color-positive);
+}
+
+.checkboxInput:focus {
+  outline: 2px solid var(--color-positive);
+  outline-offset: 2px;
+}
+
+.checkboxLabel {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  line-height: 1.4;
+}
+
+.link {
+  color: var(--color-positive);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.link:hover {
+  color: var(--color-positive-light);
+}
+
+.signinLink {
+  text-align: center;
+}
+
+.signinLink p {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+}
+
+.benefitsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.benefitsTitle {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-lg);
+}
+
+.benefits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.benefitIcon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: rgba(0, 177, 92, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.125rem;
+}
+
+.benefitTitle {
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.benefitDescription {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  line-height: 1.5;
+}
+
+.cta {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+}
+
+.ctaTitle {
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.ctaDescription {
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.5;
+}
+
+.ctaFeatures {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .nameGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ctaFeatures {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+}

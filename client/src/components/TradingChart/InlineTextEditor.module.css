@@ -1,0 +1,21 @@
+.textEditor {
+  pointer-events: auto; /* Ensure the editor receives mouse events */
+  z-index: 1001; /* Higher than chart to ensure it's on top */
+}
+
+.textInput {
+  border-radius: 4px;
+  padding: 6px 8px;
+  min-width: 120px;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.textInput::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.textInput:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}

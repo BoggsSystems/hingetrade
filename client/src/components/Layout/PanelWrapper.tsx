@@ -2,18 +2,19 @@ import React, { useState, useCallback } from 'react';
 import useLayoutStore, { useActiveLayout } from '../../store/layoutStore';
 import type { Panel } from '../../types/layout';
 import type { IPanelComponentProps } from '../../types/panel';
-import {
-  MockQuotePanel,
-  MockChartPanel,
-  MockPositionsPanel,
-  MockTradePanel,
-  MockNewsPanel,
-} from '../MockPanels';
+import TradingChartWithData from '../TradingChart/TradingChartWithData';
 import {
   WatchlistPanel,
   PortfolioPanel,
   MarketOverviewPanel,
   RecentActivityPanel,
+  QuotePanel,
+  VideoPanel,
+  TradePanel,
+  NewsPanel,
+  PositionsPanel,
+  OrdersPanel,
+  AccountsPanel,
 } from '../Panels';
 import ConfirmModal from '../Common/ConfirmModal';
 import './PanelWrapper.css';
@@ -30,12 +31,15 @@ const panelComponents: Record<string, React.FC<IPanelComponentProps>> = {
   'market-overview': MarketOverviewPanel,
   'recent-activity': RecentActivityPanel,
   
-  // Mock panels (will be replaced with real implementations)
-  quote: MockQuotePanel,
-  chart: MockChartPanel,
-  positions: MockPositionsPanel,
-  trade: MockTradePanel,
-  news: MockNewsPanel,
+  // Real implementations
+  quote: QuotePanel,
+  video: VideoPanel,
+  chart: TradingChartWithData,
+  positions: PositionsPanel,
+  trade: TradePanel,
+  orders: OrdersPanel,
+  account: AccountsPanel,
+  news: NewsPanel,
 };
 
 const PanelWrapper: React.FC<PanelWrapperProps> = ({ panel }) => {

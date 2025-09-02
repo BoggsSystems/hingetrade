@@ -3,7 +3,11 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Navigation.module.css';
 
-const Navigation: React.FC = () => {
+interface NavigationProps {
+  isCollapsed: boolean;
+}
+
+const Navigation: React.FC<NavigationProps> = ({ isCollapsed }) => {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -42,18 +46,6 @@ const Navigation: React.FC = () => {
       )
     },
     { 
-      path: '/trading', 
-      label: 'Trade', 
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M7 7L17 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M7 17V7H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M17 7L7 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M7 7H17V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      )
-    },
-    { 
       path: '/account', 
       label: 'Account', 
       icon: (
@@ -67,9 +59,9 @@ const Navigation: React.FC = () => {
 
   return (
     <>
-      <nav className={styles.navigation}>
+      <nav className={`${styles.navigation} ${isCollapsed ? styles.collapsed : ''}`}>
         <div className={styles.logo}>
-          <h2>HingeTrade</h2>
+          {!isCollapsed && <h2>HingeTrade</h2>}
         </div>
 
         <div className={styles.navItems}>
@@ -80,9 +72,10 @@ const Navigation: React.FC = () => {
               className={({ isActive }) =>
                 `${styles.navItem} ${isActive ? styles.active : ''}`
               }
+              title={isCollapsed ? item.label : undefined}
             >
               <span className={styles.icon}>{item.icon}</span>
-              <span className={styles.label}>{item.label}</span>
+              {!isCollapsed && <span className={styles.label}>{item.label}</span>}
             </NavLink>
           ))}
         </div>
@@ -95,11 +88,23 @@ const Navigation: React.FC = () => {
                 alt={user.username}
                 className={styles.avatar}
               />
-              <span className={styles.userName}>{user.username}</span>
+              {!isCollapsed && <span className={styles.userName}>{user.username}</span>}
             </div>
           )}
-          <button onClick={logout} className={styles.logoutButton}>
-            Logout
+          <button 
+            onClick={logout} 
+            className={`${styles.logoutButton} ${isCollapsed ? styles.iconOnly : ''}`}
+            title={isCollapsed ? 'Logout' : undefined}
+          >
+            {isCollapsed ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            ) : (
+              'Logout'
+            )}
           </button>
         </div>
 

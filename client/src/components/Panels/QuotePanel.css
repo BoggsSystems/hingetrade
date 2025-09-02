@@ -1,0 +1,215 @@
+.quote-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-panel, #1a1a1a);
+  color: var(--color-text, #ffffff);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  border: 1px solid var(--color-border, #444);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+
+.quote-panel--editing {
+  /* Remove centering to allow normal header layout */
+}
+
+.quote-panel--empty {
+  justify-content: center;
+  align-items: center;
+}
+
+.quote-panel--positive {
+  --quote-color: #00d09c;
+}
+
+.quote-panel--negative {
+  --quote-color: #ff5252;
+}
+
+/* Header */
+.quote-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md, 1rem);
+  background-color: var(--color-background, #2a2a2a);
+  border-bottom: 1px solid var(--color-border, #444);
+  min-height: 52px;
+  margin-bottom: 0;
+}
+
+.quote-panel__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 0.5rem);
+  flex: 1;
+}
+
+.quote-panel__header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.quote-panel__symbol {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.quote-panel__edit-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-light, #999);
+  cursor: pointer;
+  font-size: var(--font-sm, 1rem);
+  padding: var(--spacing-xs, 0.25rem);
+  border-radius: var(--radius-sm, 4px);
+  transition: all var(--transition-fast, 0.2s);
+  opacity: 0.6;
+}
+
+.quote-panel__edit-btn:hover {
+  background-color: var(--color-highlight, rgba(255, 255, 255, 0.1));
+  color: var(--color-text, #ffffff);
+  opacity: 1;
+}
+
+.quote-panel__cancel-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-light, #999);
+  cursor: pointer;
+  font-size: var(--font-sm, 1rem);
+  padding: var(--spacing-xs, 0.25rem);
+  border-radius: var(--radius-sm, 4px);
+  transition: all var(--transition-fast, 0.2s);
+}
+
+.quote-panel__cancel-btn:hover {
+  background-color: var(--color-highlight, rgba(255, 255, 255, 0.1));
+  color: var(--color-text, #ffffff);
+}
+
+/* Price Section */
+.quote-panel__price-section {
+  margin-bottom: 1.5rem;
+  padding: 0 var(--spacing-md, 1rem);
+}
+
+.quote-panel__price {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.5px;
+}
+
+.quote-panel__change {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.quote-panel__change--positive {
+  color: var(--quote-color);
+}
+
+.quote-panel__change--negative {
+  color: var(--quote-color);
+}
+
+/* Details */
+.quote-panel__details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 var(--spacing-md, 1rem);
+}
+
+.quote-panel__detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.quote-panel__detail-label {
+  color: var(--color-text-light, #999);
+  font-weight: 400;
+}
+
+.quote-panel__detail-value {
+  font-weight: 500;
+  text-align: right;
+}
+
+.quote-panel__detail-size {
+  color: var(--color-text-light, #999);
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+/* Timestamp */
+.quote-panel__timestamp {
+  font-size: 0.75rem;
+  color: var(--color-text-light, #666);
+  text-align: center;
+  margin-top: auto;
+  padding: 1rem var(--spacing-md, 1rem) var(--spacing-md, 1rem);
+}
+
+/* Symbol form styles removed - now using SymbolAutocomplete component */
+
+/* Add Symbol Button */
+.quote-panel__add-symbol-btn {
+  background: none;
+  border: 2px dashed var(--color-text-light, #666);
+  color: var(--color-text-light, #666);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s);
+}
+
+.quote-panel__add-symbol-btn:hover {
+  border-color: var(--color-text, #fff);
+  color: var(--color-text, #fff);
+}
+
+/* Loading State */
+.quote-panel--loading .quote-panel__price,
+.quote-panel--loading .quote-panel__change,
+.quote-panel--loading .quote-panel__detail-value {
+  background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  color: transparent;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .quote-panel {
+    padding: 0.75rem;
+  }
+  
+  .quote-panel__price {
+    font-size: 1.5rem;
+  }
+  
+  .quote-panel__detail-row {
+    font-size: 0.8125rem;
+  }
+}

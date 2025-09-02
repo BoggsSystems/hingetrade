@@ -1,0 +1,252 @@
+import React, { useRef, useEffect, useState, useMemo } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  TimeScale,
+} from 'chart.js';
+import type { ChartData, ChartOptions, TooltipItem } from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import zoomPlugin from 'chartjs-plugin-zoom';
+import 'chartjs-adapter-date-fns';
+import { TechnicalIndicators } from '../../chartjs-indicators/src/plugin';
+import { IndicatorRegistry } from '../../chartjs-indicators/src/indicators';
+import type { IPanelComponentProps } from '../../types/panel';
+import type { OHLCData } from '../../chartjs-indicators/src/types/indicator';
+import styles from './TradingChart.module.css';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  TimeScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  zoomPlugin,
+  TechnicalIndicators
+);
+
+interface TradingChartProps extends IPanelComponentProps {
+  data?: OHLCData[];
+}
+
+// Mock data generator for testing
+const generateMockData = (days: number = 90): OHLCData[] => {
+  const data: OHLCData[] = [];
+  const now = new Date();
+  let price = 150;
+
+  for (let i = days; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    
+    const volatility = 0.02;
+    const trend = 0.001;
+    const change = (Math.random() - 0.5) * volatility + trend;
+    
+    price = price * (1 + change);
+    const high = price * (1 + Math.random() * 0.01);
+    const low = price * (1 - Math.random() * 0.01);
+    const open = price * (1 + (Math.random() - 0.5) * 0.005);
+    const close = price;
+    
+    data.push({
+      timestamp: date.toISOString(),
+      open,
+      high,
+      low,
+      close,
+      volume: Math.floor(Math.random() * 1000000) + 500000
+    });
+  }
+  
+  return data;
+};
+
+const TradingChart: React.FC<TradingChartProps> = ({
+  symbol = 'AAPL',
+  onSymbolChange,
+  onReady,
+  data: propData
+}) => {
+  const chartRef = useRef<ChartJS<'line'>>(null);
+  const [selectedIndicators, setSelectedIndicators] = useState<string[]>(['sma']);
+  const [timeframe, setTimeframe] = useState<string>('1D');
+  
+  // Use provided data or generate mock data
+  const chartData = useMemo(() => {
+    return propData || generateMockData();
+  }, [propData]);
+
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
+
+  const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSymbol = e.target.value.toUpperCase();
+    onSymbolChange?.(newSymbol);
+  };
+
+  const toggleIndicator = (indicatorId: string) => {
+    setSelectedIndicators(prev => 
+      prev.includes(indicatorId) 
+        ? prev.filter(id => id !== indicatorId)
+        : [...prev, indicatorId]
+    );
+  };
+
+  // Prepare chart data
+  const data: ChartData<'line'> = {
+    labels: chartData.map(d => d.timestamp),
+    datasets: [
+      {
+        label: symbol,
+        data: chartData.map(d => d.close),
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.1,
+      }
+    ]
+  };
+
+  // Chart options
+  const options: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+      },
+      title: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<'line'>) => {
+            const value = context.parsed.y;
+            return `${context.dataset.label}: $${value.toFixed(2)}`;
+          }
+        }
+      },
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+          pinch: {
+            enabled: true
+          },
+          mode: 'x',
+        },
+        pan: {
+          enabled: true,
+          mode: 'x',
+        }
+      },
+      technicalIndicators: {
+        indicators: selectedIndicators.reduce((acc, id) => {
+          acc[id] = {
+            id,
+            name: id.toUpperCase(),
+            type: id,
+            enabled: true,
+            params: {}
+          };
+          return acc;
+        }, {} as Record<string, any>)
+      }
+    },
+    scales: {
+      x: {
+        type: 'time',
+        time: {
+          unit: 'day',
+          displayFormats: {
+            day: 'MMM dd'
+          }
+        },
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        position: 'right',
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          callback: (value) => `$${value}`
+        }
+      }
+    }
+  };
+
+  const availableIndicators = IndicatorRegistry.getAll();
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div className={styles.symbolInput}>
+          <input 
+            type="text" 
+            value={symbol} 
+            onChange={handleSymbolChange}
+            placeholder="Enter symbol"
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.timeframeSelector}>
+          {['1D', '1W', '1M', '3M', '1Y'].map(tf => (
+            <button
+              key={tf}
+              className={`${styles.timeframeButton} ${timeframe === tf ? styles.active : ''}`}
+              onClick={() => setTimeframe(tf)}
+            >
+              {tf}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div className={styles.chartWrapper}>
+        <Line ref={chartRef} data={data} options={options} />
+      </div>
+      
+      <div className={styles.indicatorControls}>
+        <h4>Technical Indicators</h4>
+        <div className={styles.indicatorList}>
+          {availableIndicators.map(indicator => (
+            <label key={indicator.id} className={styles.indicatorItem}>
+              <input
+                type="checkbox"
+                checked={selectedIndicators.includes(indicator.id)}
+                onChange={() => toggleIndicator(indicator.id)}
+              />
+              <span>{indicator.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+TradingChart.displayName = 'Trading Chart';
+
+export default TradingChart;

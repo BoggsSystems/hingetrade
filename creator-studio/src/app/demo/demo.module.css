@@ -1,0 +1,248 @@
+.demoPage {
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.header {
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-panel);
+}
+
+.headerContainer {
+  margin: 0 auto;
+  max-width: 80rem;
+  padding: 0 var(--spacing-lg);
+}
+
+.headerContent {
+  display: flex;
+  height: 4rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.logoIcon {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background-color: var(--color-positive);
+}
+
+.logoText {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 64rem;
+  padding: 3rem var(--spacing-lg);
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.heroTitle {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-lg);
+}
+
+.heroDescription {
+  font-size: var(--font-xl);
+  color: var(--color-text-light);
+  max-width: 42rem;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.videoCard {
+  margin-bottom: 3rem;
+}
+
+.videoCardContent {
+  padding: 0 !important;
+}
+
+.videoContainer {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, var(--color-primary-dark), #000);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.videoPlayArea {
+  text-align: center;
+}
+
+.playButton {
+  display: inline-flex;
+  height: 5rem;
+  width: 5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  margin-bottom: var(--spacing-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.playButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.videoTitle {
+  color: white;
+  font-size: var(--font-lg);
+  font-weight: 500;
+  margin-bottom: var(--spacing-xs);
+}
+
+.videoSubtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--font-sm);
+  margin: 0;
+}
+
+.features {
+  display: grid;
+  gap: var(--spacing-2xl);
+  margin-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.featureHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.featureIcon {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background-color: rgba(0, 177, 92, 0.15);
+}
+
+.featureTitle {
+  font-size: var(--font-lg) !important;
+  color: var(--color-text) !important;
+}
+
+.featureDescription {
+  color: var(--color-text-light) !important;
+}
+
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ctaCard {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  border: 1px solid var(--color-primary-light);
+}
+
+.ctaHeader {
+  text-align: center;
+}
+
+.ctaTitle {
+  font-size: var(--font-2xl) !important;
+  color: var(--color-text) !important;
+}
+
+.ctaDescription {
+  color: var(--color-text-light) !important;
+}
+
+.ctaContent {
+  text-align: center;
+}
+
+.ctaButtons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .ctaButtons {
+    flex-direction: row;
+  }
+}
+
+.ctaSubtext {
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: var(--spacing-2xl) var(--spacing-md);
+  }
+  
+  .headerContainer {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .heroTitle {
+    font-size: 1.875rem;
+  }
+  
+  .heroDescription {
+    font-size: var(--font-lg);
+  }
+  
+  .features {
+    grid-template-columns: 1fr;
+  }
+}

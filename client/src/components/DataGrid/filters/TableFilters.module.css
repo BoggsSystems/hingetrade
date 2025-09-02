@@ -1,0 +1,321 @@
+/* Filters Container */
+.filtersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.filtersRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 120px;
+}
+
+.filterLabel {
+  color: var(--color-text-light);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Text Filter */
+.textFilter {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  transition: border-color var(--transition-fast);
+  min-width: 200px;
+}
+
+.textFilter:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.textFilter::placeholder {
+  color: var(--color-text-light);
+}
+
+/* Range Filter */
+.rangeFilter {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.rangeInput {
+  padding: var(--spacing-sm);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  width: 80px;
+  transition: border-color var(--transition-fast);
+}
+
+.rangeInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.rangeInput::placeholder {
+  color: var(--color-text-light);
+}
+
+.rangeSeparator {
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+}
+
+/* Select Filter */
+.selectFilter {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+  min-width: 140px;
+}
+
+.selectFilter:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.selectFilter option {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Button Group Filter */
+.buttonGroup {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.filterButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-background);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.filterButton:hover {
+  background-color: var(--color-highlight);
+  color: var(--color-text);
+}
+
+.filterButton.active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.filterButton.active:hover {
+  background-color: var(--color-primary-light);
+}
+
+/* Clear Button */
+.clearButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: transparent;
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.clearButton:hover {
+  background-color: var(--color-negative);
+  border-color: var(--color-negative);
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .filtersRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filterGroup {
+    min-width: unset;
+  }
+  
+  .textFilter {
+    min-width: unset;
+  }
+  
+  .selectFilter {
+    min-width: unset;
+  }
+  
+  .clearButton {
+    margin-left: unset;
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .filtersContainer {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+  }
+  
+  .rangeFilter {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .rangeInput {
+    width: 100%;
+  }
+  
+  .rangeSeparator {
+    display: none;
+  }
+  
+  .buttonGroup {
+    justify-content: center;
+  }
+  
+  .filterButton {
+    flex: 1;
+    min-width: 0;
+    padding: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .buttonGroup {
+    flex-direction: column;
+  }
+  
+  .filterButton {
+    width: 100%;
+  }
+  
+  .textFilter,
+  .selectFilter {
+    font-size: var(--font-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+/* Focus States */
+.textFilter:focus,
+.rangeInput:focus,
+.selectFilter:focus,
+.filterButton:focus,
+.clearButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .filtersContainer {
+    border-width: 2px;
+  }
+  
+  .textFilter,
+  .rangeInput,
+  .selectFilter,
+  .filterButton {
+    border-width: 2px;
+  }
+  
+  .filterButton.active {
+    background-color: #0066cc !important;
+    border-color: #0066cc !important;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .textFilter,
+  .rangeInput,
+  .selectFilter,
+  .filterButton,
+  .clearButton {
+    transition: none;
+  }
+}
+
+/* Loading State */
+.filtersContainer.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Compact Mode for Panels */
+.filtersContainer.compact {
+  padding: var(--spacing-sm);
+  gap: var(--spacing-sm);
+}
+
+.filtersContainer.compact .filtersRow {
+  gap: var(--spacing-sm);
+}
+
+.filtersContainer.compact .filterGroup {
+  min-width: 100px;
+}
+
+.filtersContainer.compact .textFilter {
+  min-width: 150px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-xs);
+}
+
+.filtersContainer.compact .rangeInput {
+  width: 60px;
+  padding: var(--spacing-xs);
+  font-size: var(--font-xs);
+}
+
+.filtersContainer.compact .selectFilter {
+  min-width: 100px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-xs);
+}
+
+.filtersContainer.compact .filterButton {
+  padding: var(--spacing-xs);
+  font-size: 10px;
+}
+
+.filtersContainer.compact .clearButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-xs);
+}

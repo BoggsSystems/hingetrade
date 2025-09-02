@@ -64,14 +64,7 @@
 }
 
 .react-grid-item > .react-resizable-handle::after {
-  content: '';
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 8px;
-  height: 8px;
-  border-right: 2px solid var(--border-primary);
-  border-bottom: 2px solid var(--border-primary);
+  display: none;
 }
 
 .react-grid-placeholder {

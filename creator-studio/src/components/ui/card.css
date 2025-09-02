@@ -1,0 +1,14 @@
+.card-description {
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+}
+
+.card-content {
+  /* Card content inherits from global card styles */
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  margin-top: var(--spacing-md);
+}

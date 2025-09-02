@@ -1,0 +1,6 @@
+<svg width="24" height="24" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- White background path for better visibility -->
+  <path d="M3.5 3.5L12.5 7.5L8 8.5L7 12.5L3.5 3.5Z" fill="white" stroke="black" stroke-width="0.5" stroke-linejoin="round"/>
+  <!-- Main cursor path with orange color for hover state -->
+  <path d="M3 3L13 8L8 9L7 13L3 3Z" stroke="#ff6b35" stroke-width="1.5" fill="white" fill-opacity="0.9"/>
+</svg>

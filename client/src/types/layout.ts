@@ -23,6 +23,7 @@ export interface PanelPosition {
 export interface PanelConfig {
   type: string;
   title?: string;
+  symbol?: string;
   settings?: Record<string, any>;
   linkGroup?: string;
 }
@@ -62,12 +63,15 @@ export type PanelType =
   | 'chart'
   | 'positions'
   | 'trade'
+  | 'orders'
+  | 'account'
   | 'news'
   | 'watchlist'
   | 'depth'
   | 'time-sales'
   | 'options'
-  | 'scanner';
+  | 'scanner'
+  | 'video';
 
 export interface PanelRegistryEntry {
   type: PanelType;

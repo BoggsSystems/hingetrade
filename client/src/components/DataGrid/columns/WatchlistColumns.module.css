@@ -1,0 +1,438 @@
+/* Base cell styles */
+.symbolCell,
+.nameCell,
+.priceCell,
+.changeCell,
+.changePercentCell,
+.volumeCell,
+.marketCapCell,
+.bidAskCell,
+.dayRangeCell,
+.fiftyTwoWeekCell,
+.peRatioCell,
+.dividendYieldCell,
+.betaCell,
+.lastTradeCell {
+  display: flex;
+  align-items: center;
+}
+
+/* Symbol column styles */
+.symbolCell {
+  font-weight: 600;
+}
+
+.symbol {
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.symbol.clickable {
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.symbol.clickable:hover {
+  color: var(--color-primary);
+}
+
+.compactSymbolCell {
+  display: flex;
+  align-items: center;
+}
+
+.compactSymbolCell .symbol {
+  font-size: var(--font-xs);
+}
+
+/* Company name styles */
+.nameCell {
+  overflow: hidden;
+}
+
+.companyName {
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+/* Price styles */
+.priceCell {
+  justify-content: flex-end;
+}
+
+.price {
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Change styles */
+.changeCell {
+  justify-content: flex-end;
+}
+
+.change {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.change.positive {
+  color: var(--color-positive);
+}
+
+.change.negative {
+  color: var(--color-negative);
+}
+
+/* Change percent styles */
+.changePercentCell {
+  justify-content: flex-end;
+}
+
+.changePercent {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.changePercent.positive {
+  color: var(--color-positive);
+}
+
+.changePercent.negative {
+  color: var(--color-negative);
+}
+
+/* Volume styles */
+.volumeCell {
+  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.volume {
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.volume.highVolume {
+  color: var(--color-warning, #ff9800);
+  font-weight: 600;
+}
+
+.volume.lowVolume {
+  color: var(--color-text-light);
+  opacity: 0.7;
+}
+
+.volumeRatio {
+  font-size: 10px;
+  color: var(--color-text-light);
+  opacity: 0.7;
+}
+
+/* Market cap styles */
+.marketCapCell {
+  justify-content: flex-end;
+}
+
+.marketCap {
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* No data indicator */
+.noData {
+  color: var(--color-text-light);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* Action buttons */
+.actionButtons {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  opacity: 0.8;
+  white-space: nowrap;
+  min-width: 50px;
+  height: 24px;
+}
+
+.actionButton:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.buyButton {
+  color: var(--color-positive);
+  border: 1px solid var(--color-positive);
+}
+
+.buyButton:hover {
+  background-color: var(--color-positive);
+  color: white;
+}
+
+.sellButton {
+  color: var(--color-negative);
+  border: 1px solid var(--color-negative);
+}
+
+.sellButton:hover {
+  background-color: var(--color-negative);
+  color: white;
+}
+
+.optionsButton {
+  color: var(--color-warning, #ff9800);
+  border: 1px solid var(--color-warning, #ff9800);
+}
+
+.optionsButton:hover {
+  background-color: var(--color-warning, #ff9800);
+  color: white;
+}
+
+.chartButton:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.1);
+}
+
+.alertButton:hover {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.removeButton:hover {
+  background-color: rgba(var(--color-negative-rgb), 0.1);
+}
+
+/* Checkbox styles */
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .companyName {
+    max-width: 120px;
+  }
+  
+  .actionButtons {
+    gap: var(--spacing-xs);
+  }
+  
+  .actionButton {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  .price,
+  .change,
+  .changePercent,
+  .volume,
+  .marketCap {
+    font-size: var(--font-xs);
+  }
+}
+
+/* Accessibility improvements */
+.actionButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.checkbox:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .positive {
+    color: #00ff00 !important;
+  }
+  
+  .negative {
+    color: #ff0000 !important;
+  }
+  
+  .actionButton {
+    border: 1px solid var(--color-border);
+  }
+}
+
+/* New column styles */
+
+/* Bid/Ask styles */
+.bidAskCell {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.bidAskPrices {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.bid {
+  color: var(--color-positive);
+  font-weight: 500;
+}
+
+.ask {
+  color: var(--color-negative);
+  font-weight: 500;
+}
+
+.askSeparator {
+  color: var(--color-text-light);
+  opacity: 0.6;
+}
+
+.spread {
+  font-size: 10px;
+}
+
+.spreadValue {
+  color: var(--color-text-light);
+  opacity: 0.8;
+}
+
+/* Range bar styles */
+.dayRangeCell,
+.fiftyTwoWeekCell {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.rangeText {
+  font-size: 11px;
+  color: var(--color-text-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.rangeBar {
+  width: 100%;
+  height: 4px;
+  background-color: var(--color-bg-secondary);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.rangeIndicator {
+  position: absolute;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.rangePosition {
+  font-size: 10px;
+  color: var(--color-text-light);
+  font-weight: 500;
+}
+
+/* P/E Ratio styles */
+.peRatioCell {
+  justify-content: flex-end;
+}
+
+.peRatio {
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Dividend Yield styles */
+.dividendYieldCell {
+  justify-content: flex-end;
+}
+
+.dividendYield {
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Beta styles */
+.betaCell {
+  justify-content: flex-end;
+}
+
+.beta {
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.beta.highBeta {
+  color: var(--color-warning, #ff9800);
+}
+
+.beta.lowBeta {
+  color: var(--color-info, #2196f3);
+}
+
+/* Last Trade Time styles */
+.lastTradeCell {
+  justify-content: flex-end;
+}
+
+.lastTradeTime {
+  color: var(--color-text-light);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .actionButton {
+    transition: none;
+  }
+  
+  .symbol.clickable {
+    transition: none;
+  }
+}

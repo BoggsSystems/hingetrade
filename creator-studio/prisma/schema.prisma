@@ -1,0 +1,300 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  viewer
+  trader
+  creator
+  moderator
+  admin
+}
+
+enum VideoStatus {
+  draft
+  processing
+  needs_review
+  approved
+  rejected
+  scheduled
+  published
+}
+
+enum VideoAudience {
+  public
+  subscribers
+  community
+}
+
+enum ModerationDecision {
+  approve
+  reject
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(viewer)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts              Account[]
+  sessions              Session[]
+  creatorProfile        CreatorProfile?
+  videos                Video[]
+  moderationReviews     ModerationReview[]
+  earnings              Earning[]
+  payoutAccount         PayoutAccount?
+  auditLogs             AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model CreatorProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  displayName  String
+  bio          String?
+  socials      Json?    // {twitter, youtube, tiktok, etc}
+  isActive     Boolean  @default(true)
+  taxStatus    String?  // W-9/W-8 status
+  payoutStatus String?  // verified/pending/rejected
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionTiers  SubscriptionTier[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model Video {
+  id                  String        @id @default(cuid())
+  creatorId           String
+  title               String
+  description         String?
+  s3Key               String?       // S3 storage key (legacy)
+  thumbKey            String?       // Thumbnail S3 key (legacy)
+  cloudinaryPublicId  String?       // Cloudinary public ID
+  videoUrl            String?       // Cloudinary video URL
+  thumbnailUrl        String?       // Cloudinary thumbnail URL
+  duration            Float?        // Video duration in seconds
+  fileSize            Int?          // File size in bytes
+  format              String?       // Video format (mp4, mov, etc.)
+  tags                String[]      // Video tags
+  status              VideoStatus   @default(draft)
+  scheduledAt         DateTime?
+  publishedAt         DateTime?
+  audience            VideoAudience @default(public)
+  allowCopyTrades     Boolean       @default(false)
+  disclosures         Json?         // {notAdvice: boolean, riskWarning: boolean}
+  sponsorship         Json?         // {enabled: boolean, brand?: string}
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  creator            User                @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  transcript         Transcript?
+  nlpExtraction      NlpExtraction?
+  chartContext       ChartContext?
+  moderationFlags    ModerationFlag[]
+  moderationReviews  ModerationReview[]
+  earnings           Earning[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([publishedAt])
+  @@index([cloudinaryPublicId])
+}
+
+model Transcript {
+  id       String @id @default(cuid())
+  videoId  String @unique
+  language String @default("en")
+  text     String @db.Text
+  words    Json?  // Word-level timestamps
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+}
+
+model NlpExtraction {
+  id          String   @id @default(cuid())
+  videoId     String   @unique
+  symbols     String[] // ["TSLA", "AAPL"]
+  timeframe   String?  // "1h", "1d", etc.
+  indicators  Json?    // {rsi: true, macd: true, etc}
+  priceLevels Json?    // [{level: 250.00, type: "support"}]
+  patterns    Json?    // Pattern recognition results
+  confidence  Float?   // 0.0 - 1.0
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+}
+
+model ChartContext {
+  id          String   @id @default(cuid())
+  videoId     String   @unique
+  symbol      String
+  timeframe   String
+  indicators  Json?    // Chart indicators config
+  levels      Json?    // Support/resistance levels
+  syncCues    Json?    // Video timestamp sync points
+  generatedAt DateTime @default(now())
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([symbol])
+}
+
+model ModerationFlag {
+  id        String   @id @default(cuid())
+  videoId   String
+  type      String   // "policy_violation", "inappropriate_content", etc.
+  severity  String   // "low", "medium", "high"
+  notes     String?
+  createdAt DateTime @default(now())
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([type])
+  @@index([severity])
+}
+
+model ModerationReview {
+  id         String             @id @default(cuid())
+  videoId    String
+  reviewerId String
+  decision   ModerationDecision
+  notes      String?
+  createdAt  DateTime           @default(now())
+
+  video    Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  reviewer User  @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([reviewerId])
+  @@index([createdAt])
+}
+
+model Earning {
+  id           String   @id @default(cuid())
+  videoId      String
+  creatorId    String
+  impressions  Int      @default(0)
+  rpm          Float    @default(0.0) // Revenue per mille
+  revenueCents Int      @default(0)
+  periodStart  DateTime
+  periodEnd    DateTime
+  createdAt    DateTime @default(now())
+
+  video   Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  creator User  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([creatorId])
+  @@index([periodStart])
+}
+
+model PayoutAccount {
+  id         String   @id @default(cuid())
+  creatorId  String   @unique
+  provider   String   // "stripe", "paypal", etc.
+  accountRef String   // External account reference
+  status     String   // "verified", "pending", "rejected"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  creator User @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId])
+  @@index([status])
+}
+
+model SubscriptionTier {
+  id         String   @id @default(cuid())
+  creatorId  String
+  name       String
+  priceCents Int      // Price in cents
+  benefits   Json?    // Tier benefits
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId])
+  @@index([isActive])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  entityType String   // "video", "user", etc.
+  entityId   String
+  action     String   // "create", "update", "delete", etc.
+  meta       Json?    // Additional metadata
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

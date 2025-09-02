@@ -1,0 +1,239 @@
+.autocompleteContainer {
+  position: relative;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  transition: all var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: var(--color-panel);
+}
+
+.input::placeholder {
+  color: var(--color-text-light);
+}
+
+/* Suggestions Dropdown */
+.suggestionsDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading State */
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Suggestions List */
+.suggestionsList {
+  padding: var(--spacing-xs);
+}
+
+.suggestionItem {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-bottom: 2px;
+}
+
+.suggestionItem:hover,
+.suggestionItem.selected {
+  background-color: var(--color-highlight);
+}
+
+.suggestionItem.selected {
+  outline: 1px solid var(--color-primary);
+}
+
+.symbolInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.symbol {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.companyName {
+  font-size: var(--font-xs);
+  color: var(--color-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Asset Type Badges */
+.badge {
+  font-size: var(--font-xs);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.stockBadge {
+  background-color: rgba(0, 122, 255, 0.2);
+  color: #007aff;
+}
+
+.etfBadge {
+  background-color: rgba(52, 199, 89, 0.2);
+  color: #34c759;
+}
+
+.cryptoBadge {
+  background-color: rgba(255, 149, 0, 0.2);
+  color: #ff9500;
+}
+
+.defaultBadge {
+  background-color: rgba(142, 142, 147, 0.2);
+  color: #8e8e93;
+}
+
+/* No Results */
+.noResults {
+  padding: var(--spacing-md);
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: var(--font-sm);
+}
+
+.directAdd {
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-xs);
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+/* Scrollbar Styling */
+.suggestionsDropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.suggestionsDropdown::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-radius: var(--radius-sm);
+}
+
+.suggestionsDropdown::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.suggestionsDropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-light);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .suggestionsDropdown {
+    max-height: 200px;
+  }
+  
+  .suggestionItem {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  .symbol {
+    font-size: var(--font-xs);
+  }
+  
+  .companyName {
+    font-size: 11px;
+  }
+}
+
+/* Focus Accessibility */
+.suggestionItem:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .suggestionsDropdown {
+    border-width: 2px;
+  }
+  
+  .suggestionItem.selected {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  .badge {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .suggestionsDropdown {
+    animation: none;
+  }
+  
+  .spinner {
+    animation: none;
+    border-top-color: transparent;
+  }
+  
+  .suggestionItem {
+    transition: none;
+  }
+}

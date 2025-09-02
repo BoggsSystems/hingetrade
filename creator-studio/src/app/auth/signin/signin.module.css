@@ -1,0 +1,182 @@
+.signinPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: var(--color-background);
+  padding: 3rem var(--spacing-lg) var(--spacing-2xl) var(--spacing-lg);
+}
+
+.header {
+  max-width: 28rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.logoIcon {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background-color: var(--color-positive);
+}
+
+.logoText {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.title {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin-top: var(--spacing-sm);
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+}
+
+.link {
+  font-weight: 500;
+  color: var(--color-positive);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.link:hover {
+  color: var(--color-positive-light);
+}
+
+.formContainer {
+  margin-top: var(--spacing-2xl);
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.cardTitle {
+  font-size: var(--font-xl) !important;
+  color: var(--color-text) !important;
+}
+
+.cardDescription {
+  color: var(--color-text-light) !important;
+}
+
+.cardContent {
+  gap: var(--spacing-xl);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.inputWrapper {
+  margin-top: var(--spacing-sm);
+}
+
+.passwordHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.forgotLink {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--color-positive);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.forgotLink:hover {
+  color: var(--color-positive-light);
+}
+
+.submitWrapper {
+  margin-top: var(--spacing-sm);
+}
+
+.socialSection {
+  margin-top: var(--spacing-xl);
+}
+
+.divider {
+  position: relative;
+}
+
+.dividerLine {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+}
+
+.dividerLine::before {
+  content: '';
+  width: 100%;
+  border-top: 1px solid var(--color-border);
+}
+
+.dividerText {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  font-size: var(--font-sm);
+}
+
+.dividerText span {
+  background-color: var(--color-panel);
+  padding: 0 var(--spacing-sm);
+  color: var(--color-text-light);
+}
+
+.socialButton {
+  margin-top: var(--spacing-xl);
+}
+
+.demoInfo {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-light);
+}
+
+@media (max-width: 640px) {
+  .signinPage {
+    padding-left: var(--spacing-xl);
+    padding-right: var(--spacing-xl);
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+}
