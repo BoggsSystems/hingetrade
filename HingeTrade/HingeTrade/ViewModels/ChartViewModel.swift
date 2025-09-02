@@ -20,6 +20,17 @@ class ChartViewModel: ObservableObject {
     @Published var showVolume: Bool = true
     @Published var showIndicators: Bool = false
     @Published var chartType: ChartType = .line
+    @Published var selectedIndicators: Set<TechnicalIndicator> = []
+    
+    // Technical indicator data
+    @Published var rsiData: [RSIDataPoint] = []
+    @Published var macdData: [MACDDataPoint] = []
+    @Published var bollingerBandsData: [BollingerBandDataPoint] = []
+    @Published var sma20Data: [Decimal] = []
+    @Published var sma50Data: [Decimal] = []
+    @Published var ema12Data: [Decimal] = []
+    @Published var ema26Data: [Decimal] = []
+    @Published var supportResistanceLevels: SupportResistanceLevels = SupportResistanceLevels(supportLevels: [], resistanceLevels: [])
     
     // Current symbol
     @Published var currentSymbol: String = ""
@@ -31,11 +42,13 @@ class ChartViewModel: ObservableObject {
     
     private let marketDataService: MarketDataService
     private let webSocketService: WebSocketService
+    private let technicalIndicatorsService: TechnicalIndicatorsService
     private var cancellables = Set<AnyCancellable>()
     
-    init(marketDataService: MarketDataService = MarketDataService(), webSocketService: WebSocketService = WebSocketService()) {
+    init(marketDataService: MarketDataService = MarketDataService(), webSocketService: WebSocketService = WebSocketService(), technicalIndicatorsService: TechnicalIndicatorsService = TechnicalIndicatorsService()) {
         self.marketDataService = marketDataService
         self.webSocketService = webSocketService
+        self.technicalIndicatorsService = technicalIndicatorsService
         setupRealTimeUpdates()
         setupErrorHandling()
     }
@@ -67,6 +80,11 @@ class ChartViewModel: ObservableObject {
             }
             
             updatePriceInformation()
+            
+            // Calculate technical indicators if enabled
+            if showIndicators {
+                calculateTechnicalIndicators()
+            }
             
         } catch {
             self.error = ChartError.loadingFailed(error.localizedDescription)
@@ -165,6 +183,23 @@ class ChartViewModel: ObservableObject {
     
     func toggleIndicators() {
         showIndicators.toggle()
+        if showIndicators {
+            calculateTechnicalIndicators()
+        } else {
+            clearTechnicalIndicators()
+        }
+    }
+    
+    func toggleIndicator(_ indicator: TechnicalIndicator) {
+        if selectedIndicators.contains(indicator) {
+            selectedIndicators.remove(indicator)
+        } else {
+            selectedIndicators.insert(indicator)
+        }
+        
+        if showIndicators {
+            calculateTechnicalIndicators()
+        }
     }
     
     func changeChartType(to type: ChartType) {
@@ -192,26 +227,72 @@ class ChartViewModel: ObservableObject {
         maxPrice - minPrice
     }
     
-    // MARK: - Technical Indicators (Placeholder)
+    // MARK: - Technical Indicators
+    
+    private func calculateTechnicalIndicators() {
+        guard !chartData.isEmpty else { return }
+        
+        let prices = chartData.map { $0.close }
+        
+        // Calculate RSI
+        if selectedIndicators.contains(.rsi) {
+            rsiData = technicalIndicatorsService.calculateRSI(prices: prices)
+        }
+        
+        // Calculate MACD
+        if selectedIndicators.contains(.macd) {
+            macdData = technicalIndicatorsService.calculateMACD(prices: prices)
+        }
+        
+        // Calculate Bollinger Bands
+        if selectedIndicators.contains(.bollingerBands) {
+            bollingerBandsData = technicalIndicatorsService.calculateBollingerBands(prices: prices)
+        }
+        
+        // Calculate Moving Averages
+        if selectedIndicators.contains(.sma20) {
+            sma20Data = technicalIndicatorsService.calculateSMA(prices: prices, period: 20)
+        }
+        
+        if selectedIndicators.contains(.sma50) {
+            sma50Data = technicalIndicatorsService.calculateSMA(prices: prices, period: 50)
+        }
+        
+        if selectedIndicators.contains(.ema12) {
+            ema12Data = technicalIndicatorsService.calculateEMA(prices: prices, period: 12)
+        }
+        
+        if selectedIndicators.contains(.ema26) {
+            ema26Data = technicalIndicatorsService.calculateEMA(prices: prices, period: 26)
+        }
+        
+        // Calculate Support/Resistance
+        if selectedIndicators.contains(.supportResistance) {
+            supportResistanceLevels = technicalIndicatorsService.findSupportResistanceLevels(prices: prices)
+        }
+    }
+    
+    private func clearTechnicalIndicators() {
+        rsiData = []
+        macdData = []
+        bollingerBandsData = []
+        sma20Data = []
+        sma50Data = []
+        ema12Data = []
+        ema26Data = []
+        supportResistanceLevels = SupportResistanceLevels(supportLevels: [], resistanceLevels: [])
+    }
     
     func calculateMovingAverage(period: Int) -> [Decimal] {
         guard chartData.count >= period else { return [] }
-        
-        var movingAverages: [Decimal] = []
-        
-        for i in (period - 1)..<chartData.count {
-            let sum = chartData[(i - period + 1)...i].reduce(0) { $0 + $1.close }
-            let average = sum / Decimal(period)
-            movingAverages.append(average)
-        }
-        
-        return movingAverages
+        let prices = chartData.map { $0.close }
+        return technicalIndicatorsService.calculateSMA(prices: prices, period: period)
     }
     
-    func calculateRSI(period: Int = 14) -> [Double] {
-        // Simplified RSI calculation
-        // In production, would use proper RSI formula
-        return Array(repeating: 50.0, count: chartData.count)
+    func calculateRSI(period: Int = 14) -> [RSIDataPoint] {
+        guard chartData.count >= period else { return [] }
+        let prices = chartData.map { $0.close }
+        return technicalIndicatorsService.calculateRSI(prices: prices, period: period)
     }
     
     // MARK: - Error Handling

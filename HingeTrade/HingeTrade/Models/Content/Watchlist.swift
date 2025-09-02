@@ -4,17 +4,30 @@ import Foundation
 struct Watchlist: Codable, Identifiable, Equatable {
     let id: String
     let accountId: String
-    let name: String
-    let items: [String] // Array of symbols
+    var name: String
+    var items: [String] // Array of symbols
     let createdAt: Date
-    let updatedAt: Date
+    var updatedAt: Date
     
     // Optional metadata
-    let description: String?
+    var description: String?
     let isDefault: Bool?
-    let sortOrder: Int?
-    let color: String? // Hex color code for UI theming
-    let isPublic: Bool? // For sharing watchlists
+    var sortOrder: Int?
+    var color: String? // Hex color code for UI theming
+    var isPublic: Bool? // For sharing watchlists
+    
+    // Social and performance features
+    var isFavorite: Bool
+    var dailyPerformance: Double?
+    var gainers: Int
+    var losers: Int
+    var lastUpdated: Date?
+    
+    // Computed property for symbols (compatibility)
+    var symbols: [String] {
+        get { items }
+        set { items = newValue }
+    }
     
     enum CodingKeys: String, CodingKey {
         case id, name, items, description, color
@@ -24,6 +37,10 @@ struct Watchlist: Codable, Identifiable, Equatable {
         case isDefault = "is_default"
         case sortOrder = "sort_order"
         case isPublic = "is_public"
+        case isFavorite = "is_favorite"
+        case dailyPerformance = "daily_performance"
+        case gainers, losers
+        case lastUpdated = "last_updated"
     }
     
     // MARK: - Computed Properties
@@ -320,6 +337,99 @@ enum WatchlistCategory: String, CaseIterable {
 
 // MARK: - Sample Data
 extension Watchlist {
+    static let sampleWatchlists: [Watchlist] = [
+        Watchlist(
+            id: "watchlist-tech-giants",
+            accountId: "account-001",
+            name: "Tech Giants",
+            items: ["AAPL", "GOOGL", "MSFT", "AMZN", "META", "NVDA"],
+            createdAt: Date().addingTimeInterval(-86400 * 30),
+            updatedAt: Date().addingTimeInterval(-3600),
+            description: "Large cap technology leaders",
+            isDefault: true,
+            sortOrder: 1,
+            color: WatchlistColor.blue.hexString,
+            isPublic: false,
+            isFavorite: true,
+            dailyPerformance: 0.024,
+            gainers: 4,
+            losers: 2,
+            lastUpdated: Date()
+        ),
+        Watchlist(
+            id: "watchlist-ev-stocks",
+            accountId: "account-001",
+            name: "Electric Vehicles",
+            items: ["TSLA", "NIO", "XPEV", "LI", "RIVN", "LCID"],
+            createdAt: Date().addingTimeInterval(-86400 * 14),
+            updatedAt: Date().addingTimeInterval(-7200),
+            description: "Electric vehicle companies",
+            isDefault: false,
+            sortOrder: 2,
+            color: WatchlistColor.green.hexString,
+            isPublic: true,
+            isFavorite: false,
+            dailyPerformance: -0.018,
+            gainers: 2,
+            losers: 4,
+            lastUpdated: Date()
+        ),
+        Watchlist(
+            id: "watchlist-crypto",
+            accountId: "account-001",
+            name: "Crypto Plays",
+            items: ["COIN", "MSTR", "RIOT", "MARA", "CLSK"],
+            createdAt: Date().addingTimeInterval(-86400 * 7),
+            updatedAt: Date().addingTimeInterval(-1800),
+            description: "Crypto-exposed stocks",
+            isDefault: false,
+            sortOrder: 3,
+            color: WatchlistColor.orange.hexString,
+            isPublic: false,
+            isFavorite: true,
+            dailyPerformance: 0.056,
+            gainers: 5,
+            losers: 0,
+            lastUpdated: Date()
+        ),
+        Watchlist(
+            id: "watchlist-ai-stocks",
+            accountId: "account-001",
+            name: "AI Revolution",
+            items: ["NVDA", "AMD", "PLTR", "C3AI", "AI", "SMCI"],
+            createdAt: Date().addingTimeInterval(-86400 * 21),
+            updatedAt: Date().addingTimeInterval(-86400),
+            description: "Artificial intelligence leaders",
+            isDefault: false,
+            sortOrder: 4,
+            color: WatchlistColor.purple.hexString,
+            isPublic: true,
+            isFavorite: false,
+            dailyPerformance: 0.031,
+            gainers: 4,
+            losers: 2,
+            lastUpdated: Date()
+        ),
+        Watchlist(
+            id: "watchlist-dividend-kings",
+            accountId: "account-001",
+            name: "Dividend Champions",
+            items: ["JNJ", "PG", "KO", "PEP", "WMT", "HD", "JPM", "V"],
+            createdAt: Date().addingTimeInterval(-86400 * 45),
+            updatedAt: Date().addingTimeInterval(-3600 * 6),
+            description: "Reliable dividend performers",
+            isDefault: false,
+            sortOrder: 5,
+            color: WatchlistColor.teal.hexString,
+            isPublic: false,
+            isFavorite: false,
+            dailyPerformance: 0.008,
+            gainers: 5,
+            losers: 3,
+            lastUpdated: Date()
+        )
+    ]
+    
     static let sampleData: [Watchlist] = [
         Watchlist(
             id: "watchlist-001",

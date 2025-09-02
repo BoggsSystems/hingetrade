@@ -60,7 +60,7 @@ struct MainTabView: View {
             }
         case .orders:
             if appState.isAuthenticated {
-                OrdersPlaceholderView()
+                OrderManagementView()
             } else {
                 AuthenticationRequiredView(tabName: tab.rawValue)
             }

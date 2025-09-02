@@ -24,6 +24,10 @@ struct VideoContent: Identifiable, Codable {
     let isSponsored: Bool
     let sponsorInfo: SponsorInfo?
     
+    // Performance tracking
+    let performanceScore: Double?
+    let createdAt: Date?
+    
     // Market-related metadata
     let marketDirection: MarketDirection?
     let priceTargets: [PriceTarget]
@@ -126,6 +130,22 @@ struct Creator: Identifiable, Codable {
     let expertise: [String]
     let trackRecord: TrackRecord?
     
+    // Social features
+    let profileImageURL: String?
+    let bio: String?
+    let tagline: String?
+    let website: String?
+    let twitterHandle: String?
+    let instagramHandle: String?
+    let linkedinHandle: String?
+    
+    // Performance metrics for social profile
+    let winRate: Double?
+    let averageReturn: Double?
+    let totalTrades: Int?
+    let riskRating: String?
+    let specialties: [String]?
+    
     struct TrackRecord: Codable {
         let accuracyRate: Double
         let totalPredictions: Int
@@ -133,7 +153,16 @@ struct Creator: Identifiable, Codable {
         let bestCall: String?
         let worstCall: String?
     }
+    
+    // Computed properties
+    var performanceScore: Double? {
+        guard let winRate = winRate, let avgReturn = averageReturn else { return nil }
+        return (winRate * 0.6) + (max(-1, min(1, avgReturn)) * 0.4)
+    }
 }
+
+// Type alias for consistency with social features
+typealias VideoCreator = Creator
 
 // MARK: - VideoCategory
 
@@ -307,6 +336,8 @@ extension VideoContent {
         likeCount: 890,
         isSponsored: false,
         sponsorInfo: nil,
+        performanceScore: 0.12,
+        createdAt: Date().addingTimeInterval(-3600),
         marketDirection: .bullish,
         priceTargets: [
             PriceTarget(symbol: "TSLA", targetPrice: 250.0, timeframe: "6 months", confidence: 0.75, reasoning: "Strong delivery growth")
@@ -343,6 +374,18 @@ extension Creator {
             avgReturn: 0.08,
             bestCall: "TSLA $180 → $250",
             worstCall: "META $320 → $280"
-        )
+        ),
+        profileImageURL: "https://example.com/profile1.jpg",
+        bio: "Full-time trader and educator with 8+ years of experience in equity markets. Specializing in technical analysis and growth stock identification.",
+        tagline: "Making the markets accessible, one trade at a time",
+        website: "https://marketmike.co",
+        twitterHandle: "MarketMikeTrader",
+        instagramHandle: "marketmike_trades",
+        linkedinHandle: "mike-trader",
+        winRate: 0.68,
+        averageReturn: 0.12,
+        totalTrades: 247,
+        riskRating: "Moderate",
+        specialties: ["Growth Stocks", "Technical Analysis", "Risk Management", "Options Strategies"]
     )
 }

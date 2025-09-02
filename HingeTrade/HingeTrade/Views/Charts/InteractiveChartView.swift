@@ -23,6 +23,11 @@ struct InteractiveChartView: View {
             
             // Chart Controls
             chartControlsView
+            
+            // Technical Indicators Panel
+            if chartViewModel.showIndicators {
+                technicalIndicatorsPanel
+            }
         }
         .onAppear {
             Task {
@@ -112,6 +117,11 @@ struct InteractiveChartView: View {
                 
                 // Price Line
                 priceLineView(in: geometry)
+                
+                // Technical Indicators
+                if chartViewModel.showIndicators {
+                    technicalIndicatorsOverlay(in: geometry)
+                }
                 
                 // Volume Bars (if available)
                 if chartViewModel.showVolume {
@@ -288,6 +298,461 @@ struct InteractiveChartView: View {
     private func handleChartDrag(at location: CGPoint) {
         // Handle drag for crosshair movement
         handleChartTap(at: location)
+    }
+    
+    // MARK: - Technical Indicators Overlay
+    
+    private func technicalIndicatorsOverlay(in geometry: GeometryProxy) -> some View {
+        ZStack {
+            // Moving Averages
+            movingAveragesOverlay(in: geometry)
+            
+            // Bollinger Bands
+            bollingerBandsOverlay(in: geometry)
+            
+            // Support/Resistance Lines
+            supportResistanceOverlay(in: geometry)
+        }
+    }
+    
+    private func movingAveragesOverlay(in geometry: GeometryProxy) -> some View {
+        ZStack {
+            // SMA 20
+            if chartViewModel.selectedIndicators.contains(.sma20) && !chartViewModel.sma20Data.isEmpty {
+                movingAverageLineView(data: chartViewModel.sma20Data, color: .yellow, in: geometry)
+            }
+            
+            // SMA 50
+            if chartViewModel.selectedIndicators.contains(.sma50) && !chartViewModel.sma50Data.isEmpty {
+                movingAverageLineView(data: chartViewModel.sma50Data, color: .pink, in: geometry)
+            }
+            
+            // EMA 12
+            if chartViewModel.selectedIndicators.contains(.ema12) && !chartViewModel.ema12Data.isEmpty {
+                movingAverageLineView(data: chartViewModel.ema12Data, color: .cyan, in: geometry)
+            }
+            
+            // EMA 26
+            if chartViewModel.selectedIndicators.contains(.ema26) && !chartViewModel.ema26Data.isEmpty {
+                movingAverageLineView(data: chartViewModel.ema26Data, color: .mint, in: geometry)
+            }
+        }
+    }
+    
+    private func movingAverageLineView(data: [Decimal], color: Color, in geometry: GeometryProxy) -> some View {
+        Path { path in
+            guard !data.isEmpty, !chartViewModel.chartData.isEmpty else { return }
+            
+            let minPrice = chartViewModel.minPrice
+            let maxPrice = chartViewModel.maxPrice
+            let priceRange = maxPrice - minPrice
+            
+            guard priceRange > 0 else { return }
+            
+            let width = geometry.size.width
+            let height = geometry.size.height
+            let startIndex = chartViewModel.chartData.count - data.count
+            let stepX = width / CGFloat(chartViewModel.chartData.count - 1)
+            
+            for (index, value) in data.enumerated() {
+                let x = CGFloat(index + startIndex) * stepX
+                let normalizedPrice = (value - minPrice) / priceRange
+                let y = height - (CGFloat(normalizedPrice) * height)
+                
+                if index == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+        }
+        .stroke(color.opacity(0.8), lineWidth: 1.5)
+    }
+    
+    private func bollingerBandsOverlay(in geometry: GeometryProxy) -> some View {
+        ZStack {
+            if chartViewModel.selectedIndicators.contains(.bollingerBands) && !chartViewModel.bollingerBandsData.isEmpty {
+                // Upper Band
+                bollingerBandLineView(
+                    data: chartViewModel.bollingerBandsData.map { $0.upperBand },
+                    color: .blue.opacity(0.6),
+                    in: geometry
+                )
+                
+                // Middle Band (SMA)
+                bollingerBandLineView(
+                    data: chartViewModel.bollingerBandsData.map { $0.middleBand },
+                    color: .blue.opacity(0.8),
+                    in: geometry
+                )
+                
+                // Lower Band
+                bollingerBandLineView(
+                    data: chartViewModel.bollingerBandsData.map { $0.lowerBand },
+                    color: .blue.opacity(0.6),
+                    in: geometry
+                )
+                
+                // Fill between bands
+                bollingerBandsFillView(in: geometry)
+            }
+        }
+    }
+    
+    private func bollingerBandLineView(data: [Decimal], color: Color, in geometry: GeometryProxy) -> some View {
+        movingAverageLineView(data: data, color: color, in: geometry)
+    }
+    
+    private func bollingerBandsFillView(in geometry: GeometryProxy) -> some View {
+        Path { path in
+            guard !chartViewModel.bollingerBandsData.isEmpty else { return }
+            
+            let minPrice = chartViewModel.minPrice
+            let maxPrice = chartViewModel.maxPrice
+            let priceRange = maxPrice - minPrice
+            
+            guard priceRange > 0 else { return }
+            
+            let width = geometry.size.width
+            let height = geometry.size.height
+            let startIndex = chartViewModel.chartData.count - chartViewModel.bollingerBandsData.count
+            let stepX = width / CGFloat(chartViewModel.chartData.count - 1)
+            
+            // Create path for upper band
+            for (index, band) in chartViewModel.bollingerBandsData.enumerated() {
+                let x = CGFloat(index + startIndex) * stepX
+                let normalizedPrice = (band.upperBand - minPrice) / priceRange
+                let y = height - (CGFloat(normalizedPrice) * height)
+                
+                if index == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+            }
+            
+            // Add path for lower band (in reverse)
+            for (index, band) in chartViewModel.bollingerBandsData.enumerated().reversed() {
+                let x = CGFloat(index + startIndex) * stepX
+                let normalizedPrice = (band.lowerBand - minPrice) / priceRange
+                let y = height - (CGFloat(normalizedPrice) * height)
+                path.addLine(to: CGPoint(x: x, y: y))
+            }
+            
+            path.closeSubpath()
+        }
+        .fill(Color.blue.opacity(0.1))
+    }
+    
+    private func supportResistanceOverlay(in geometry: GeometryProxy) -> some View {
+        ZStack {
+            if chartViewModel.selectedIndicators.contains(.supportResistance) {
+                // Support levels
+                ForEach(Array(chartViewModel.supportResistanceLevels.supportLevels.enumerated()), id: \.offset) { _, level in
+                    supportResistanceLineView(price: level, color: .green, in: geometry)
+                }
+                
+                // Resistance levels
+                ForEach(Array(chartViewModel.supportResistanceLevels.resistanceLevels.enumerated()), id: \.offset) { _, level in
+                    supportResistanceLineView(price: level, color: .red, in: geometry)
+                }
+            }
+        }
+    }
+    
+    private func supportResistanceLineView(price: Decimal, color: Color, in geometry: GeometryProxy) -> some View {
+        let minPrice = chartViewModel.minPrice
+        let maxPrice = chartViewModel.maxPrice
+        let priceRange = maxPrice - minPrice
+        
+        guard priceRange > 0 else {
+            return Path().stroke(Color.clear, lineWidth: 0)
+        }
+        
+        let normalizedPrice = (price - minPrice) / priceRange
+        let y = geometry.size.height - (CGFloat(normalizedPrice) * geometry.size.height)
+        
+        return Path { path in
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: geometry.size.width, y: y))
+        }
+        .stroke(color.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+    }
+    
+    // MARK: - Technical Indicators Panel
+    
+    private var technicalIndicatorsPanel: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Technical Indicators")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+            }
+            
+            // Indicator Selection
+            indicatorSelectionView
+            
+            // RSI Panel
+            if chartViewModel.selectedIndicators.contains(.rsi) && !chartViewModel.rsiData.isEmpty {
+                rsiPanelView
+            }
+            
+            // MACD Panel
+            if chartViewModel.selectedIndicators.contains(.macd) && !chartViewModel.macdData.isEmpty {
+                macdPanelView
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.05))
+                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+        )
+    }
+    
+    private var indicatorSelectionView: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 8) {
+            ForEach(TechnicalIndicator.allCases, id: \.self) { indicator in
+                IndicatorToggleButton(
+                    indicator: indicator,
+                    isSelected: chartViewModel.selectedIndicators.contains(indicator)
+                ) {
+                    chartViewModel.toggleIndicator(indicator)
+                }
+            }
+        }
+    }
+    
+    private var rsiPanelView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("RSI (14)")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.purple)
+                
+                Spacer()
+                
+                if let latestRSI = chartViewModel.rsiData.last {
+                    Text(latestRSI.value.formatted(.number.precision(.fractionLength(2))))
+                        .font(.body)
+                        .fontWeight(.bold)
+                        .foregroundColor(rsiColor(for: latestRSI))
+                }
+            }
+            
+            // Mini RSI Chart
+            if !chartViewModel.rsiData.isEmpty {
+                rsiMiniChartView
+                    .frame(height: 40)
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.purple.opacity(0.1))
+        )
+    }
+    
+    private var rsiMiniChartView: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Background levels
+                Path { path in
+                    // 70 level (overbought)
+                    let y70 = geometry.size.height * 0.3
+                    path.move(to: CGPoint(x: 0, y: y70))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: y70))
+                    
+                    // 30 level (oversold)
+                    let y30 = geometry.size.height * 0.7
+                    path.move(to: CGPoint(x: 0, y: y30))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: y30))
+                }
+                .stroke(Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                
+                // RSI Line
+                Path { path in
+                    let stepX = geometry.size.width / CGFloat(max(chartViewModel.rsiData.count - 1, 1))
+                    
+                    for (index, rsiPoint) in chartViewModel.rsiData.enumerated() {
+                        let x = CGFloat(index) * stepX
+                        let normalizedRSI = 1 - (Double(rsiPoint.value) / 100.0) // Invert for display
+                        let y = CGFloat(normalizedRSI) * geometry.size.height
+                        
+                        if index == 0 {
+                            path.move(to: CGPoint(x: x, y: y))
+                        } else {
+                            path.addLine(to: CGPoint(x: x, y: y))
+                        }
+                    }
+                }
+                .stroke(Color.purple, lineWidth: 1.5)
+            }
+        }
+    }
+    
+    private var macdPanelView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("MACD (12,26,9)")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.orange)
+                
+                Spacer()
+                
+                if let latestMACD = chartViewModel.macdData.last {
+                    HStack(spacing: 8) {
+                        Text("MACD: \(latestMACD.macdLine.formatted(.number.precision(.fractionLength(4))))")
+                            .font(.caption)
+                        
+                        Text("Signal: \(latestMACD.signalLine.formatted(.number.precision(.fractionLength(4))))")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.white)
+                }
+            }
+            
+            // Mini MACD Chart
+            if !chartViewModel.macdData.isEmpty {
+                macdMiniChartView
+                    .frame(height: 40)
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.orange.opacity(0.1))
+        )
+    }
+    
+    private var macdMiniChartView: some View {
+        GeometryReader { geometry in
+            let macdValues = chartViewModel.macdData.map { $0.macdLine }
+            let signalValues = chartViewModel.macdData.map { $0.signalLine }
+            let histogramValues = chartViewModel.macdData.map { $0.histogram }
+            
+            let minValue = (macdValues + signalValues + histogramValues).min() ?? 0
+            let maxValue = (macdValues + signalValues + histogramValues).max() ?? 0
+            let range = maxValue - minValue
+            
+            guard range > 0 else { return AnyView(EmptyView()) }
+            
+            return AnyView(ZStack {
+                // Zero line
+                Path { path in
+                    let zeroY = geometry.size.height - (CGFloat((-minValue) / range) * geometry.size.height)
+                    path.move(to: CGPoint(x: 0, y: zeroY))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: zeroY))
+                }
+                .stroke(Color.gray.opacity(0.5), lineWidth: 0.5)
+                
+                // Histogram bars
+                HStack(alignment: .bottom, spacing: 0) {
+                    ForEach(Array(chartViewModel.macdData.enumerated()), id: \.offset) { index, macdPoint in
+                        let normalizedValue = (macdPoint.histogram - minValue) / range
+                        let barHeight = abs(CGFloat(normalizedValue) * geometry.size.height)
+                        
+                        Rectangle()
+                            .fill(macdPoint.isBullish ? Color.green.opacity(0.6) : Color.red.opacity(0.6))
+                            .frame(height: barHeight)
+                    }
+                }
+                
+                // MACD Line
+                Path { path in
+                    let stepX = geometry.size.width / CGFloat(max(macdValues.count - 1, 1))
+                    
+                    for (index, value) in macdValues.enumerated() {
+                        let x = CGFloat(index) * stepX
+                        let normalizedValue = (value - minValue) / range
+                        let y = geometry.size.height - (CGFloat(normalizedValue) * geometry.size.height)
+                        
+                        if index == 0 {
+                            path.move(to: CGPoint(x: x, y: y))
+                        } else {
+                            path.addLine(to: CGPoint(x: x, y: y))
+                        }
+                    }
+                }
+                .stroke(Color.orange, lineWidth: 1)
+                
+                // Signal Line
+                Path { path in
+                    let stepX = geometry.size.width / CGFloat(max(signalValues.count - 1, 1))
+                    
+                    for (index, value) in signalValues.enumerated() {
+                        let x = CGFloat(index) * stepX
+                        let normalizedValue = (value - minValue) / range
+                        let y = geometry.size.height - (CGFloat(normalizedValue) * geometry.size.height)
+                        
+                        if index == 0 {
+                            path.move(to: CGPoint(x: x, y: y))
+                        } else {
+                            path.addLine(to: CGPoint(x: x, y: y))
+                        }
+                    }
+                }
+                .stroke(Color.blue, lineWidth: 1)
+            })
+        }
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func rsiColor(for rsiPoint: RSIDataPoint) -> Color {
+        if rsiPoint.isOverbought {
+            return .red
+        } else if rsiPoint.isOversold {
+            return .green
+        } else {
+            return .white
+        }
+    }
+}
+
+// MARK: - IndicatorToggleButton
+
+struct IndicatorToggleButton: View {
+    let indicator: TechnicalIndicator
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(indicator.rawValue)
+                .font(.caption2)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .foregroundColor(buttonForegroundColor)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(backgroundColor)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(borderColor, lineWidth: 1)
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isSelected ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
+    }
+    
+    private var buttonForegroundColor: Color {
+        isSelected ? .white : indicator.color
+    }
+    
+    private var backgroundColor: Color {
+        isSelected ? indicator.color.opacity(0.3) : Color.white.opacity(0.05)
+    }
+    
+    private var borderColor: Color {
+        indicator.color.opacity(isSelected ? 0.8 : 0.4)
     }
 }
 

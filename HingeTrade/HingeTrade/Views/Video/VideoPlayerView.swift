@@ -17,6 +17,7 @@ struct VideoPlayerView: View {
     @FocusState private var focusedControl: PlayerControl?
     @State private var showingTradeModal = false
     @State private var showingChartView = false
+    @State private var showingCreatorProfile = false
     
     enum PlayerControl: Hashable {
         case playPause
@@ -56,7 +57,22 @@ struct VideoPlayerView: View {
             videoPlayerViewModel.pause()
         }
         .sheet(isPresented: $showingTradeModal) {
-            TradeTicketModalView(symbol: videoPlayerViewModel.primarySymbol)
+            TradeTicketModalView(
+                symbol: videoPlayerViewModel.primarySymbol,
+                videoContext: VideoContext(
+                    videoId: video.id,
+                    videoTitle: video.title,
+                    creatorName: video.creator.displayName,
+                    marketDirection: video.marketDirection,
+                    keyInsight: video.aiSummary,
+                    mentionedSymbols: video.symbols,
+                    priceTargets: video.priceTargets
+                )
+            )
+            .environmentObject(appState)
+        }
+        .sheet(isPresented: $showingCreatorProfile) {
+            CreatorProfileView(creator: video.creator)
                 .environmentObject(appState)
         }
     }
@@ -131,17 +147,22 @@ struct VideoPlayerView: View {
                         .lineLimit(2)
                         .multilineTextAlignment(.trailing)
                     
-                    HStack(spacing: 8) {
-                        Text(video.creator.displayName)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        if video.creator.isVerified {
-                            Image(systemName: "checkmark.seal.fill")
+                    Button(action: {
+                        showingCreatorProfile = true
+                    }) {
+                        HStack(spacing: 8) {
+                            Text(video.creator.displayName)
                                 .font(.caption)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.gray)
+                            
+                            if video.creator.isVerified {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
                         }
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .padding(.horizontal, 60)
@@ -564,29 +585,7 @@ struct ChartPiPView: View {
     }
 }
 
-// MARK: - TradeTicketModalView (Placeholder)
-
-struct TradeTicketModalView: View {
-    let symbol: String
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("Trade \(symbol)")
-                .font(.largeTitle)
-                .foregroundColor(.white)
-            
-            Text("Trade ticket integration coming soon...")
-                .foregroundColor(.gray)
-            
-            FocusableButton("Close") {
-                dismiss()
-            }
-        }
-        .padding(60)
-        .background(Color.black.ignoresSafeArea())
-    }
-}
+// The TradeTicketModalView is now implemented in its own file
 
 #Preview {
     VideoPlayerView(video: VideoContent.sampleVideo)
