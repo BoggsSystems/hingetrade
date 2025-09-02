@@ -11,7 +11,16 @@ import SwiftUI
 struct HingeTradeApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
+                .preferredColorScheme(.dark)
+                .onOpenURL { url in
+                    handleDeepLink(url)
+                }
         }
+    }
+    
+    private func handleDeepLink(_ url: URL) {
+        // TODO: Implement deep linking logic
+        print("Deep link received: \(url)")
     }
 }
