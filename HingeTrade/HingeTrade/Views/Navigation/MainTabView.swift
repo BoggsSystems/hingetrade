@@ -48,7 +48,7 @@ struct MainTabView: View {
         switch tab {
         case .feed:
             if appState.isAuthenticated {
-                VideoFeedPlaceholderView()
+                VideoFeedView()
             } else {
                 WelcomeView()
             }
@@ -82,33 +82,6 @@ struct MainTabView: View {
 }
 
 // MARK: - Placeholder Views
-struct VideoFeedPlaceholderView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "tv")
-                .font(.system(size: 100))
-                .foregroundColor(.secondary)
-            Text("Video Feed")
-                .font(.largeTitle)
-            Text("Coming soon...")
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
-struct AccountsPlaceholderView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "chart.pie.fill")
-                .font(.system(size: 100))
-                .foregroundColor(.secondary)
-            Text("Accounts & Positions")
-                .font(.largeTitle)
-            Text("Coming soon...")
-                .foregroundColor(.secondary)
-        }
-    }
-}
 
 struct OrdersPlaceholderView: View {
     var body: some View {
