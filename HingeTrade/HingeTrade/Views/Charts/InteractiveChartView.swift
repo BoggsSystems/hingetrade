@@ -10,8 +10,8 @@ import SwiftUI
 struct InteractiveChartView: View {
     let symbol: String
     @EnvironmentObject private var chartViewModel: ChartViewModel
-    @FocusState private var focusedTimeframe: ChartTimeframe?
-    @State private var selectedDataPoint: ChartDataPoint?
+    @FocusState private var focusedTimeframe: ViewModelChartTimeframe?
+    @State private var selectedDataPoint: ViewModelChartDataPoint?
     
     var body: some View {
         VStack(spacing: 16) {
@@ -45,7 +45,7 @@ struct InteractiveChartView: View {
     
     private var timeframeSelectorView: some View {
         HStack(spacing: 12) {
-            ForEach(ChartTimeframe.allCases, id: \.self) { timeframe in
+            ForEach(ViewModelChartTimeframe.allCases, id: \.self) { timeframe in
                 TimeframeButton(
                     timeframe: timeframe,
                     isSelected: chartViewModel.selectedTimeframe == timeframe,
@@ -134,6 +134,7 @@ struct InteractiveChartView: View {
                 }
             }
         }
+        #if os(iOS)
         .onTapGesture { location in
             handleChartTap(at: location)
         }
@@ -143,6 +144,7 @@ struct InteractiveChartView: View {
                     handleChartDrag(at: value.location)
                 }
         )
+        #endif
     }
     
     private func chartGridView(in geometry: GeometryProxy) -> some View {
@@ -173,8 +175,8 @@ struct InteractiveChartView: View {
         Path { path in
             guard !chartViewModel.chartData.isEmpty else { return }
             
-            let minPrice = chartViewModel.minPrice
-            let maxPrice = chartViewModel.maxPrice
+            let minPrice = Double(truncating: chartViewModel.minPrice as NSDecimalNumber)
+            let maxPrice = Double(truncating: chartViewModel.maxPrice as NSDecimalNumber)
             let priceRange = maxPrice - minPrice
             
             guard priceRange > 0 else { return }
@@ -185,7 +187,7 @@ struct InteractiveChartView: View {
             
             for (index, dataPoint) in chartViewModel.chartData.enumerated() {
                 let x = CGFloat(index) * stepX
-                let normalizedPrice = (dataPoint.price - minPrice) / priceRange
+                let normalizedPrice = (Double(truncating: dataPoint.price as NSDecimalNumber) - minPrice) / priceRange
                 let y = height - (CGFloat(normalizedPrice) * height)
                 
                 if index == 0 {
@@ -208,9 +210,9 @@ struct InteractiveChartView: View {
     private func volumeBarsView(in geometry: GeometryProxy) -> some View {
         HStack(alignment: .bottom, spacing: 1) {
             ForEach(Array(chartViewModel.chartData.enumerated()), id: \.offset) { index, dataPoint in
-                let maxVolume = chartViewModel.maxVolume
+                let maxVolume = Double(truncating: chartViewModel.maxVolume as NSDecimalNumber)
                 let volumeHeight = maxVolume > 0 ? 
-                    CGFloat(dataPoint.volume / maxVolume) * (geometry.size.height * 0.2) : 0
+                    CGFloat(Double(truncating: dataPoint.volume as NSDecimalNumber) / maxVolume) * (geometry.size.height * 0.2) : 0
                 
                 Rectangle()
                     .fill(Color.gray.opacity(0.3))
@@ -221,7 +223,7 @@ struct InteractiveChartView: View {
         .offset(y: geometry.size.height * 0.8)
     }
     
-    private func crosshairView(for dataPoint: ChartDataPoint, in geometry: GeometryProxy) -> some View {
+    private func crosshairView(for dataPoint: ViewModelChartDataPoint, in geometry: GeometryProxy) -> some View {
         // Implementation for crosshair overlay when user taps/drags
         Rectangle()
             .stroke(Color.green.opacity(0.5), lineWidth: 1)
@@ -274,7 +276,7 @@ struct InteractiveChartView: View {
             
             if let selectedPoint = selectedDataPoint {
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(selectedPoint.price.formatted(.currency(code: "USD")))
+                    Text(Double(truncating: selectedPoint.price as NSDecimalNumber).formatted(.currency(code: "USD")))
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
@@ -343,8 +345,8 @@ struct InteractiveChartView: View {
         Path { path in
             guard !data.isEmpty, !chartViewModel.chartData.isEmpty else { return }
             
-            let minPrice = chartViewModel.minPrice
-            let maxPrice = chartViewModel.maxPrice
+            let minPrice = Double(truncating: chartViewModel.minPrice as NSDecimalNumber)
+            let maxPrice = Double(truncating: chartViewModel.maxPrice as NSDecimalNumber)
             let priceRange = maxPrice - minPrice
             
             guard priceRange > 0 else { return }
@@ -356,7 +358,7 @@ struct InteractiveChartView: View {
             
             for (index, value) in data.enumerated() {
                 let x = CGFloat(index + startIndex) * stepX
-                let normalizedPrice = (value - minPrice) / priceRange
+                let normalizedPrice = (Double(truncating: value as NSDecimalNumber) - minPrice) / priceRange
                 let y = height - (CGFloat(normalizedPrice) * height)
                 
                 if index == 0 {
@@ -407,8 +409,8 @@ struct InteractiveChartView: View {
         Path { path in
             guard !chartViewModel.bollingerBandsData.isEmpty else { return }
             
-            let minPrice = chartViewModel.minPrice
-            let maxPrice = chartViewModel.maxPrice
+            let minPrice = Double(truncating: chartViewModel.minPrice as NSDecimalNumber)
+            let maxPrice = Double(truncating: chartViewModel.maxPrice as NSDecimalNumber)
             let priceRange = maxPrice - minPrice
             
             guard priceRange > 0 else { return }
@@ -421,7 +423,7 @@ struct InteractiveChartView: View {
             // Create path for upper band
             for (index, band) in chartViewModel.bollingerBandsData.enumerated() {
                 let x = CGFloat(index + startIndex) * stepX
-                let normalizedPrice = (band.upperBand - minPrice) / priceRange
+                let normalizedPrice = (Double(truncating: band.upperBand as NSDecimalNumber) - minPrice) / priceRange
                 let y = height - (CGFloat(normalizedPrice) * height)
                 
                 if index == 0 {
@@ -434,7 +436,7 @@ struct InteractiveChartView: View {
             // Add path for lower band (in reverse)
             for (index, band) in chartViewModel.bollingerBandsData.enumerated().reversed() {
                 let x = CGFloat(index + startIndex) * stepX
-                let normalizedPrice = (band.lowerBand - minPrice) / priceRange
+                let normalizedPrice = (Double(truncating: band.lowerBand as NSDecimalNumber) - minPrice) / priceRange
                 let y = height - (CGFloat(normalizedPrice) * height)
                 path.addLine(to: CGPoint(x: x, y: y))
             }
@@ -469,7 +471,7 @@ struct InteractiveChartView: View {
             return Path().stroke(Color.clear, lineWidth: 0)
         }
         
-        let normalizedPrice = (price - minPrice) / priceRange
+        let normalizedPrice = Double(truncating: ((price - minPrice) / priceRange) as NSDecimalNumber)
         let y = geometry.size.height - (CGFloat(normalizedPrice) * geometry.size.height)
         
         return Path { path in
@@ -579,7 +581,7 @@ struct InteractiveChartView: View {
                     
                     for (index, rsiPoint) in chartViewModel.rsiData.enumerated() {
                         let x = CGFloat(index) * stepX
-                        let normalizedRSI = 1 - (Double(rsiPoint.value) / 100.0) // Invert for display
+                        let normalizedRSI = 1 - (Double(truncating: rsiPoint.value as NSDecimalNumber) / 100.0) // Invert for display
                         let y = CGFloat(normalizedRSI) * geometry.size.height
                         
                         if index == 0 {
@@ -635,13 +637,12 @@ struct InteractiveChartView: View {
             let signalValues = chartViewModel.macdData.map { $0.signalLine }
             let histogramValues = chartViewModel.macdData.map { $0.histogram }
             
-            let minValue = (macdValues + signalValues + histogramValues).min() ?? 0
-            let maxValue = (macdValues + signalValues + histogramValues).max() ?? 0
+            let minValue = Double(truncating: ((macdValues + signalValues + histogramValues).min() ?? 0) as NSDecimalNumber)
+            let maxValue = Double(truncating: ((macdValues + signalValues + histogramValues).max() ?? 0) as NSDecimalNumber)
             let range = maxValue - minValue
             
-            guard range > 0 else { return AnyView(EmptyView()) }
-            
-            return AnyView(ZStack {
+            if range > 0 {
+                ZStack {
                 // Zero line
                 Path { path in
                     let zeroY = geometry.size.height - (CGFloat((-minValue) / range) * geometry.size.height)
@@ -653,7 +654,7 @@ struct InteractiveChartView: View {
                 // Histogram bars
                 HStack(alignment: .bottom, spacing: 0) {
                     ForEach(Array(chartViewModel.macdData.enumerated()), id: \.offset) { index, macdPoint in
-                        let normalizedValue = (macdPoint.histogram - minValue) / range
+                        let normalizedValue = (Double(truncating: macdPoint.histogram as NSDecimalNumber) - minValue) / range
                         let barHeight = abs(CGFloat(normalizedValue) * geometry.size.height)
                         
                         Rectangle()
@@ -668,7 +669,7 @@ struct InteractiveChartView: View {
                     
                     for (index, value) in macdValues.enumerated() {
                         let x = CGFloat(index) * stepX
-                        let normalizedValue = (value - minValue) / range
+                        let normalizedValue = (Double(truncating: value as NSDecimalNumber) - minValue) / range
                         let y = geometry.size.height - (CGFloat(normalizedValue) * geometry.size.height)
                         
                         if index == 0 {
@@ -686,7 +687,7 @@ struct InteractiveChartView: View {
                     
                     for (index, value) in signalValues.enumerated() {
                         let x = CGFloat(index) * stepX
-                        let normalizedValue = (value - minValue) / range
+                        let normalizedValue = (Double(truncating: value as NSDecimalNumber) - minValue) / range
                         let y = geometry.size.height - (CGFloat(normalizedValue) * geometry.size.height)
                         
                         if index == 0 {
@@ -697,7 +698,8 @@ struct InteractiveChartView: View {
                     }
                 }
                 .stroke(Color.blue, lineWidth: 1)
-            })
+                }
+            }
         }
     }
     
@@ -759,7 +761,7 @@ struct IndicatorToggleButton: View {
 // MARK: - TimeframeButton
 
 struct TimeframeButton: View {
-    let timeframe: ChartTimeframe
+    let timeframe: ViewModelChartTimeframe
     let isSelected: Bool
     let isFocused: Bool
     let action: () -> Void

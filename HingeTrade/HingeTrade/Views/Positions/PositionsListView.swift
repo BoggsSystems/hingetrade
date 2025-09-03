@@ -260,7 +260,7 @@ struct ControlButton: View {
 struct PositionsGridView: View {
     let positions: [Position]
     @Binding var selectedPosition: Position?
-    @Binding var focusedPosition: String?
+    @FocusState.Binding var focusedPosition: String?
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -327,7 +327,7 @@ struct PositionCard: View {
                             .font(.caption)
                             .foregroundColor(.gray)
                         
-                        Text(position.quantity.formatted(.number.precision(.fractionLength(0))))
+                        Text(position.formattedQty)
                             .font(.body)
                             .fontWeight(.medium)
                             .foregroundColor(.white)
@@ -340,7 +340,7 @@ struct PositionCard: View {
                             .font(.caption)
                             .foregroundColor(.gray)
                         
-                        Text(position.avgEntryPrice.formatted(.currency(code: "USD")))
+                        Text(position.formattedAvgEntryPrice)
                             .font(.body)
                             .fontWeight(.medium)
                             .foregroundColor(.white)
@@ -356,7 +356,7 @@ struct PositionCard: View {
                         
                         Spacer()
                         
-                        Text(position.marketValue.formatted(.currency(code: "USD")))
+                        Text(position.formattedMarketValue)
                             .font(.body)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
@@ -370,10 +370,10 @@ struct PositionCard: View {
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(position.unrealizedPL.formatted(.currency(code: "USD")))
+                            Text(position.formattedUnrealizedPl)
                                 .font(.body)
                                 .fontWeight(.semibold)
-                                .foregroundColor(position.unrealizedPL >= 0 ? .green : .red)
+                                .foregroundColor(position.isPositiveUnrealizedPl ? .green : .red)
                             
                             Text("(\(position.unrealizedPLPercent.formatted(.percent.precision(.fractionLength(2)))))")
                                 .font(.caption)

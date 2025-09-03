@@ -537,7 +537,6 @@ struct TradeTicketModalView: View {
                     MarketDataItem(title: "Volume", value: (quote.volume ?? 0).formatted(.number.notation(.compactName)))
                     MarketDataItem(title: "Day High", value: (quote.dailyHigh ?? 0).formatted(.currency(code: "USD")))
                     MarketDataItem(title: "Day Low", value: (quote.dailyLow ?? 0).formatted(.currency(code: "USD")))
-                    MarketDataItem(title: "52W High", value: quote.fiftyTwoWeekHigh.formatted(.currency(code: "USD")))
                 }
             } else {
                 LoadingStateView(message: "Loading market data...")
@@ -672,7 +671,7 @@ struct SideButton: View {
 }
 
 struct OrderTypeButton: View {
-    let orderType: TicketOrderType
+    let orderType: OrderType
     let isSelected: Bool
     let isFocused: Bool
     let action: () -> Void
@@ -725,7 +724,7 @@ struct OrderTypeButton: View {
 }
 
 struct TimeInForceButton: View {
-    let timeInForce: TimeInForce
+    let timeInForce: OrderTimeInForce
     let isSelected: Bool
     let isFocused: Bool
     let action: () -> Void
