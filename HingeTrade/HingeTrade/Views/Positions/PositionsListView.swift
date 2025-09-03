@@ -298,90 +298,19 @@ struct PositionCard: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Symbol and Side
-                HStack {
-                    Text(position.symbol)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    Text(position.side.rawValue.uppercased())
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(position.side == .long ? .blue : .orange)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(position.side == .long ? Color.blue.opacity(0.2) : Color.orange.opacity(0.2))
-                        )
-                }
-                
-                // Quantity and Price
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Quantity")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        Text(position.formattedQty)
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundColor(.white)
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Avg Cost")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        Text(position.formattedAvgEntryPrice)
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundColor(.white)
-                    }
-                }
-                
-                // Current Value and P&L
-                VStack(spacing: 8) {
-                    HStack {
-                        Text("Market Value")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        Spacer()
-                        
-                        Text(position.formattedMarketValue)
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
-                    
-                    HStack {
-                        Text("Unrealized P&L")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(position.formattedUnrealizedPl)
-                                .font(.body)
-                                .fontWeight(.semibold)
-                                .foregroundColor(position.isPositiveUnrealizedPl ? .green : .red)
-                            
-                            Text("(\(position.unrealizedPLPercent.formatted(.percent.precision(.fractionLength(2)))))")
-                                .font(.caption)
-                                .foregroundColor(position.isPositiveUnrealizedPl ? .green : .red)
-                        }
-                    }
-                }
-            }
+            positionCardContent
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isFocused)
+    }
+    
+    private var positionCardContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            symbolAndSideSection
+            quantityAndPriceSection  
+            valueAndPLSection
+        }
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 12)
@@ -391,10 +320,99 @@ struct PositionCard: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.green, lineWidth: isFocused ? 2 : 0)
             )
+    }
+    
+    private var symbolAndSideSection: some View {
+        HStack {
+            Text(position.symbol)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Text(position.side.rawValue.uppercased())
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(position.side == .long ? .blue : .orange)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(position.side == .long ? Color.blue.opacity(0.2) : Color.orange.opacity(0.2))
+                )
         }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isFocused)
+    }
+    
+    private var quantityAndPriceSection: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Quantity")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
+                Text(position.formattedQty)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("Avg Cost")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
+                Text(position.formattedAvgEntryPrice)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+            }
+        }
+    }
+    
+    private var valueAndPLSection: some View {
+        VStack(spacing: 8) {
+            marketValueRow
+            unrealizedPLRow
+        }
+    }
+    
+    private var marketValueRow: some View {
+        HStack {
+            Text("Market Value")
+                .font(.caption)
+                .foregroundColor(.gray)
+            
+            Spacer()
+            
+            Text(position.formattedMarketValue)
+                .font(.body)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+        }
+    }
+    
+    private var unrealizedPLRow: some View {
+        HStack {
+            Text("Unrealized P&L")
+                .font(.caption)
+                .foregroundColor(.gray)
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(position.formattedUnrealizedPl)
+                    .font(.body)
+                    .fontWeight(.semibold)
+                    .foregroundColor(position.unrealizedPlColor == .positive ? .green : .red)
+                
+                Text(position.formattedUnrealizedPlpc)
+                    .font(.caption)
+                    .foregroundColor(position.unrealizedPlColor == .positive ? .green : .red)
+            }
+        }
     }
 }
 

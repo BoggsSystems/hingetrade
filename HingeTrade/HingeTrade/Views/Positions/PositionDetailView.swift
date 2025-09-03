@@ -124,13 +124,13 @@ struct PositionDetailView: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
                 MetricCard(
                     title: "Quantity",
-                    value: position.quantity.formatted(.number.precision(.fractionLength(0))),
+                    value: position.formattedQty,
                     subtitle: "Shares"
                 )
                 
                 MetricCard(
                     title: "Avg Entry Price",
-                    value: position.avgEntryPrice.formatted(.currency(code: "USD")),
+                    value: position.formattedAvgEntryPrice,
                     subtitle: "Per share"
                 )
                 
@@ -144,7 +144,7 @@ struct PositionDetailView: View {
                 
                 MetricCard(
                     title: "Market Value",
-                    value: position.marketValue.formatted(.currency(code: "USD")),
+                    value: position.formattedMarketValue,
                     subtitle: "Total value"
                 )
             }
@@ -169,13 +169,13 @@ struct PositionDetailView: View {
                 }
                 
                 HStack(alignment: .bottom, spacing: 12) {
-                    Text(position.unrealizedPL.formatted(.currency(code: "USD")))
+                    Text(position.formattedUnrealizedPl)
                         .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(position.unrealizedPL >= 0 ? .green : .red)
+                        .foregroundColor(position.unrealizedPlColor == .positive ? .green : .red)
                     
-                    Text("(\(position.unrealizedPLPercent.formatted(.percent.precision(.fractionLength(2)))))")
+                    Text(position.formattedUnrealizedPlpc)
                         .font(.title2)
-                        .foregroundColor(position.unrealizedPL >= 0 ? .green : .red)
+                        .foregroundColor(position.unrealizedPlColor == .positive ? .green : .red)
                     
                     Spacer()
                 }
@@ -183,8 +183,8 @@ struct PositionDetailView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill((position.unrealizedPL >= 0 ? Color.green : Color.red).opacity(0.1))
-                    .stroke((position.unrealizedPL >= 0 ? Color.green : Color.red).opacity(0.3), lineWidth: 1)
+                    .fill((position.unrealizedPlColor == .positive ? Color.green : Color.red).opacity(0.1))
+                    .stroke((position.unrealizedPlColor == .positive ? Color.green : Color.red).opacity(0.3), lineWidth: 1)
             )
             
             // Additional Performance Metrics
@@ -450,13 +450,13 @@ struct OrderHistoryRow: View {
                 .foregroundColor(order.side == .buy ? .green : .red)
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(order.side.rawValue.uppercased()) \(order.quantity.formatted(.number))")
+                Text("\(order.side.rawValue.uppercased()) \(order.formattedQty)")
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                 
-                if let executedAt = order.executedAt {
-                    Text(executedAt.formatted(.dateTime.month().day().hour().minute()))
+                if let filledAt = order.filledAt {
+                    Text(filledAt.formatted(.dateTime.month().day().hour().minute()))
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -464,8 +464,8 @@ struct OrderHistoryRow: View {
             
             Spacer()
             
-            if let filledPrice = order.filledPrice {
-                Text(filledPrice.formatted(.currency(code: "USD")))
+            if let filledAvgPrice = order.filledAvgPrice {
+                Text(order.formattedFilledAvgPrice)
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundColor(.white)
