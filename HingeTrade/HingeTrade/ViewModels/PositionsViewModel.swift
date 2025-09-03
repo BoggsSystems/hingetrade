@@ -53,10 +53,23 @@ class PositionsViewModel: ObservableObject {
         error = nil
         
         do {
-            let loadedPositions = try await tradingService.getPositions()
+            let loadedPositions = try await withCheckedThrowingContinuation { continuation in
+                tradingService.getPositions()
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { positions in
+                            continuation.resume(returning: positions)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             
-            // Filter out zero positions  
-            self.positions = loadedPositions.filter { Double($0.qty) != 0 }
+            // Filter out zero positions using correct property name
+            self.positions = loadedPositions.filter { (Double($0.qty) ?? 0.0) != 0 }
             
             // Apply current filters and sorting
             applyFiltersAndSorting()
@@ -77,7 +90,20 @@ class PositionsViewModel: ObservableObject {
     
     func refreshPosition(_ symbol: String) async {
         do {
-            let updatedPosition = try await tradingService.getPosition(symbol: symbol)
+            let updatedPosition = try await withCheckedThrowingContinuation { continuation in
+                tradingService.getPosition(symbol: symbol)
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { position in
+                            continuation.resume(returning: position)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             
             if let index = positions.firstIndex(where: { $0.symbol == symbol }) {
                 if let position = updatedPosition {
@@ -138,21 +164,41 @@ class PositionsViewModel: ObservableObject {
     // MARK: - Summary Calculations
     
     private func calculateSummaries() {
-        totalMarketValue = positions.reduce(0) { $0 + $1.marketValue }
-        totalUnrealizedPL = positions.reduce(0) { $0 + $1.unrealizedPL }
+        totalMarketValue = positions.reduce(Decimal(0)) { result, position in
+            result + currentMarketValue(for: position)
+        }
         
-        let totalCostBasis = positions.reduce(0) { $0 + ($1.avgEntryPrice * abs($1.quantity)) }
-        totalUnrealizedPLPercent = totalCostBasis > 0 ? Double(totalUnrealizedPL / totalCostBasis) : 0.0
+        totalUnrealizedPL = positions.reduce(Decimal(0)) { result, position in
+            result + currentUnrealizedPL(for: position)
+        }
         
-        profitablePositionsCount = positions.filter { $0.unrealizedPL > 0 }.count
-        losingPositionsCount = positions.filter { $0.unrealizedPL < 0 }.count
+        let totalCostBasis = positions.reduce(Decimal(0)) { result, position in
+            let avgPrice = Decimal(string: position.avgEntryPrice) ?? 0
+            let qty = Decimal(string: position.qty) ?? 0
+            return result + (avgPrice * abs(qty))
+        }
+        
+        totalUnrealizedPLPercent = totalCostBasis > 0 ? Double(truncating: (totalUnrealizedPL / totalCostBasis) as NSDecimalNumber) : 0.0
+        
+        profitablePositionsCount = positions.filter { 
+            currentUnrealizedPL(for: $0) > 0 
+        }.count
+        
+        losingPositionsCount = positions.filter { 
+            currentUnrealizedPL(for: $0) < 0 
+        }.count
     }
     
     // MARK: - Real-Time Updates
     
     private func setupRealTimeUpdates() {
         // Subscribe to position updates via WebSocket
-        webSocketService.positionUpdates
+        webSocketService.messagePublisher
+            .filter { $0.type == .positionUpdate }
+            .compactMap { message -> Position? in
+                guard let data = message.data else { return nil }
+                return try? JSONDecoder().decode(Position.self, from: data)
+            }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] positionUpdate in
                 self?.handlePositionUpdate(positionUpdate)
@@ -160,7 +206,12 @@ class PositionsViewModel: ObservableObject {
             .store(in: &cancellables)
         
         // Subscribe to quote updates for position symbols
-        webSocketService.quoteUpdates
+        webSocketService.messagePublisher
+            .filter { $0.type == .quote }
+            .compactMap { message -> Quote? in
+                guard let data = message.data else { return nil }
+                return try? JSONDecoder().decode(Quote.self, from: data)
+            }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] quote in
                 self?.handleQuoteUpdate(quote)
@@ -184,49 +235,82 @@ class PositionsViewModel: ObservableObject {
         }
     }
     
+    // Store current prices separately since Position properties are read-only
+    @Published private var currentPrices: [String: Decimal] = [:]
+    
     private func handleQuoteUpdate(_ quote: Quote) {
-        // Update positions with new market prices
-        for i in positions.indices {
-            if positions[i].symbol == quote.symbol {
-                let currentPrice = quote.bidPrice
-                let quantity = positions[i].quantity
-                let avgEntryPrice = positions[i].avgEntryPrice
-                
-                // Recalculate market value and unrealized P&L
-                positions[i].marketValue = currentPrice * abs(quantity)
-                
-                if positions[i].side == .long {
-                    positions[i].unrealizedPL = (currentPrice - avgEntryPrice) * quantity
-                } else {
-                    positions[i].unrealizedPL = (avgEntryPrice - currentPrice) * abs(quantity)
-                }
-                
-                positions[i].unrealizedPLPercent = avgEntryPrice > 0 ? 
-                    Double(positions[i].unrealizedPL / (avgEntryPrice * abs(quantity))) : 0.0
-            }
-        }
+        // Store current price for this symbol
+        currentPrices[quote.symbol] = Decimal(quote.bidPrice)
         
-        applyFiltersAndSorting()
+        // Recalculate summaries with updated prices
         calculateSummaries()
         lastUpdated = Date()
+    }
+    
+    // MARK: - Helper Methods for Calculated Values
+    
+    func currentMarketValue(for position: Position) -> Decimal {
+        let currentPrice = currentPrices[position.symbol] ?? (Decimal(string: position.currentPrice ?? "0") ?? 0)
+        let qty = Decimal(string: position.qty) ?? 0
+        return currentPrice * abs(qty)
+    }
+    
+    func currentUnrealizedPL(for position: Position) -> Decimal {
+        let currentPrice = currentPrices[position.symbol] ?? (Decimal(string: position.currentPrice ?? "0") ?? 0)
+        let avgEntryPrice = Decimal(string: position.avgEntryPrice) ?? 0
+        let qty = Decimal(string: position.qty) ?? 0
+        
+        if position.side == .long {
+            return (currentPrice - avgEntryPrice) * qty
+        } else {
+            return (avgEntryPrice - currentPrice) * abs(qty)
+        }
+    }
+    
+    func currentUnrealizedPLPercent(for position: Position) -> Double {
+        let avgEntryPrice = Decimal(string: position.avgEntryPrice) ?? 0
+        let qty = Decimal(string: position.qty) ?? 0
+        let unrealizedPL = currentUnrealizedPL(for: position)
+        
+        guard avgEntryPrice > 0 && qty != 0 else { return 0.0 }
+        let costBasis = avgEntryPrice * abs(qty)
+        return Double(truncating: (unrealizedPL / costBasis) as NSDecimalNumber)
     }
     
     // MARK: - Position Actions
     
     func closePosition(_ position: Position) async {
         do {
-            let orderSide: Order.Side = position.side == .long ? .sell : .buy
-            let quantity = abs(position.quantity)
+            let orderSide: OrderSide = position.side == .long ? .sell : .buy
+            let quantity = abs(Decimal(string: position.qty) ?? 0)
             
-            let order = Order(
+            let orderRequest = PlaceOrderRequest(
                 symbol: position.symbol,
-                quantity: quantity,
                 side: orderSide,
                 type: .market,
-                timeInForce: .day
+                timeInForce: .day,
+                qty: String(describing: quantity),
+                notional: nil,
+                limitPrice: nil,
+                stopPrice: nil,
+                extendedHours: false,
+                clientOrderId: nil
             )
             
-            _ = try await tradingService.submitOrder(order)
+            _ = try await withCheckedThrowingContinuation { continuation in
+                tradingService.placeOrder(orderRequest)
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { order in
+                            continuation.resume(returning: order)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             
             // Refresh positions after order submission
             await refreshPosition(position.symbol)
@@ -238,27 +322,45 @@ class PositionsViewModel: ObservableObject {
     }
     
     func adjustPosition(_ position: Position, newQuantity: Decimal) async {
-        let currentQuantity = position.quantity
+        let currentQuantity = Decimal(string: position.qty) ?? 0
         let difference = newQuantity - currentQuantity
         
         guard difference != 0 else { return }
         
         do {
-            let orderSide: Order.Side = difference > 0 ? 
+            let orderSide: OrderSide = difference > 0 ? 
                 (position.side == .long ? .buy : .sell) : 
                 (position.side == .long ? .sell : .buy)
             
             let orderQuantity = abs(difference)
             
-            let order = Order(
+            let orderRequest = PlaceOrderRequest(
                 symbol: position.symbol,
-                quantity: orderQuantity,
                 side: orderSide,
                 type: .market,
-                timeInForce: .day
+                timeInForce: .day,
+                qty: String(describing: orderQuantity),
+                notional: nil,
+                limitPrice: nil,
+                stopPrice: nil,
+                extendedHours: false,
+                clientOrderId: nil
             )
             
-            _ = try await tradingService.submitOrder(order)
+            _ = try await withCheckedThrowingContinuation { continuation in
+                tradingService.placeOrder(orderRequest)
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { order in
+                            continuation.resume(returning: order)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             
             // Refresh positions after order submission
             await refreshPosition(position.symbol)
@@ -272,13 +374,13 @@ class PositionsViewModel: ObservableObject {
     // MARK: - Computed Properties
     
     var biggestWinner: Position? {
-        positions.filter { $0.unrealizedPL > 0 }
-                .max(by: { $0.unrealizedPL < $1.unrealizedPL })
+        positions.filter { currentUnrealizedPL(for: $0) > 0 }
+                .max(by: { currentUnrealizedPL(for: $0) < currentUnrealizedPL(for: $1) })
     }
     
     var biggestLoser: Position? {
-        positions.filter { $0.unrealizedPL < 0 }
-                .min(by: { $0.unrealizedPL < $1.unrealizedPL })
+        positions.filter { currentUnrealizedPL(for: $0) < 0 }
+                .min(by: { currentUnrealizedPL(for: $0) < currentUnrealizedPL(for: $1) })
     }
     
     var portfolioDiversification: [String: Decimal] {
@@ -287,7 +389,7 @@ class PositionsViewModel: ObservableObject {
         
         var weights: [String: Decimal] = [:]
         for position in positions {
-            let weight = position.marketValue / totalValue
+            let weight = currentMarketValue(for: position) / totalValue
             weights[position.symbol] = weight
         }
         

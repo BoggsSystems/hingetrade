@@ -282,7 +282,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
         do {
             let endpoint = try APIEndpoint.post("/auth/change-password", body: request)
             
-            return apiClient.request<String>(endpoint)
+            return apiClient.request<SimpleResponse>(endpoint)
                 .map { _ in () }
                 .eraseToAnyPublisher()
                 
@@ -303,7 +303,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
         do {
             let endpoint = try APIEndpoint.post("/auth/reset-password", body: request)
             
-            return apiClient.request<String>(endpoint)
+            return apiClient.request<SimpleResponse>(endpoint)
                 .map { _ in () }
                 .eraseToAnyPublisher()
                 

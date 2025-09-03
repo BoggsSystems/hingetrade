@@ -441,8 +441,8 @@ class DefaultWatchlistServiceImpl: WatchlistServiceProtocol {
     func setDefaultWatchlist(id: String) -> AnyPublisher<Void, APIError> {
         let endpoint = APIEndpoint(path: "/watchlists/\(id)/set-default", method: .POST)
         
-        return apiClient.request(endpoint)
-            .map { _ in () }
+        return apiClient.request<SimpleResponse>(endpoint)
+            .map { (_: APIResponse<SimpleResponse>) in () }
             .eraseToAnyPublisher()
     }
     
@@ -855,3 +855,4 @@ class MockWatchlistService: WatchlistServiceProtocol {
         )
     }
 }
+

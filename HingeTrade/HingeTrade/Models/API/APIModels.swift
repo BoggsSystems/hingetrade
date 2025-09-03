@@ -15,6 +15,11 @@ struct APIResponse<T: Codable>: Codable {
     }
 }
 
+struct SimpleResponse: Codable {
+    let message: String?
+    let success: Bool
+}
+
 // MARK: - API Error
 struct APIError: Codable, Error {
     let code: String

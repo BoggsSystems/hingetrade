@@ -106,7 +106,7 @@ class TechnicalIndicatorsService {
             let sma = subset.reduce(0, +) / Decimal(Double(period))
             
             // Calculate standard deviation
-            let variance = subset.map { pow(Double($0 - sma), 2) }.reduce(0, +) / Double(period)
+            let variance = subset.map { pow(Double(truncating: ($0 - sma) as NSDecimalNumber), 2) }.reduce(0, +) / Double(period)
             let stdDev = Decimal(sqrt(variance))
             
             let upperBand = sma + (standardDeviations * stdDev)

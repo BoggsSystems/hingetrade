@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Market Hours Model
 struct MarketHours: Codable, Identifiable, Equatable {
@@ -282,6 +283,17 @@ enum MarketStatusColor {
     case red
     case orange
     case green
+    
+    var swiftUIColor: Color {
+        switch self {
+        case .red:
+            return .red
+        case .orange:
+            return .orange
+        case .green:
+            return .green
+        }
+    }
 }
 
 // MARK: - Market Event

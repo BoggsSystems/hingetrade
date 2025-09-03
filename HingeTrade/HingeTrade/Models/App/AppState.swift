@@ -521,6 +521,12 @@ struct MemoryUsage {
         self.usedMemoryMB = Double.random(in: 200...800)
         self.availableMemoryMB = totalMemoryMB - usedMemoryMB
     }
+    
+    init(usedMemoryMB: Double, availableMemoryMB: Double, totalMemoryMB: Double) {
+        self.usedMemoryMB = usedMemoryMB
+        self.availableMemoryMB = availableMemoryMB
+        self.totalMemoryMB = totalMemoryMB
+    }
 }
 
 struct CacheStatus {
@@ -562,6 +568,15 @@ struct FeatureFlags: Codable {
         self.socialFeatures = false
         self.betaAnalytics = true
         self.darkMode = true
+    }
+    
+    init(advancedCharting: Bool, optionsTrading: Bool, cryptoSupport: Bool, socialFeatures: Bool, betaAnalytics: Bool, darkMode: Bool) {
+        self.advancedCharting = advancedCharting
+        self.optionsTrading = optionsTrading
+        self.cryptoSupport = cryptoSupport
+        self.socialFeatures = socialFeatures
+        self.betaAnalytics = betaAnalytics
+        self.darkMode = darkMode
     }
 }
 

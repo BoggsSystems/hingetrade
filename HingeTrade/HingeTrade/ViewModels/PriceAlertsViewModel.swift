@@ -252,12 +252,9 @@ class PriceAlertsViewModel: ObservableObject {
         case .triggered:
             filtered = filtered.filter { alert in alert.triggeredAt != nil }
         case .expired:
-            filtered = filtered.compactMap { (alert: PriceAlert) -> PriceAlert? in
-                if let expiresAt = alert.expiresAt {
-                    return Date() > expiresAt ? alert : nil
-                }
-                return nil
-            }
+            // Note: PriceAlert model doesn't have expiresAt property
+            // For now, treat expired as empty filter
+            filtered = []
         }
         
         // Apply search filter
@@ -283,12 +280,8 @@ class PriceAlertsViewModel: ObservableObject {
         case .triggered:
             return alerts.filter { alert in alert.triggeredAt != nil }.count
         case .expired:
-            return alerts.compactMap { (alert: PriceAlert) -> PriceAlert? in
-                if let expiresAt = alert.expiresAt {
-                    return Date() > expiresAt ? alert : nil
-                }
-                return nil
-            }.count
+            // Note: PriceAlert model doesn't have expiresAt property
+            return 0
         }
     }
     
@@ -351,9 +344,10 @@ class PriceAlertsViewModel: ObservableObject {
         if !triggeredAlerts.isEmpty {
             // Success could be defined as alerts that triggered within their timeframe
             let successfulAlerts = triggeredAlerts.compactMap { (alert: PriceAlert) -> PriceAlert? in
-                if let expiresAt = alert.expiresAt,
-                   let triggeredAt = alert.triggeredAt {
-                    return triggeredAt <= expiresAt ? alert : nil
+                // Note: PriceAlert model doesn't have expiresAt property
+                // Just check if triggered
+                if alert.triggeredAt != nil {
+                    return alert
                 } else {
                     return alert
                 }

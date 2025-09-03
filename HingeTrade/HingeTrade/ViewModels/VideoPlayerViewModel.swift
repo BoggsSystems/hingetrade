@@ -278,7 +278,12 @@ class VideoPlayerViewModel: ObservableObject {
     
     private func setupRealTimeUpdates() {
         // Subscribe to quote updates for video symbols
-        webSocketService.quoteUpdates
+        webSocketService.messagePublisher
+            .filter { $0.type == .quote }
+            .compactMap { message -> Quote? in
+                guard let data = message.data else { return nil }
+                return try? JSONDecoder().decode(Quote.self, from: data)
+            }
             .filter { [weak self] quote in
                 self?.video.symbols.contains(quote.symbol) ?? false
             }

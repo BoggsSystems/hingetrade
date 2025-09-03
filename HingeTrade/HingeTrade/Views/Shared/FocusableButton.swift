@@ -54,7 +54,8 @@ struct FocusableButton: View {
         #if !os(tvOS)
         .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
             isPressed = pressing
-        }, perform: {})\n        #endif
+        }, perform: {})
+        #endif
     }
     
     private var backgroundColor: Color {
@@ -118,7 +119,8 @@ struct FocusableCard<Content: View>: View {
                 if action != nil {
                     isPressed = pressing
                 }
-            }, perform: {})\n        #endif
+            }, perform: {})
+        #endif
     }
 }
 

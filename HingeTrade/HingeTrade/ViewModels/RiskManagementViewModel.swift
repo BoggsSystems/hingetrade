@@ -432,6 +432,10 @@ enum RiskProfile: String, CaseIterable, Codable {
             return .default
         }
     }
+    
+    var displayName: String {
+        return self.rawValue
+    }
 }
 
 struct RiskLimits {

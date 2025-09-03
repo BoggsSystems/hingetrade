@@ -103,7 +103,7 @@ struct VideoFeedView: View {
                 
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(videoFeedViewModel.marketStatus.color)
+                        .fill(videoFeedViewModel.marketStatus.color.swiftUIColor)
                         .frame(width: 8, height: 8)
                     
                     Text(videoFeedViewModel.marketStatus.displayName)
@@ -318,7 +318,7 @@ struct HeroVideoCard: View {
                         
                         Spacer()
                         
-                        Text(video.duration.formatted(.time(pattern: .minuteSecond)))
+                        Text(Duration.seconds(video.duration).formatted(.time(pattern: .minuteSecond)))
                             .font(.caption)
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)

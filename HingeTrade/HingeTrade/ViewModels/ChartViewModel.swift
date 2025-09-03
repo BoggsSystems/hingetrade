@@ -61,23 +61,36 @@ class ChartViewModel: ObservableObject {
         error = nil
         
         do {
-            let bars = try await marketDataService.getBars(
-                symbols: [symbol],
-                timeframe: selectedTimeframe.alpacaTimeframe,
-                start: nil,
-                end: nil,
-                limit: selectedTimeframe.defaultLimit
-            )
+            let bars = try await withCheckedThrowingContinuation { continuation in
+                marketDataService.getBars(
+                    symbols: [symbol],
+                    timeframe: selectedTimeframe.alpacaTimeframe,
+                    start: nil,
+                    end: nil,
+                    limit: selectedTimeframe.defaultLimit
+                )
+                .sink(
+                    receiveCompletion: { completion in
+                        if case .failure(let error) = completion {
+                            continuation.resume(throwing: error)
+                        }
+                    },
+                    receiveValue: { barsDict in
+                        continuation.resume(returning: barsDict)
+                    }
+                )
+                .store(in: &cancellables)
+            }
             
             self.chartData = bars[symbol]?.map { bar in
                 ViewModelChartDataPoint(
                     timestamp: bar.timestamp,
-                    price: bar.close,
-                    volume: bar.volume,
-                    open: bar.open,
-                    high: bar.high,
-                    low: bar.low,
-                    close: bar.close
+                    price: Decimal(bar.close),
+                    volume: Decimal(bar.volume),
+                    open: Decimal(bar.open),
+                    high: Decimal(bar.high),
+                    low: Decimal(bar.low),
+                    close: Decimal(bar.close)
                 )
             } ?? []
             
@@ -107,7 +120,7 @@ class ChartViewModel: ObservableObject {
         let latestPoint = chartData.last!
         let firstPoint = chartData.first!
         
-        currentPrice = Double(truncating: latestPoint.close as NSDecimalNumber)
+        currentPrice = latestPoint.close
         priceChange = latestPoint.close - firstPoint.open
         priceChangePercent = firstPoint.open > 0 ? Double(truncating: (priceChange / firstPoint.open) as NSDecimalNumber) : 0.0
     }
@@ -141,12 +154,12 @@ class ChartViewModel: ObservableObject {
     private func handleBarUpdate(_ bar: Bar) {
         let newDataPoint = ViewModelChartDataPoint(
             timestamp: bar.timestamp,
-            price: bar.close,
-            volume: bar.volume,
-            open: bar.open,
-            high: bar.high,
-            low: bar.low,
-            close: bar.close
+            price: Decimal(bar.close),
+            volume: Decimal(bar.volume),
+            open: Decimal(bar.open),
+            high: Decimal(bar.high),
+            low: Decimal(bar.low),
+            close: Decimal(bar.close)
         )
         
         // Update the latest data point or add new one
@@ -167,12 +180,12 @@ class ChartViewModel: ObservableObject {
     }
     
     private func handleQuoteUpdate(_ quote: Quote) {
-        currentPrice = quote.bidPrice
+        currentPrice = Decimal(quote.bidPrice)
         
         // Update the latest data point with real-time price
         if var lastPoint = chartData.last {
-            lastPoint.price = quote.bidPrice
-            lastPoint.close = quote.bidPrice
+            lastPoint.price = Decimal(quote.bidPrice)
+            lastPoint.close = Decimal(quote.bidPrice)
             chartData[chartData.count - 1] = lastPoint
         }
         
@@ -207,7 +220,24 @@ class ChartViewModel: ObservableObject {
     }
     
     func changeChartType(to type: ChartType) {
-        chartType = type
+        chartType = convertToViewModelChartType(type)
+    }
+    
+    private func convertToViewModelChartType(_ chartType: ChartType) -> ViewModelChartType {
+        switch chartType {
+        case .line:
+            return .line
+        case .area:
+            return .area
+        case .bar:
+            return .bar
+        case .candlestick:
+            return .candlestick
+        case .scatter:
+            return .line // Default to line for scatter
+        case .pie, .donut, .heatmap:
+            return .line // Default to line for unsupported chart types
+        }
     }
     
     // MARK: - Computed Properties
