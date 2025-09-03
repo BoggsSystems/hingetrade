@@ -368,7 +368,7 @@ struct FollowingCreatorRow: View {
                         Spacer()
                     }
                     
-                    Text(creator.bio)
+                    Text(creator.bio ?? "")
                         .font(.body)
                         .foregroundColor(.gray)
                         .lineLimit(2)
@@ -563,7 +563,7 @@ struct TrendingCreatorRow: View {
                     Spacer()
                 }
                 
-                Text(creator.bio)
+                Text(creator.bio ?? "")
                     .font(.body)
                     .foregroundColor(.gray)
                     .lineLimit(2)

@@ -143,7 +143,7 @@ struct PriceAlertDetailView: View {
                         .foregroundColor(.gray)
                         .textCase(.uppercase)
                     
-                    Text(alert.alertType.displayName)
+                    Text(alert.condition.displayName)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -188,43 +188,6 @@ struct PriceAlertDetailView: View {
                 }
             }
             
-            if let expiresAt = alert.expiresAt {
-                Divider()
-                    .background(Color.gray.opacity(0.3))
-                
-                HStack {
-                    Image(systemName: "clock")
-                        .font(.body)
-                        .foregroundColor(.orange)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Expires")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .textCase(.uppercase)
-                        
-                        Text(expiresAt.formatted(.dateTime.month().day().hour().minute()))
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundColor(.white)
-                    }
-                    
-                    Spacer()
-                    
-                    if Date() > expiresAt {
-                        Text("EXPIRED")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.red)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.red.opacity(0.2))
-                            )
-                    }
-                }
-            }
         }
         .padding(24)
         .background(
@@ -238,71 +201,89 @@ struct PriceAlertDetailView: View {
     
     private var priceInformationSection: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Price Information")
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            HStack(spacing: 30) {
-                // Current Price
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Current Price")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .textCase(.uppercase)
-                    
-                    Text(currentPrice.formatted(.currency(code: "USD")))
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    // Price change (simulated)
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.right")
-                            .font(.caption)
-                        Text("+1.2%")
-                            .font(.body)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(.green)
-                }
-                
-                Spacer()
-                
-                // Target Price
-                VStack(alignment: .trailing, spacing: 8) {
-                    Text("Target Price")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .textCase(.uppercase)
-                    
-                    Text(alert.targetPrice.formatted(.currency(code: "USD")))
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.orange)
-                    
-                    // Distance to target
-                    if currentPrice > 0 {
-                        let difference = alert.targetPrice - currentPrice
-                        let percentDiff = (difference / currentPrice) * 100
-                        
-                        HStack(spacing: 4) {
-                            Image(systemName: difference > 0 ? "arrow.up" : "arrow.down")
-                                .font(.caption)
-                            Text("\(abs(percentDiff).formatted(.number.precision(.fractionLength(1))))% away")
-                                .font(.body)
-                                .fontWeight(.medium)
-                        }
-                        .foregroundColor(difference > 0 ? .red : .green)
-                    }
-                }
-            }
+            priceInformationHeader
+            priceInformationContent
         }
         .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-        )
+        .background(priceInformationBackground)
+    }
+    
+    private var priceInformationHeader: some View {
+        Text("Price Information")
+            .font(.headline)
+            .foregroundColor(.white)
+    }
+    
+    private var priceInformationContent: some View {
+        HStack(spacing: 30) {
+            currentPriceSection
+            Spacer()
+            targetPriceSection
+        }
+    }
+    
+    private var currentPriceSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Current Price")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .textCase(.uppercase)
+            
+            Text(currentPrice.formatted(.currency(code: "USD")))
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+            
+            // Price change (simulated)
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                Text("+1.2%")
+                    .font(.body)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(.green)
+        }
+    }
+    
+    private var targetPriceSection: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            Text("Target Price")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .textCase(.uppercase)
+            
+            Text(alert.price.formatted(.currency(code: "USD")))
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.orange)
+            
+            // Distance to target
+            if currentPrice > 0 {
+                distanceToTargetView
+            }
+        }
+    }
+    
+    private var distanceToTargetView: some View {
+        let alertPriceDecimal = Decimal(alert.price)
+        let difference = alertPriceDecimal - currentPrice
+        let percentDiff = (difference / currentPrice) * 100
+        
+        return HStack(spacing: 4) {
+            Image(systemName: difference > 0 ? "arrow.up" : "arrow.down")
+                .font(.caption)
+            Text("\(abs(percentDiff).formatted(.number.precision(.fractionLength(1))))% away")
+                .font(.body)
+                .fontWeight(.medium)
+        }
+        .foregroundColor(difference > 0 ? .red : .green)
+    }
+    
+    private var priceInformationBackground: some View {
+        RoundedRectangle(cornerRadius: 16)
+            .fill(Color.white.opacity(0.05))
+            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
     }
     
     // MARK: - Configuration
@@ -316,32 +297,15 @@ struct PriceAlertDetailView: View {
             VStack(spacing: 16) {
                 configurationRow(
                     title: "Alert Type",
-                    value: alert.alertType.displayName,
+                    value: alert.condition.displayName,
                     icon: alertTypeIcon
                 )
                 
-                switch alert.alertType {
-                case .priceAbove, .priceBelow:
-                    configurationRow(
-                        title: "Target Price",
-                        value: alert.targetPrice.formatted(.currency(code: "USD")),
-                        icon: "target"
-                    )
-                case .percentChange:
-                    if let percentChange = alert.percentChange {
-                        configurationRow(
-                            title: "Percent Change",
-                            value: "\(percentChange.formatted(.number.precision(.fractionLength(1))))%",
-                            icon: "percent"
-                        )
-                    }
-                case .volumeSpike:
-                    configurationRow(
-                        title: "Volume Threshold",
-                        value: "2x Average",
-                        icon: "chart.bar.fill"
-                    )
-                }
+                configurationRow(
+                    title: "Target Price",
+                    value: alert.price.formatted(.currency(code: "USD")),
+                    icon: "target"
+                )
                 
                 configurationRow(
                     title: "Status",
@@ -494,11 +458,9 @@ struct PriceAlertDetailView: View {
     }
     
     private var alertTypeIcon: String {
-        switch alert.alertType {
-        case .priceAbove: return "arrow.up.circle.fill"
-        case .priceBelow: return "arrow.down.circle.fill"
-        case .percentChange: return "percent"
-        case .volumeSpike: return "chart.bar.fill"
+        switch alert.condition {
+        case .above, .crossesAbove: return "arrow.up.circle.fill"
+        case .below, .crossesBelow: return "arrow.down.circle.fill"
         }
     }
     

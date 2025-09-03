@@ -377,7 +377,7 @@ struct PositionCard: View {
                             
                             Text("(\(position.unrealizedPLPercent.formatted(.percent.precision(.fractionLength(2)))))")
                                 .font(.caption)
-                                .foregroundColor(position.unrealizedPL >= 0 ? .green : .red)
+                                .foregroundColor(position.isPositiveUnrealizedPl ? .green : .red)
                         }
                     }
                 }

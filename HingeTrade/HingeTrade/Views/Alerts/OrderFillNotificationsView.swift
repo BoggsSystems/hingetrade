@@ -368,7 +368,7 @@ struct OrderNotificationRow: View {
                         Text("•")
                             .foregroundColor(.gray)
                         
-                        Text("\(order.side.rawValue.capitalized) \(order.quantity.formatted(.number))")
+                        Text("\(order.side.rawValue.capitalized) \(order.formattedQty)")
                             .font(.body)
                             .foregroundColor(.gray)
                         
@@ -376,20 +376,19 @@ struct OrderNotificationRow: View {
                         
                         // Order value
                         VStack(alignment: .trailing, spacing: 2) {
-                            if let fillPrice = order.fillPrice {
-                                Text(fillPrice.formatted(.currency(code: "USD")))
+                            if let filledAvgPrice = order.filledAvgPrice, let priceValue = Double(filledAvgPrice) {
+                                Text(priceValue.formatted(.currency(code: "USD")))
                                     .font(.body)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.white)
-                            } else if let limitPrice = order.limitPrice {
-                                Text("@ \(limitPrice.formatted(.currency(code: "USD")))")
+                            } else if let limitPrice = order.limitPrice, let priceValue = Double(limitPrice) {
+                                Text("@ \(priceValue.formatted(.currency(code: "USD")))")
                                     .font(.body)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.orange)
                             }
                             
-                            let totalValue = (order.fillPrice ?? order.limitPrice ?? 0) * Decimal(order.quantity)
-                            Text(totalValue.formatted(.currency(code: "USD")))
+                            Text(order.formattedOrderValue)
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
@@ -398,7 +397,7 @@ struct OrderNotificationRow: View {
                     HStack {
                         // Order type and time in force
                         HStack(spacing: 4) {
-                            Text(order.orderType.rawValue.uppercased())
+                            Text(order.type.rawValue.uppercased())
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .foregroundColor(.blue)
@@ -428,24 +427,22 @@ struct OrderNotificationRow: View {
                             Text("Filled \(filledAt.formatted(.relative(presentation: .named)))")
                                 .font(.caption)
                                 .foregroundColor(.green)
+                        } else if let submittedAt = order.submittedAt {
+                            Text("Submitted \(submittedAt.formatted(.relative(presentation: .named)))")
+                                .font(.caption)
+                                .foregroundColor(.gray)
                         } else {
-                            Text("Submitted \(order.submittedAt.formatted(.relative(presentation: .named)))")
+                            Text("Created \(order.createdAt.formatted(.relative(presentation: .named)))")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
                     }
                 }
                 
-                // Notification indicator
-                if order.hasNotificationBeenSent {
-                    Image(systemName: "bell.fill")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                } else {
-                    Image(systemName: "bell.badge")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                }
+                // Status indicator
+                Image(systemName: "bell.fill")
+                    .font(.caption)
+                    .foregroundColor(.green)
             }
             .padding(16)
             .background(

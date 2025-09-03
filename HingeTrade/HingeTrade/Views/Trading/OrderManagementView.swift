@@ -343,7 +343,7 @@ struct OrderRowView: View {
                         
                         Spacer()
                         
-                        Text(order.quantity.formatted(.number))
+                        Text(order.formattedQty)
                             .font(.body)
                             .foregroundColor(.white)
                         
@@ -359,8 +359,13 @@ struct OrderRowView: View {
                         
                         Spacer()
                         
-                        if let price = order.limitPrice ?? order.filledPrice {
-                            Text(price.formatted(.currency(code: "USD")))
+                        if let limitPrice = order.limitPrice {
+                            Text(order.formattedLimitPrice)
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                        } else if let filledAvgPrice = order.filledAvgPrice {
+                            Text(order.formattedFilledAvgPrice)
                                 .font(.body)
                                 .fontWeight(.medium)
                                 .foregroundColor(.white)
@@ -368,7 +373,7 @@ struct OrderRowView: View {
                     }
                     
                     HStack {
-                        Text(order.createdAt?.formatted(.dateTime.month().day().hour().minute()) ?? "")
+                        Text(order.createdAt.formatted(.dateTime.month().day().hour().minute()))
                             .font(.caption)
                             .foregroundColor(.gray)
                         
@@ -382,7 +387,7 @@ struct OrderRowView: View {
                 }
                 
                 // Action Buttons (only for open orders)
-                if order.status == .open || order.status == .partiallyFilled {
+                if order.status == .new || order.status == .partiallyFilled {
                     orderActionButtons
                 }
             }
@@ -457,7 +462,7 @@ struct OrderDetailView: View {
                 orderDetailsSection
                 
                 // Actions (if applicable)
-                if order.status == .open || order.status == .partiallyFilled {
+                if order.status == .new || order.status == .partiallyFilled {
                     orderActionsSection
                 }
                 
@@ -541,20 +546,20 @@ struct OrderDetailView: View {
             HStack(spacing: 40) {
                 DetailSummaryItem(
                     title: "Quantity",
-                    value: order.quantity.formatted(.number),
+                    value: order.formattedQty,
                     subtitle: "shares"
                 )
                 
                 if let limitPrice = order.limitPrice {
                     DetailSummaryItem(
                         title: "Limit Price",
-                        value: limitPrice.formatted(.currency(code: "USD")),
+                        value: order.formattedLimitPrice,
                         subtitle: "per share"
                     )
-                } else if let filledPrice = order.filledPrice {
+                } else if let filledAvgPrice = order.filledAvgPrice {
                     DetailSummaryItem(
                         title: "Filled Price",
-                        value: filledPrice.formatted(.currency(code: "USD")),
+                        value: order.formattedFilledAvgPrice,
                         subtitle: "per share"
                     )
                 }
@@ -595,12 +600,12 @@ struct OrderDetailView: View {
                 OrderDetailRow(title: "Order Type", value: order.type.displayName)
                 
                 if let stopPrice = order.stopPrice {
-                    OrderDetailRow(title: "Stop Price", value: stopPrice.formatted(.currency(code: "USD")))
+                    OrderDetailRow(title: "Stop Price", value: order.formattedStopPrice)
                 }
                 
                 OrderDetailRow(
                     title: "Created At",
-                    value: order.createdAt?.formatted(.dateTime.month().day().year().hour().minute()) ?? "Unknown"
+                    value: order.createdAt.formatted(.dateTime.month().day().year().hour().minute())
                 )
                 
                 if let filledAt = order.filledAt {
@@ -638,7 +643,7 @@ struct OrderDetailView: View {
                 }
                 .focused($focusedAction, equals: .modify)
                 
-                FocusableButton("Cancel Order", systemImage: "xmark.circle.fill", style: .destructive) {
+                FocusableButton("Cancel Order", systemImage: "xmark.circle.fill") {
                     Task {
                         await orderViewModel.cancelOrder(order)
                         dismiss()
@@ -651,10 +656,20 @@ struct OrderDetailView: View {
         }
     }
     
-    private func calculateOrderValue() -> Decimal? {
-        let price = order.filledPrice ?? order.limitPrice
-        guard let price = price else { return nil }
-        return order.quantity * price
+    private func calculateOrderValue() -> Double? {
+        if let orderValue = order.orderValue {
+            return orderValue
+        }
+        
+        var price: Double?
+        if let filledAvgPrice = order.filledAvgPrice, let priceValue = Double(filledAvgPrice) {
+            price = priceValue
+        } else if let limitPrice = order.limitPrice, let priceValue = Double(limitPrice) {
+            price = priceValue
+        }
+        
+        guard let price = price, let qty = order.qty, let qtyValue = Double(qty) else { return nil }
+        return qtyValue * price
     }
 }
 
