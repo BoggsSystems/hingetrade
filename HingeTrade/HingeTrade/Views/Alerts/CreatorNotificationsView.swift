@@ -291,7 +291,6 @@ struct CreatorTabButton: View {
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isFocused)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
     
@@ -337,6 +336,14 @@ struct FollowingCreatorRow: View {
     
     var body: some View {
         Button(action: onTap) {
+            followingCreatorRowContent
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isFocused)
+    }
+    
+    private var followingCreatorRowContent: some View {
             HStack(spacing: 16) {
                 // Creator Avatar
                 AsyncImage(url: URL(string: creator.profileImageURL ?? "")) { image in
@@ -374,14 +381,14 @@ struct FollowingCreatorRow: View {
                         .lineLimit(2)
                     
                     HStack {
-                        Text("\(creator.followersCount.formatted(.number.notation(.compactName))) followers")
+                        Text("\(creator.followerCount.formatted(.number.notation(.compactName))) followers")
                             .font(.caption)
                             .foregroundColor(.gray)
                         
                         Text("•")
                             .foregroundColor(.gray)
                         
-                        Text("\(creator.totalVideos) videos")
+                        Text("0 videos")
                             .font(.caption)
                             .foregroundColor(.gray)
                         
@@ -404,9 +411,9 @@ struct FollowingCreatorRow: View {
                 }
                 
                 // Notification settings indicator
-                Image(systemName: creator.notificationsEnabled ? "bell.fill" : "bell.slash.fill")
+                Image(systemName: "bell.fill")
                     .font(.body)
-                    .foregroundColor(creator.notificationsEnabled ? .green : .gray)
+                    .foregroundColor(.green)
             }
             .padding(20)
             .background(
@@ -417,10 +424,6 @@ struct FollowingCreatorRow: View {
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(isFocused ? Color.green : Color.clear, lineWidth: isFocused ? 2 : 0)
             )
-        }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isFocused ? 1.02 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isFocused)
     }
 }
 
@@ -569,7 +572,7 @@ struct TrendingCreatorRow: View {
                     .lineLimit(2)
                 
                 HStack {
-                    Text("\(creator.followersCount.formatted(.number.notation(.compactName))) followers")
+                    Text("\(creator.followerCount.formatted(.number.notation(.compactName))) followers")
                         .font(.caption)
                         .foregroundColor(.gray)
                     
