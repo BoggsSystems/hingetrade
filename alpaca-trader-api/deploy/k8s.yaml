@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trader-api
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: trader-api-secrets
+  namespace: trader-api
+type: Opaque
+stringData:
+  connection-string: "Host=postgres-service;Port=5432;Database=trader;Username=postgres;Password=changeme"
+  redis-connection: "redis-service:6379"
+  auth-authority: "https://your-tenant.auth0.com/"
+  auth-audience: "alpaca-trader-api"
+  alpaca-env: "paper"
+  alpaca-base-url: "https://paper-api.alpaca.markets"
+  key-protection-key: "production-encryption-key-change-this"
+  webhook-secret: "alpaca-webhook-secret"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trader-api
+  namespace: trader-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: trader-api
+  template:
+    metadata:
+      labels:
+        app: trader-api
+    spec:
+      containers:
+      - name: trader-api
+        image: ghcr.io/yourusername/alpaca-trader-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ASPNETCORE_URLS
+          value: "http://+:8080"
+        - name: ConnectionStrings__Postgres
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: connection-string
+        - name: Redis__Connection
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: redis-connection
+        - name: Auth__Authority
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: auth-authority
+        - name: Auth__Audience
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: auth-audience
+        - name: Alpaca__Env
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: alpaca-env
+        - name: Alpaca__BaseUrl
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: alpaca-base-url
+        - name: KeyProtection__Key
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: key-protection-key
+        - name: Webhook__SigningSecret
+          valueFrom:
+            secretKeyRef:
+              name: trader-api-secrets
+              key: webhook-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trader-api-service
+  namespace: trader-api
+spec:
+  selector:
+    app: trader-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer

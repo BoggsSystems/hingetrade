@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: trader
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    logging:
+      driver: 'none'  # Disable logging for mailhog
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=trader;Username=postgres;Password=postgres"
+      Redis__Connection: "redis:6379"
+      Auth__Authority: "${AUTH0_AUTHORITY}"
+      Auth__Audience: "${AUTH0_AUDIENCE:-alpaca-trader-api}"
+      Alpaca__Env: "paper"
+      Alpaca__BaseUrl: "https://paper-api.alpaca.markets"
+      KeyProtection__Key: "${KEY_PROTECTION_KEY:-development-key-change-in-production}"
+      Webhook__SigningSecret: "${WEBHOOK_SECRET:-development-secret}"
+      Notifications__Smtp__Host: "mailhog"
+      Notifications__Smtp__Port: "1025"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
