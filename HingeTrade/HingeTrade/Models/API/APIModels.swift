@@ -20,6 +20,8 @@ struct SimpleResponse: Codable {
     let success: Bool
 }
 
+struct EmptyRequest: Codable {}
+
 // MARK: - API Error
 struct APIError: Codable, Error {
     let code: String

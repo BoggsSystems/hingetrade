@@ -122,7 +122,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
                     self?._authenticationState = .authenticated(loginResponse.user)
                 })
                 .map { $0.user }
-                .catch { [weak self] error in
+                .catch { [weak self] error -> AnyPublisher<User, APIError> in
                     let apiError = error as? APIError ?? APIError(
                         code: "AUTH_ERROR",
                         message: "Authentication failed",
@@ -130,9 +130,9 @@ class AuthenticationService: AuthenticationServiceProtocol {
                         field: nil
                     )
                     self?._authenticationState = .error(apiError)
-                    return Fail<User, APIError>(error: apiError)
+                    return Fail<User, APIError>(error: apiError).eraseToAnyPublisher()
                 }
-                .eraseToAnyPublisher() as AnyPublisher<User, APIError>
+                .eraseToAnyPublisher()
                 
         } catch {
             let apiError = error as? APIError ?? APIError(
@@ -149,8 +149,8 @@ class AuthenticationService: AuthenticationServiceProtocol {
     func logout() -> AnyPublisher<Void, APIError> {
         let endpoint = APIEndpoint.post("/auth/logout", body: EmptyRequest())
         
-        return apiClient.request(endpoint)
-            .map { (_: APIResponse<String>) -> String in "" }
+        return apiClient.request<SimpleResponse>(endpoint)
+            .map { (_: APIResponse<SimpleResponse>) in () }
             .handleEvents(receiveOutput: { [weak self] _ in
                 self?.clearSession()
             }, receiveCompletion: { [weak self] completion in
@@ -200,10 +200,16 @@ class AuthenticationService: AuthenticationServiceProtocol {
                 .handleEvents(receiveOutput: { [weak self] tokens in
                     self?.tokenManager.setTokens(tokens)
                 })
-                .catch { [weak self] error in
+                .catch { [weak self] error -> AnyPublisher<AuthTokens, APIError> in
                     // If refresh fails, clear session
                     self?.clearSession()
-                    return Fail<AuthTokens, APIError>(error: error)
+                    let apiError = error as? APIError ?? APIError(
+                        code: "REFRESH_ERROR",
+                        message: "Token refresh failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
+                    return Fail<AuthTokens, APIError>(error: apiError).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
                 
@@ -237,6 +243,14 @@ class AuthenticationService: AuthenticationServiceProtocol {
                 self?._currentUser = user
                 self?._authenticationState = .authenticated(user)
             })
+            .mapError { error -> APIError in
+                error as? APIError ?? APIError(
+                    code: "USER_FETCH_ERROR",
+                    message: "Failed to fetch user",
+                    details: error.localizedDescription,
+                    field: nil
+                )
+            }
             .eraseToAnyPublisher()
     }
     
@@ -245,7 +259,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
             let endpoint = try APIEndpoint.put("/auth/me", body: user)
             
             return apiClient.request<User>(endpoint)
-                .map { response in
+                .tryMap { response in
                     guard let updatedUser = response.data else {
                         throw APIError(
                             code: "USER_UPDATE_FAILED",
@@ -260,6 +274,14 @@ class AuthenticationService: AuthenticationServiceProtocol {
                     self?._currentUser = updatedUser
                     self?._authenticationState = .authenticated(updatedUser)
                 })
+                .mapError { error -> APIError in
+                    error as? APIError ?? APIError(
+                        code: "USER_UPDATE_ERROR",
+                        message: "Failed to update user",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
+                }
                 .eraseToAnyPublisher()
                 
         } catch {

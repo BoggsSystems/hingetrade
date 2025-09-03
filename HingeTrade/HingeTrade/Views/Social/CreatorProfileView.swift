@@ -95,8 +95,7 @@ struct CreatorProfileView: View {
                     // Follow/Unfollow Button
                     FocusableButton(
                         creatorViewModel.isFollowing ? "Unfollow" : "Follow",
-                        systemImage: creatorViewModel.isFollowing ? "person.fill.checkmark" : "person.badge.plus",
-                        style: creatorViewModel.isFollowing ? .secondary : .primary
+                        systemImage: creatorViewModel.isFollowing ? "person.fill.checkmark" : "person.badge.plus"
                     ) {
                         Task {
                             await creatorViewModel.toggleFollowStatus()
