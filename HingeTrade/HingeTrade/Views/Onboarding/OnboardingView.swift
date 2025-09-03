@@ -309,7 +309,7 @@ struct RiskProfileStep: View {
 
 struct NotificationPreferencesStep: View {
     @EnvironmentObject private var onboardingViewModel: OnboardingViewModel
-    @FocusState private var focusedToggle: NotificationType?
+    @FocusState private var focusedToggle: OnboardingNotificationType?
     
     var body: some View {
         VStack(spacing: 40) {
@@ -327,7 +327,7 @@ struct NotificationPreferencesStep: View {
             }
             
             VStack(spacing: 12) {
-                ForEach(NotificationType.allCases, id: \.self) { type in
+                ForEach(OnboardingNotificationType.allCases, id: \.self) { type in
                     NotificationToggleRow(
                         type: type,
                         isEnabled: onboardingViewModel.notificationPreferences[type] ?? true,
@@ -341,7 +341,7 @@ struct NotificationPreferencesStep: View {
         }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                focusedToggle = NotificationType.allCases.first
+                focusedToggle = OnboardingNotificationType.allCases.first
             }
         }
     }
@@ -622,7 +622,7 @@ struct RiskProfileCard: View {
 }
 
 struct NotificationToggleRow: View {
-    let type: NotificationType
+    let type: OnboardingNotificationType
     let isEnabled: Bool
     let isFocused: Bool
     let onToggle: (Bool) -> Void
@@ -651,7 +651,9 @@ struct NotificationToggleRow: View {
                 Spacer()
                 
                 Toggle("", isOn: .constant(isEnabled))
+                    #if os(iOS)
                     .toggleStyle(SwitchToggleStyle(tint: .blue))
+                    #endif
                     .allowsHitTesting(false)
             }
             .padding(.horizontal, 20)

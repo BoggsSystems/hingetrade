@@ -104,7 +104,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
             let endpoint = try APIEndpoint.post("/auth/login", body: request)
             
             return apiClient.request<LoginResponse>(endpoint)
-                .map { response in
+                .tryMap { (response: APIResponse<LoginResponse>) -> LoginResponse in
                     guard let loginResponse = response.data else {
                         throw APIError(
                             code: "LOGIN_FAILED",
@@ -121,7 +121,9 @@ class AuthenticationService: AuthenticationServiceProtocol {
                     self?._currentUser = loginResponse.user
                     self?._authenticationState = .authenticated(loginResponse.user)
                 })
-                .map { $0.user }
+                .map { (loginResponse: LoginResponse) -> User in
+                    return loginResponse.user
+                }
                 .catch { [weak self] error -> AnyPublisher<User, APIError> in
                     let apiError = error as? APIError ?? APIError(
                         code: "AUTH_ERROR",
@@ -147,26 +149,39 @@ class AuthenticationService: AuthenticationServiceProtocol {
     }
     
     func logout() -> AnyPublisher<Void, APIError> {
-        let endpoint = APIEndpoint.post("/auth/logout", body: EmptyRequest())
-        
-        return apiClient.request<SimpleResponse>(endpoint)
-            .map { (_: APIResponse<SimpleResponse>) in () }
-            .handleEvents(receiveOutput: { [weak self] _ in
-                self?.clearSession()
-            }, receiveCompletion: { [weak self] completion in
-                // Clear session regardless of API response
-                // (in case the server is unreachable)
-                if case .failure = completion {
+        do {
+            let endpoint = try APIEndpoint.post("/auth/logout", body: EmptyRequest())
+            
+            return apiClient.request<SimpleResponse>(endpoint)
+                .map { (_: APIResponse<SimpleResponse>) in () }
+                .handleEvents(receiveOutput: { [weak self] _ in
                     self?.clearSession()
+                }, receiveCompletion: { [weak self] completion in
+                    // Clear session regardless of API response
+                    // (in case the server is unreachable)
+                    if case .failure = completion {
+                        self?.clearSession()
+                    }
+                })
+                .map { _ in () }
+                .catch { [weak self] error in
+                    // Still clear local session even if logout API fails
+                    self?.clearSession()
+                    return Just(()).setFailureType(to: APIError.self)
                 }
-            })
-            .map { _ in () }
-            .catch { [weak self] error in
-                // Still clear local session even if logout API fails
-                self?.clearSession()
-                return Just(()).setFailureType(to: APIError.self)
-            }
-            .eraseToAnyPublisher()
+                .eraseToAnyPublisher()
+                
+        } catch {
+            // If we can't even create the request, still clear the session
+            clearSession()
+            let apiError = error as? APIError ?? APIError(
+                code: "REQUEST_ERROR",
+                message: "Failed to create logout request",
+                details: error.localizedDescription,
+                field: nil
+            )
+            return Fail<Void, APIError>(error: apiError).eraseToAnyPublisher()
+        }
     }
     
     func refreshToken() -> AnyPublisher<AuthTokens, APIError> {
@@ -186,7 +201,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
             let endpoint = try APIEndpoint.post("/auth/refresh", body: request)
             
             return apiClient.request<AuthTokens>(endpoint)
-                .tryMap { response in
+                .tryMap { (response: APIResponse<AuthTokens>) -> AuthTokens in
                     guard let tokens = response.data else {
                         throw APIError(
                             code: "REFRESH_FAILED",
@@ -200,16 +215,18 @@ class AuthenticationService: AuthenticationServiceProtocol {
                 .handleEvents(receiveOutput: { [weak self] tokens in
                     self?.tokenManager.setTokens(tokens)
                 })
-                .catch { [weak self] error -> AnyPublisher<AuthTokens, APIError> in
-                    // If refresh fails, clear session
-                    self?.clearSession()
-                    let apiError = error as? APIError ?? APIError(
+                .mapError { error -> APIError in
+                    error as? APIError ?? APIError(
                         code: "REFRESH_ERROR",
                         message: "Token refresh failed",
                         details: error.localizedDescription,
                         field: nil
                     )
-                    return Fail<AuthTokens, APIError>(error: apiError).eraseToAnyPublisher()
+                }
+                .catch { [weak self] error -> AnyPublisher<AuthTokens, APIError> in
+                    // If refresh fails, clear session
+                    self?.clearSession()
+                    return Fail<AuthTokens, APIError>(error: error).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
                 
@@ -228,7 +245,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
         let endpoint = APIEndpoint.get("/auth/me")
         
         return apiClient.request<User>(endpoint)
-            .tryMap { response in
+            .tryMap { (response: APIResponse<User>) -> User in
                 guard let user = response.data else {
                     throw APIError(
                         code: "USER_FETCH_FAILED",
@@ -259,7 +276,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
             let endpoint = try APIEndpoint.put("/auth/me", body: user)
             
             return apiClient.request<User>(endpoint)
-                .tryMap { response in
+                .tryMap { (response: APIResponse<User>) -> User in
                     guard let updatedUser = response.data else {
                         throw APIError(
                             code: "USER_UPDATE_FAILED",
@@ -305,7 +322,15 @@ class AuthenticationService: AuthenticationServiceProtocol {
             let endpoint = try APIEndpoint.post("/auth/change-password", body: request)
             
             return apiClient.request<SimpleResponse>(endpoint)
-                .map { _ in () }
+                .map { (_: APIResponse<SimpleResponse>) in () }
+                .mapError { error -> APIError in
+                    error as? APIError ?? APIError(
+                        code: "CHANGE_PASSWORD_ERROR",
+                        message: "Failed to change password",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
+                }
                 .eraseToAnyPublisher()
                 
         } catch {
@@ -326,7 +351,15 @@ class AuthenticationService: AuthenticationServiceProtocol {
             let endpoint = try APIEndpoint.post("/auth/reset-password", body: request)
             
             return apiClient.request<SimpleResponse>(endpoint)
-                .map { _ in () }
+                .map { (_: APIResponse<SimpleResponse>) in () }
+                .mapError { error -> APIError in
+                    error as? APIError ?? APIError(
+                        code: "PASSWORD_RESET_ERROR",
+                        message: "Failed to request password reset",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
+                }
                 .eraseToAnyPublisher()
                 
         } catch {

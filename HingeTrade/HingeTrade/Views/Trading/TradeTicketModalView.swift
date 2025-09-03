@@ -174,13 +174,13 @@ struct TradeTicketModalView: View {
                             .foregroundColor(.white)
                         
                         HStack(spacing: 4) {
-                            Text(quote.change.formatted(.currency(code: "USD")))
+                            Text((quote.dailyChange ?? 0).formatted(.currency(code: "USD")))
                                 .font(.caption)
                             
-                            Text("(\(quote.changePercent.formatted(.percent.precision(.fractionLength(2)))))")
+                            Text("(\((quote.dailyChangePercent ?? 0).formatted(.percent.precision(.fractionLength(2)))))")
                                 .font(.caption)
                         }
-                        .foregroundColor(quote.change >= 0 ? .green : .red)
+                        .foregroundColor((quote.dailyChange ?? 0) >= 0 ? .green : .red)
                     }
                 }
             }
@@ -263,13 +263,13 @@ struct TradeTicketModalView: View {
                 .foregroundColor(.gray)
             
             HStack(spacing: 12) {
-                ForEach(TicketOrderType.allCases, id: \.self) { orderType in
+                ForEach(OrderType.allCases, id: \.self) { orderType in
                     OrderTypeButton(
                         orderType: orderType,
                         isSelected: tradeTicketViewModel.orderType == orderType,
                         isFocused: focusedField == .orderType
                     ) {
-                        tradeTicketViewModel.setOrderType(orderType)
+                        tradeTicketViewModel.orderType = orderType
                     }
                 }
             }
@@ -377,13 +377,13 @@ struct TradeTicketModalView: View {
                 .foregroundColor(.gray)
             
             HStack(spacing: 12) {
-                ForEach(TimeInForce.allCases, id: \.self) { tif in
+                ForEach(OrderTimeInForce.allCases, id: \.self) { tif in
                     TimeInForceButton(
                         timeInForce: tif,
                         isSelected: tradeTicketViewModel.timeInForce == tif,
                         isFocused: focusedField == .timeInForce
                     ) {
-                        tradeTicketViewModel.setTimeInForce(tif)
+                        tradeTicketViewModel.timeInForce = tif
                     }
                 }
             }
@@ -534,9 +534,9 @@ struct TradeTicketModalView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
                     MarketDataItem(title: "Bid", value: quote.bidPrice.formatted(.currency(code: "USD")))
                     MarketDataItem(title: "Ask", value: quote.askPrice.formatted(.currency(code: "USD")))
-                    MarketDataItem(title: "Volume", value: quote.volume.formatted(.number.notation(.compactName)))
-                    MarketDataItem(title: "Day High", value: quote.high.formatted(.currency(code: "USD")))
-                    MarketDataItem(title: "Day Low", value: quote.low.formatted(.currency(code: "USD")))
+                    MarketDataItem(title: "Volume", value: (quote.volume ?? 0).formatted(.number.notation(.compactName)))
+                    MarketDataItem(title: "Day High", value: (quote.dailyHigh ?? 0).formatted(.currency(code: "USD")))
+                    MarketDataItem(title: "Day Low", value: (quote.dailyLow ?? 0).formatted(.currency(code: "USD")))
                     MarketDataItem(title: "52W High", value: quote.fiftyTwoWeekHigh.formatted(.currency(code: "USD")))
                 }
             } else {

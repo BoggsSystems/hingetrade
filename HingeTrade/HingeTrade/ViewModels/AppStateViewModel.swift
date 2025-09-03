@@ -15,6 +15,8 @@ class AppStateViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: AppError?
     @Published var showingError: Bool = false
+    @Published var needsOnboarding: Bool = false
+    @Published var isFirstLaunch: Bool = false
     
     // Account metrics for header display
     @Published var buyingPower: Decimal = 0.0

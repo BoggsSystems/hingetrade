@@ -372,12 +372,27 @@ struct HingeNotification: Identifiable {
     var isRead: Bool
 }
 
-enum NotificationType {
+enum NotificationType: CaseIterable {
     case priceAlert
     case orderFill
     case creatorContent
     case marketNews
     case system
+    
+    var icon: String {
+        switch self {
+        case .priceAlert:
+            return "bell.badge"
+        case .orderFill:
+            return "checkmark.circle.fill"
+        case .creatorContent:
+            return "person.crop.square"
+        case .marketNews:
+            return "newspaper"
+        case .system:
+            return "gear"
+        }
+    }
     
     init(from categoryIdentifier: String) {
         switch categoryIdentifier {

@@ -468,12 +468,14 @@ struct OrderNotificationRow: View {
             return "checkmark.circle.fill"
         case .partiallyFilled:
             return "clock.badge.checkmark.fill"
-        case .pending:
+        case .pendingNew, .pendingCancel, .pendingReplace:
             return "clock.fill"
-        case .cancelled:
+        case .canceled:
             return "xmark.circle.fill"
         case .rejected:
             return "exclamationmark.triangle.fill"
+        default:
+            return "clock.fill"
         }
     }
     
@@ -483,12 +485,14 @@ struct OrderNotificationRow: View {
             return .green
         case .partiallyFilled:
             return .orange
-        case .pending:
+        case .pendingNew, .pendingCancel, .pendingReplace:
             return .yellow
-        case .cancelled:
+        case .canceled:
             return .red
         case .rejected:
             return .red
+        default:
+            return .gray
         }
     }
     
@@ -498,10 +502,12 @@ struct OrderNotificationRow: View {
             return .green
         case .partiallyFilled:
             return .orange
-        case .pending:
+        case .pendingNew, .pendingCancel, .pendingReplace:
             return .yellow
-        case .cancelled, .rejected:
+        case .canceled, .rejected:
             return .red
+        default:
+            return .gray
         }
     }
 }
