@@ -193,7 +193,7 @@ struct OptionsTradingView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(optionsViewModel.availableExpirations, id: \.self) { expiration in
-                        ExpirationButton(
+                        OptionsExpirationButton(
                             date: expiration,
                             isSelected: Calendar.current.isDate(selectedExpiration, inSameDayAs: expiration),
                             isFocused: focusedSection == .expiration(expiration)
@@ -443,7 +443,7 @@ struct OptionsTabButton: View {
     }
 }
 
-struct ExpirationButton: View {
+struct OptionsExpirationButton: View {
     let date: Date
     let isSelected: Bool
     let isFocused: Bool

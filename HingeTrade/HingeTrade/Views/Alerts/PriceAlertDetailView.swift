@@ -563,17 +563,18 @@ struct EditPriceAlertView: View {
 #Preview {
     let sampleAlert = PriceAlert(
         id: "alert-1",
+        userId: "user-123",
         symbol: "AAPL",
-        alertType: .priceAbove,
-        targetPrice: 180.00,
-        percentChange: nil,
-        createdAt: Date().addingTimeInterval(-86400),
+        price: 180.00,
+        condition: .above,
+        message: "AAPL has reached your target price!",
         isActive: true,
-        triggeredAt: nil,
-        expiresAt: Date().addingTimeInterval(86400 * 7)
+        createdAt: Date().addingTimeInterval(-86400),
+        updatedAt: Date().addingTimeInterval(-86400),
+        triggeredAt: nil
     )
     
-    return PriceAlertDetailView(alert: sampleAlert)
+    PriceAlertDetailView(alert: sampleAlert)
         .environmentObject(PriceAlertsViewModel())
         .environmentObject(AppStateViewModel())
         .preferredColorScheme(.dark)

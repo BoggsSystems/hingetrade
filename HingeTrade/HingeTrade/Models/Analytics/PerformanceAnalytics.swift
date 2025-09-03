@@ -162,7 +162,7 @@ struct PerformanceDataPoint: Identifiable, Codable {
     let id: String
     let date: Date
     let value: Decimal
-    let return: Double
+    let returnValue: Double
     let cumulativeReturn: Double
     let benchmarkValue: Decimal?
     let benchmarkReturn: Double?
@@ -309,7 +309,7 @@ struct PerformanceAnalysisResult: Identifiable {
     
     var overallRating: PerformanceRating {
         let returnScore = portfolioPerformance.returnMetrics.annualizedReturn > 0.10 ? 2 : 1
-        let riskScore = portfolioPerformance.riskMetrics.sharpeRatio > 1.0 ? 2 : 1
+        let riskScore = portfolioPerformance.riskMetrics.alpha > 0.0 ? 2 : 1
         let benchmarkScore = benchmarkComparisons.first?.outperformance ?? 0 > 0 ? 1 : 0
         
         let totalScore = returnScore + riskScore + benchmarkScore

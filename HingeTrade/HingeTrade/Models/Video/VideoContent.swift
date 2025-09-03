@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct VideoContent: Identifiable, Codable {
     let id: String
@@ -172,8 +173,20 @@ struct VideoCategory: Identifiable, Codable, Hashable {
     let displayName: String
     let description: String
     let systemImage: String
-    let color: Color
+    let colorName: String
     let sortOrder: Int
+    
+    var color: Color {
+        switch colorName {
+        case "green": return .green
+        case "blue": return .blue
+        case "orange": return .orange
+        case "purple": return .purple
+        case "pink": return .pink
+        case "red": return .red
+        default: return .gray
+        }
+    }
     
     static let topMovers = VideoCategory(
         id: "top-movers",
@@ -181,7 +194,7 @@ struct VideoCategory: Identifiable, Codable, Hashable {
         displayName: "Top Movers Today",
         description: "AI-generated recaps of biggest gainers and losers",
         systemImage: "chart.line.uptrend.xyaxis",
-        color: .green,
+        colorName: "green",
         sortOrder: 1
     )
     
@@ -189,9 +202,9 @@ struct VideoCategory: Identifiable, Codable, Hashable {
         id: "earnings",
         name: "earnings",
         displayName: "Earnings in Focus",
-        displayName: "Latest quarterly results analysis",
+        description: "Latest quarterly results analysis",
         systemImage: "chart.bar.doc.horizontal",
-        color: .blue,
+        colorName: "blue",
         sortOrder: 2
     )
     
@@ -201,7 +214,7 @@ struct VideoCategory: Identifiable, Codable, Hashable {
         displayName: "Crypto Pulse",
         description: "Bitcoin, Ethereum, and altcoin updates",
         systemImage: "bitcoinsign.circle",
-        color: .orange,
+        colorName: "orange",
         sortOrder: 3
     )
     
@@ -211,7 +224,7 @@ struct VideoCategory: Identifiable, Codable, Hashable {
         displayName: "Educational Shorts",
         description: "Learn RSI, MACD, options, and more",
         systemImage: "graduationcap",
-        color: .purple,
+        colorName: "purple",
         sortOrder: 4
     )
     
@@ -221,7 +234,7 @@ struct VideoCategory: Identifiable, Codable, Hashable {
         displayName: "Creator Spotlights",
         description: "Hand-picked finance influencers and analysts",
         systemImage: "person.2.crop.square.stack",
-        color: .pink,
+        colorName: "pink",
         sortOrder: 5
     )
     
@@ -231,7 +244,7 @@ struct VideoCategory: Identifiable, Codable, Hashable {
         displayName: "Breaking News",
         description: "Market-moving news and analysis",
         systemImage: "newspaper",
-        color: .red,
+        colorName: "red",
         sortOrder: 6
     )
     
@@ -270,17 +283,9 @@ struct PriceTarget: Codable {
 }
 
 // MARK: - Market Data Types
+// TopMover struct removed - using MarketDataService.TopMover instead
 
-struct TopMover: Identifiable {
-    let id = UUID()
-    let symbol: String
-    let price: Decimal
-    let change: Decimal
-    let changePercent: Double
-    let volume: Int
-}
-
-enum MarketStatus {
+enum VideoMarketStatus {
     case preMarket
     case open
     case afterHours

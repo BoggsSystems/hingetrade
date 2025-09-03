@@ -263,7 +263,7 @@ struct TradeTicketModalView: View {
                 .foregroundColor(.gray)
             
             HStack(spacing: 12) {
-                ForEach(OrderType.allCases, id: \.self) { orderType in
+                ForEach(TicketOrderType.allCases, id: \.self) { orderType in
                     OrderTypeButton(
                         orderType: orderType,
                         isSelected: tradeTicketViewModel.orderType == orderType,
@@ -609,7 +609,7 @@ struct TradeTicketModalView: View {
 // MARK: - Supporting Views and Components
 
 struct SideButton: View {
-    let side: Order.Side
+    let side: OrderSide
     let isSelected: Bool
     let isFocused: Bool
     let action: () -> Void
@@ -672,7 +672,7 @@ struct SideButton: View {
 }
 
 struct OrderTypeButton: View {
-    let orderType: OrderType
+    let orderType: TicketOrderType
     let isSelected: Bool
     let isFocused: Bool
     let action: () -> Void
@@ -831,7 +831,7 @@ struct VideoContext {
     let priceTargets: [PriceTarget]
 }
 
-enum OrderType: String, CaseIterable {
+enum TicketOrderType: String, CaseIterable {
     case market
     case limit
     case stop
@@ -847,7 +847,7 @@ enum OrderType: String, CaseIterable {
     }
 }
 
-enum TimeInForce: String, CaseIterable {
+enum TimeInForce: String, CaseIterable, Codable {
     case day
     case gtc
     case ioc

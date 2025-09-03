@@ -167,25 +167,25 @@ struct CreatorProfileView: View {
                 
                 // Stats Row
                 HStack(spacing: 32) {
-                    StatItem(
+                    CreatorStatItem(
                         title: "Followers",
                         value: creatorViewModel.followerCount.formatted(.number.notation(.compactName)),
                         color: .green
                     )
                     
-                    StatItem(
+                    CreatorStatItem(
                         title: "Videos",
                         value: creatorViewModel.videoCount.formatted(.number.notation(.compactName)),
                         color: .blue
                     )
                     
-                    StatItem(
+                    CreatorStatItem(
                         title: "Win Rate",
                         value: creatorViewModel.winRate.formatted(.percent.precision(.fractionLength(1))),
                         color: creatorViewModel.winRate > 0.5 ? .green : .red
                     )
                     
-                    StatItem(
+                    CreatorStatItem(
                         title: "Avg Return",
                         value: creatorViewModel.averageReturn.formatted(.percent.precision(.fractionLength(1))),
                         color: creatorViewModel.averageReturn > 0 ? .green : .red
@@ -359,7 +359,7 @@ struct CreatorProfileView: View {
 
 // MARK: - Supporting Views
 
-struct StatItem: View {
+struct CreatorStatItem: View {
     let title: String
     let value: String
     let color: Color

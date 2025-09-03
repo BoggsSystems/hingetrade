@@ -68,7 +68,7 @@ struct ChartSeries: Identifiable {
     }
 }
 
-struct ChartDataPoint: Identifiable {
+struct ChartDataPoint: Identifiable, Equatable {
     let id = UUID().uuidString
     let date: Date
     let value: Double
@@ -84,6 +84,14 @@ struct ChartDataPoint: Identifiable {
         formatter.dateStyle = .short
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+    
+    static func == (lhs: ChartDataPoint, rhs: ChartDataPoint) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.date == rhs.date &&
+               lhs.value == rhs.value &&
+               lhs.volume == rhs.volume
+        // Note: metadata is ignored for equality comparison due to [String: Any] not being Equatable
     }
 }
 

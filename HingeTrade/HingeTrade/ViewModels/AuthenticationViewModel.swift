@@ -83,7 +83,7 @@ class AuthenticationViewModel: ObservableObject {
         case failed
     }
     
-    init(authenticationService: AuthenticationService = AuthenticationService()) {
+    init(authenticationService: AuthenticationService = AuthenticationService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager()), tokenManager: TokenManager())) {
         self.authenticationService = authenticationService
         setupBindings()
         checkAuthenticationStatus()
@@ -95,20 +95,37 @@ class AuthenticationViewModel: ObservableObject {
         isLoading = true
         error = nil
         
-        do {
-            let user = try await authenticationService.signIn(email: email, password: password)
-            self.currentUser = user
-            self.isAuthenticated = true
-        } catch {
-            self.error = AuthenticationError.signInFailed(error.localizedDescription)
-            self.showingError = true
-        }
-        
-        isLoading = false
+        authenticationService.login(email: email, password: password)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    if case .failure(let error) = completion {
+                        self?.error = AuthenticationError.signInFailed(error.localizedDescription)
+                        self?.showingError = true
+                    }
+                    self?.isLoading = false
+                },
+                receiveValue: { [weak self] user in
+                    self?.currentUser = user
+                    self?.isAuthenticated = true
+                }
+            )
+            .store(in: &cancellables)
     }
     
     func signOut() {
-        authenticationService.signOut()
+        authenticationService.logout()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    // Handle completion if needed
+                },
+                receiveValue: { [weak self] _ in
+                    self?.currentUser = nil
+                    self?.isAuthenticated = false
+                }
+            )
+            .store(in: &cancellables)
         currentUser = nil
         isAuthenticated = false
         resetOnboardingState()
@@ -118,15 +135,9 @@ class AuthenticationViewModel: ObservableObject {
         isLoading = true
         error = nil
         
-        do {
-            let user = try await authenticationService.createAccount(email: email, password: password)
-            self.currentUser = user
-            self.isAuthenticated = true
-            self.onboardingStep = .personalInfo
-        } catch {
-            self.error = AuthenticationError.accountCreationFailed(error.localizedDescription)
-            self.showingError = true
-        }
+        // TODO: Implement account creation when AuthenticationService supports it
+        self.error = AuthenticationError.accountCreationFailed("Account creation not yet implemented")
+        self.showingError = true
         
         isLoading = false
     }

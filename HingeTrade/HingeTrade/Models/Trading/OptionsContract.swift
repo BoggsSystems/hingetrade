@@ -173,7 +173,7 @@ enum ExpirationCategory: String, CaseIterable {
 
 // MARK: - Options Strategy
 
-enum OptionsStrategy: String, CaseIterable {
+enum OptionsStrategy: String, CaseIterable, Codable {
     case buyCall = "buy_call"
     case buyPut = "buy_put"
     case sellCall = "sell_call"

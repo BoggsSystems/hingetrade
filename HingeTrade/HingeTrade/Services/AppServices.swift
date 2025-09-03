@@ -20,7 +20,7 @@ protocol PersistenceService {
     func clearAllCaches() async throws
 }
 
-class PersistenceService: PersistenceService {
+class DefaultPersistenceServiceImpl: PersistenceService {
     private let fileManager = FileManager.default
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -166,10 +166,10 @@ protocol PerformanceMonitor {
     func stopMonitoring()
     func getCurrentMemoryUsage() -> MemoryUsage
     func logPerformanceMetric(_ metric: PerformanceMetric)
-    func getPerformanceReport() -> PerformanceReport
+    func getPerformanceReport() -> AppPerformanceReport
 }
 
-class PerformanceMonitor: PerformanceMonitor {
+class DefaultPerformanceMonitor: PerformanceMonitor {
     private var isMonitoring = false
     private var performanceMetrics: [PerformanceMetric] = []
     private let logger = Logger(subsystem: "com.hingetrade.app", category: "performance")
@@ -223,13 +223,13 @@ class PerformanceMonitor: PerformanceMonitor {
         logger.info("Performance metric: \(metric.name) - \(metric.value) \(metric.unit)")
     }
     
-    func getPerformanceReport() -> PerformanceReport {
+    func getPerformanceReport() -> AppPerformanceReport {
         let now = Date()
         let oneHourAgo = now.addingTimeInterval(-3600)
         
         let recentMetrics = performanceMetrics.filter { $0.timestamp >= oneHourAgo }
         
-        return PerformanceReport(
+        return AppPerformanceReport(
             generatedAt: now,
             totalMetrics: performanceMetrics.count,
             recentMetrics: recentMetrics.count,
@@ -280,13 +280,13 @@ class PerformanceMonitor: PerformanceMonitor {
 
 protocol ErrorLogger {
     func log(_ error: AppError)
-    func log(_ message: String, level: LogLevel)
+    func log(_ message: String, level: AppLogLevel)
     func getErrorHistory() -> [LogEntry]
     func clearLogs()
     func exportLogs() -> URL?
 }
 
-class ErrorLogger: ErrorLogger {
+class DefaultErrorLogger: ErrorLogger {
     private let logger = Logger(subsystem: "com.hingetrade.app", category: "errors")
     private var logEntries: [LogEntry] = []
     private let maxLogEntries = 1000
@@ -294,7 +294,7 @@ class ErrorLogger: ErrorLogger {
     func log(_ error: AppError) {
         let entry = LogEntry(
             timestamp: Date(),
-            level: mapErrorSeverityToLogLevel(error.severity),
+            level: mapErrorSeverityToAppLogLevel(error.severity),
             message: error.localizedDescription,
             context: error.id
         )
@@ -317,7 +317,7 @@ class ErrorLogger: ErrorLogger {
         }
     }
     
-    func log(_ message: String, level: LogLevel) {
+    func log(_ message: String, level: AppLogLevel) {
         let entry = LogEntry(
             timestamp: Date(),
             level: level,
@@ -379,7 +379,7 @@ class ErrorLogger: ErrorLogger {
         }
     }
     
-    private func mapErrorSeverityToLogLevel(_ severity: ErrorSeverity) -> LogLevel {
+    private func mapErrorSeverityToAppLogLevel(_ severity: ErrorSeverity) -> AppLogLevel {
         switch severity {
         case .minor:
             return .debug
@@ -402,7 +402,7 @@ protocol FeatureFlagService {
     func disableFeature(_ feature: String)
 }
 
-class FeatureFlagService: FeatureFlagService {
+class DefaultFeatureFlagService: FeatureFlagService {
     private var currentFlags: FeatureFlags?
     
     func loadFeatureFlags() async throws -> FeatureFlags {
@@ -464,7 +464,7 @@ struct PerformanceMetric {
     }
 }
 
-struct PerformanceReport {
+struct AppPerformanceReport {
     let generatedAt: Date
     let totalMetrics: Int
     let recentMetrics: Int
@@ -475,12 +475,12 @@ struct PerformanceReport {
 
 struct LogEntry {
     let timestamp: Date
-    let level: LogLevel
+    let level: AppLogLevel
     let message: String
     let context: String?
 }
 
-enum LogLevel: String {
+enum AppLogLevel: String {
     case debug = "debug"
     case info = "info"
     case warning = "warning"

@@ -245,7 +245,7 @@ struct MarketHours: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Market Status
-enum MarketStatus: String, CaseIterable {
+enum MarketStatus: String, CaseIterable, Codable {
     case closed = "Closed"
     case premarket = "Pre-Market"
     case open = "Open"

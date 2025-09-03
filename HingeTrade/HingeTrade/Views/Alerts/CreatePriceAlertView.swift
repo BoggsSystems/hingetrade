@@ -16,7 +16,7 @@ struct CreatePriceAlertView: View {
     @FocusState private var focusedField: CreateAlertField?
     
     @State private var selectedSymbol = ""
-    @State private var alertType: PriceAlert.PriceAlertType = .priceAbove
+    @State private var alertType: AlertCondition = .above
     @State private var targetPrice = ""
     @State private var percentChange = ""
     @State private var expiresIn: ExpirationOption = .never
@@ -25,14 +25,14 @@ struct CreatePriceAlertView: View {
     @State private var showingSymbolSearch = false
     @State private var currentPrice: Decimal = 0
     
-    enum CreateAlertField: Hashable {
+    enum CreateAlertField: Hashable, Equatable {
         case cancel
         case symbol
         case targetPrice
         case percentChange
         case notes
         case create
-        case alertType(PriceAlert.PriceAlertType)
+        case alertType(AlertCondition)
         case expiration(ExpirationOption)
     }
     
@@ -203,7 +203,7 @@ struct CreatePriceAlertView: View {
                 .foregroundColor(.white)
             
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                ForEach([PriceAlert.PriceAlertType.priceAbove, .priceBelow, .percentChange, .volumeSpike], id: \.self) { type in
+                ForEach([AlertCondition.above, .below, .crossesAbove, .crossesBelow], id: \.self) { type in
                     AlertTypeButton(
                         type: type,
                         isSelected: alertType == type,
@@ -232,12 +232,10 @@ struct CreatePriceAlertView: View {
                 .foregroundColor(.white)
             
             switch alertType {
-            case .priceAbove, .priceBelow:
+            case .above, .below:
                 priceTargetConfiguration
-            case .percentChange:
-                percentChangeConfiguration
-            case .volumeSpike:
-                volumeSpikeConfiguration
+            case .crossesAbove, .crossesBelow:
+                crossingConfiguration
             }
         }
         .padding(20)
@@ -292,62 +290,33 @@ struct CreatePriceAlertView: View {
         }
     }
     
-    private var percentChangeConfiguration: some View {
+    private var crossingConfiguration: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Percent Change")
+            Text("Crossing Price Alert")
                 .font(.subheadline)
                 .foregroundColor(.gray)
             
             HStack {
-                TextField("0", text: $percentChange)
+                Text("$")
+                    .font(.title3)
+                    .foregroundColor(.gray)
+                
+                TextField("0.00", text: $targetPrice)
                     .textFieldStyle(PlainTextFieldStyle())
                     .font(.title3)
                     .foregroundColor(.white)
                     .keyboardType(.decimalPad)
-                    .focused($focusedField, equals: .percentChange)
-                
-                Text("%")
-                    .font(.title3)
-                    .foregroundColor(.gray)
+                    .focused($focusedField, equals: .targetPrice)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.white.opacity(0.1))
-                    .stroke(focusedField == .percentChange ? Color.green : Color.gray.opacity(0.3), lineWidth: 1)
+                    .stroke(focusedField == .targetPrice ? Color.green : Color.gray.opacity(0.3), lineWidth: 1)
             )
             
-            Text("Alert when price moves by this percentage in either direction")
-                .font(.caption)
-                .foregroundColor(.gray)
-        }
-    }
-    
-    private var volumeSpikeConfiguration: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Volume Spike Detection")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            
-            HStack {
-                Image(systemName: "chart.bar.fill")
-                    .font(.title3)
-                    .foregroundColor(.orange)
-                
-                Text("Alert when volume exceeds 2x average")
-                    .font(.body)
-                    .foregroundColor(.white)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.orange.opacity(0.1))
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
-            
-            Text("Based on 20-day average volume")
+            Text("Alert when price crosses the target and sustains for a period")
                 .font(.caption)
                 .foregroundColor(.gray)
         }
@@ -433,12 +402,10 @@ struct CreatePriceAlertView: View {
         guard !selectedSymbol.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         
         switch alertType {
-        case .priceAbove, .priceBelow:
+        case .above, .below:
             return Decimal(string: targetPrice) != nil
-        case .percentChange:
-            return Double(percentChange) != nil
-        case .volumeSpike:
-            return true
+        case .crossesAbove, .crossesBelow:
+            return Decimal(string: targetPrice) != nil
         }
     }
     
@@ -448,20 +415,12 @@ struct CreatePriceAlertView: View {
         }
         
         switch alertType {
-        case .priceAbove, .priceBelow:
+        case .above, .below, .crossesAbove, .crossesBelow:
             if targetPrice.isEmpty {
                 return "Please enter a target price"
             } else if Decimal(string: targetPrice) == nil {
                 return "Please enter a valid price"
             }
-        case .percentChange:
-            if percentChange.isEmpty {
-                return "Please enter a percent change"
-            } else if Double(percentChange) == nil {
-                return "Please enter a valid percentage"
-            }
-        case .volumeSpike:
-            break
         }
         
         return ""
@@ -484,14 +443,15 @@ struct CreatePriceAlertView: View {
         
         let alert = PriceAlert(
             id: UUID().uuidString,
+            userId: "current-user", // TODO: Get from auth service
             symbol: selectedSymbol.uppercased(),
-            alertType: alertType,
-            targetPrice: Decimal(string: targetPrice) ?? 0,
-            percentChange: Double(percentChange),
-            createdAt: Date(),
+            price: Double(targetPrice) ?? 0.0,
+            condition: alertType,
+            message: notes.isEmpty ? nil : notes,
             isActive: true,
-            triggeredAt: nil,
-            expiresAt: expiresIn.timeInterval.map { Date().addingTimeInterval($0) }
+            createdAt: Date(),
+            updatedAt: Date(),
+            triggeredAt: nil
         )
         
         await alertsViewModel.createAlert(alert)
@@ -504,7 +464,7 @@ struct CreatePriceAlertView: View {
 // MARK: - Supporting Views
 
 struct AlertTypeButton: View {
-    let type: PriceAlert.PriceAlertType
+    let type: AlertCondition
     let isSelected: Bool
     let isFocused: Bool
     let action: () -> Void
@@ -546,28 +506,28 @@ struct AlertTypeButton: View {
     
     private var icon: String {
         switch type {
-        case .priceAbove: return "arrow.up.circle.fill"
-        case .priceBelow: return "arrow.down.circle.fill"
-        case .percentChange: return "percent"
-        case .volumeSpike: return "chart.bar.fill"
+        case .above: return "arrow.up.circle.fill"
+        case .below: return "arrow.down.circle.fill"
+        case .crossesAbove: return "arrow.up.right.circle.fill"
+        case .crossesBelow: return "arrow.down.right.circle.fill"
         }
     }
     
     private var iconColor: Color {
         switch type {
-        case .priceAbove: return .green
-        case .priceBelow: return .red
-        case .percentChange: return .blue
-        case .volumeSpike: return .orange
+        case .above: return .green
+        case .below: return .red
+        case .crossesAbove: return .blue
+        case .crossesBelow: return .orange
         }
     }
     
     private var description: String {
         switch type {
-        case .priceAbove: return "Alert when price goes above target"
-        case .priceBelow: return "Alert when price drops below target"
-        case .percentChange: return "Alert on % move"
-        case .volumeSpike: return "Alert on high volume"
+        case .above: return "Alert when price goes above target"
+        case .below: return "Alert when price drops below target"
+        case .crossesAbove: return "Alert when price crosses above and stays"
+        case .crossesBelow: return "Alert when price crosses below and stays"
         }
     }
     

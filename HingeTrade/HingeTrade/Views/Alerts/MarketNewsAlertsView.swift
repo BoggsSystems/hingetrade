@@ -585,18 +585,7 @@ extension MarketNewsItem.NewsCategory {
     }
 }
 
-extension MarketNewsItem {
-    var isRead: Bool {
-        get {
-            // This would typically be stored in the news data
-            // For demo purposes, simulate some read status
-            return Bool.random()
-        }
-        set {
-            // In a real implementation, this would update the news record
-        }
-    }
-}
+// MarketNewsItem isRead extension removed - using ViewModels implementation
 
 #Preview {
     MarketNewsAlertsView()

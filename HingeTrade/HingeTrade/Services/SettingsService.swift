@@ -40,7 +40,7 @@ protocol AccountService {
 
 // MARK: - Service Implementations
 
-class SettingsService: SettingsService {
+class DefaultSettingsService: SettingsService {
     
     func updateNotificationSettings(enabled: Bool, priceAlerts: Bool, orderUpdates: Bool, marketNews: Bool, portfolioUpdates: Bool, researchReports: Bool) async throws {
         // Simulate API call
@@ -172,7 +172,7 @@ class SettingsService: SettingsService {
     }
 }
 
-class SecurityService: SecurityService {
+class DefaultSecurityService: SecurityService {
     
     func getBiometricAvailability() async throws -> BiometricStatus {
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -243,7 +243,7 @@ class SecurityService: SecurityService {
     }
 }
 
-class AccountService: AccountService {
+class DefaultAccountService: AccountService {
     
     func getUserProfile() async throws -> UserProfile {
         try await Task.sleep(nanoseconds: 800_000_000)
@@ -325,7 +325,7 @@ class AccountService: AccountService {
 
 // MARK: - Mock Data Helpers
 
-extension SettingsService {
+extension DefaultSettingsService {
     
     func generateMockDataUsage() -> DataUsageStats {
         return DataUsageStats(
@@ -339,7 +339,7 @@ extension SettingsService {
     }
 }
 
-extension SecurityService {
+extension DefaultSecurityService {
     
     func generateMockSecurityStatus() -> SecurityInfo {
         return SecurityInfo(
@@ -351,7 +351,7 @@ extension SecurityService {
     }
 }
 
-extension AccountService {
+extension DefaultAccountService {
     
     func generateMockUserProfile() -> UserProfile {
         let firstNames = ["John", "Jane", "Michael", "Sarah", "David", "Emily", "Robert", "Lisa"]

@@ -1,11 +1,14 @@
 import Foundation
 import Combine
+#if os(iOS)
+import UIKit
+#endif
 
 // MARK: - Authentication Service Protocol
 protocol AuthenticationServiceProtocol {
     var currentUser: User? { get }
     var isAuthenticated: Bool { get }
-    var authenticationState: AnyPublisher<AuthenticationState, Never> { get }
+    var authenticationState: AnyPublisher<AuthState, Never> { get }
     
     func login(email: String, password: String) -> AnyPublisher<User, APIError>
     func logout() -> AnyPublisher<Void, APIError>
@@ -17,7 +20,7 @@ protocol AuthenticationServiceProtocol {
 }
 
 // MARK: - Authentication State
-enum AuthenticationState {
+enum AuthState {
     case unauthenticated
     case authenticating
     case authenticated(User)
@@ -51,7 +54,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
     private let tokenManager: TokenManagerProtocol
     
     @Published private var _currentUser: User?
-    @Published private var _authenticationState: AuthenticationState = .unauthenticated
+    @Published private var _authenticationState: AuthState = .unauthenticated
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -65,7 +68,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
         return _authenticationState.isAuthenticated && !tokenManager.isTokenExpired
     }
     
-    var authenticationState: AnyPublisher<AuthenticationState, Never> {
+    var authenticationState: AnyPublisher<AuthState, Never> {
         return $_authenticationState.eraseToAnyPublisher()
     }
     
@@ -87,7 +90,13 @@ class AuthenticationService: AuthenticationServiceProtocol {
         let request = LoginRequest(
             email: email,
             password: password,
-            deviceId: UIDevice.current.identifierForVendor?.uuidString,
+            deviceId: {
+                #if os(iOS)
+                return UIDevice.current.identifierForVendor?.uuidString
+                #else
+                return UUID().uuidString // Fallback for tvOS
+                #endif
+            }(),
             appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         )
         
@@ -114,10 +123,16 @@ class AuthenticationService: AuthenticationServiceProtocol {
                 })
                 .map { $0.user }
                 .catch { [weak self] error in
-                    self?._authenticationState = .error(error)
-                    return Fail<User, APIError>(error: error)
+                    let apiError = error as? APIError ?? APIError(
+                        code: "AUTH_ERROR",
+                        message: "Authentication failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
+                    self?._authenticationState = .error(apiError)
+                    return Fail<User, APIError>(error: apiError)
                 }
-                .eraseToAnyPublisher()
+                .eraseToAnyPublisher() as AnyPublisher<User, APIError>
                 
         } catch {
             let apiError = error as? APIError ?? APIError(
@@ -132,9 +147,10 @@ class AuthenticationService: AuthenticationServiceProtocol {
     }
     
     func logout() -> AnyPublisher<Void, APIError> {
-        let endpoint = APIEndpoint.post("/auth/logout", method: .POST)
+        let endpoint = APIEndpoint.post("/auth/logout", body: EmptyRequest())
         
-        return apiClient.request<String>(endpoint)
+        return apiClient.request(endpoint)
+            .map { (_: APIResponse<String>) -> String in "" }
             .handleEvents(receiveOutput: { [weak self] _ in
                 self?.clearSession()
             }, receiveCompletion: { [weak self] completion in
@@ -170,7 +186,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
             let endpoint = try APIEndpoint.post("/auth/refresh", body: request)
             
             return apiClient.request<AuthTokens>(endpoint)
-                .map { response in
+                .tryMap { response in
                     guard let tokens = response.data else {
                         throw APIError(
                             code: "REFRESH_FAILED",
@@ -206,7 +222,7 @@ class AuthenticationService: AuthenticationServiceProtocol {
         let endpoint = APIEndpoint.get("/auth/me")
         
         return apiClient.request<User>(endpoint)
-            .map { response in
+            .tryMap { response in
                 guard let user = response.data else {
                     throw APIError(
                         code: "USER_FETCH_FAILED",
@@ -350,7 +366,7 @@ struct PasswordResetRequest: Codable {
 
 // MARK: - Mock Authentication Service
 class MockAuthenticationService: AuthenticationServiceProtocol {
-    @Published private var _authenticationState: AuthenticationState = .unauthenticated
+    @Published private var _authenticationState: AuthState = .unauthenticated
     private var _currentUser: User?
     
     var currentUser: User? {
@@ -361,7 +377,7 @@ class MockAuthenticationService: AuthenticationServiceProtocol {
         return _authenticationState.isAuthenticated
     }
     
-    var authenticationState: AnyPublisher<AuthenticationState, Never> {
+    var authenticationState: AnyPublisher<AuthState, Never> {
         return $_authenticationState.eraseToAnyPublisher()
     }
     

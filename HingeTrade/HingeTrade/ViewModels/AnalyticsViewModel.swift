@@ -46,16 +46,16 @@ class AnalyticsViewModel: ObservableObject {
     @Published var lastUpdated: Date?
     
     // Services
-    private let analyticsService: AnalyticsService
+    private let analyticsService: DefaultAnalyticsService
     private let performanceService: PerformanceService
     private let chartService: ChartService
     
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        analyticsService: AnalyticsService = AnalyticsService(),
-        performanceService: PerformanceService = PerformanceService(),
-        chartService: ChartService = ChartService()
+        analyticsService: DefaultAnalyticsService = DefaultAnalyticsService(),
+        performanceService: DefaultPerformanceService = DefaultPerformanceService(),
+        chartService: DefaultChartService = DefaultChartService()
     ) {
         self.analyticsService = analyticsService
         self.performanceService = performanceService
@@ -407,7 +407,7 @@ struct ReportMetadata {
 
 // MARK: - Services
 
-protocol AnalyticsService {
+protocol AnalyticsServiceProtocol {
     func analyzePerformance(period: PerformancePeriod, benchmark: String) async throws -> PerformanceAnalysisResult
     func getPerformanceRecommendations(analysis: PerformanceAnalysisResult?) async throws -> [PerformanceRecommendation]
     func implementRecommendation(_ recommendationId: String) async throws

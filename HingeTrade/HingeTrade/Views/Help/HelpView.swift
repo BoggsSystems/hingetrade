@@ -515,7 +515,7 @@ struct HelpSearchResultRow: View {
 
 // MARK: - Quick Actions View
 
-struct QuickActionsView: View {
+struct HelpQuickActionsView: View {
     let actions: [QuickAction]
     
     var body: some View {

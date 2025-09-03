@@ -135,7 +135,12 @@ struct Watchlist: Codable, Identifiable, Equatable {
             isDefault: isDefault,
             sortOrder: sortOrder,
             color: color,
-            isPublic: isPublic
+            isPublic: isPublic,
+            isFavorite: isFavorite,
+            dailyPerformance: dailyPerformance,
+            gainers: gainers,
+            losers: losers,
+            lastUpdated: lastUpdated
         )
     }
     
@@ -157,7 +162,12 @@ struct Watchlist: Codable, Identifiable, Equatable {
             isDefault: isDefault,
             sortOrder: sortOrder,
             color: color,
-            isPublic: isPublic
+            isPublic: isPublic,
+            isFavorite: isFavorite,
+            dailyPerformance: dailyPerformance,
+            gainers: gainers,
+            losers: losers,
+            lastUpdated: lastUpdated
         )
     }
     
@@ -178,7 +188,12 @@ struct Watchlist: Codable, Identifiable, Equatable {
             isDefault: isDefault,
             sortOrder: sortOrder,
             color: color,
-            isPublic: isPublic
+            isPublic: isPublic,
+            isFavorite: isFavorite,
+            dailyPerformance: dailyPerformance,
+            gainers: gainers,
+            losers: losers,
+            lastUpdated: lastUpdated
         )
     }
     
@@ -195,7 +210,12 @@ struct Watchlist: Codable, Identifiable, Equatable {
             isDefault: isDefault,
             sortOrder: sortOrder,
             color: color ?? self.color,
-            isPublic: isPublic
+            isPublic: isPublic,
+            isFavorite: isFavorite,
+            dailyPerformance: dailyPerformance,
+            gainers: gainers,
+            losers: losers,
+            lastUpdated: lastUpdated
         )
     }
     
@@ -442,7 +462,12 @@ extension Watchlist {
             isDefault: true,
             sortOrder: 1,
             color: WatchlistColor.blue.hexString,
-            isPublic: false
+            isPublic: false,
+            isFavorite: false,
+            dailyPerformance: 0.015,
+            gainers: 3,
+            losers: 2,
+            lastUpdated: Date()
         ),
         Watchlist(
             id: "watchlist-002",
@@ -455,7 +480,12 @@ extension Watchlist {
             isDefault: false,
             sortOrder: 2,
             color: WatchlistColor.orange.hexString,
-            isPublic: false
+            isPublic: false,
+            isFavorite: true,
+            dailyPerformance: -0.045,
+            gainers: 1,
+            losers: 4,
+            lastUpdated: Date()
         ),
         Watchlist(
             id: "watchlist-003",
@@ -468,7 +498,12 @@ extension Watchlist {
             isDefault: false,
             sortOrder: 3,
             color: WatchlistColor.green.hexString,
-            isPublic: true
+            isPublic: true,
+            isFavorite: false,
+            dailyPerformance: 0.087,
+            gainers: 5,
+            losers: 1,
+            lastUpdated: Date()
         ),
         Watchlist(
             id: "watchlist-004",
@@ -481,7 +516,12 @@ extension Watchlist {
             isDefault: false,
             sortOrder: 4,
             color: WatchlistColor.purple.hexString,
-            isPublic: false
+            isPublic: false,
+            isFavorite: false,
+            dailyPerformance: 0.012,
+            gainers: 4,
+            losers: 3,
+            lastUpdated: Date()
         ),
         Watchlist(
             id: "watchlist-005",
@@ -494,7 +534,12 @@ extension Watchlist {
             isDefault: false,
             sortOrder: 5,
             color: WatchlistColor.red.hexString,
-            isPublic: false
+            isPublic: false,
+            isFavorite: true,
+            dailyPerformance: -0.123,
+            gainers: 0,
+            losers: 5,
+            lastUpdated: Date()
         )
     ]
     
@@ -511,7 +556,12 @@ extension Watchlist {
             isDefault: false,
             sortOrder: nil,
             color: color.hexString,
-            isPublic: false
+            isPublic: false,
+            isFavorite: false,
+            dailyPerformance: nil,
+            gainers: 0,
+            losers: 0,
+            lastUpdated: nil
         )
     }
     
@@ -528,7 +578,12 @@ extension Watchlist {
             isDefault: true,
             sortOrder: 1,
             color: WatchlistColor.blue.hexString,
-            isPublic: false
+            isPublic: false,
+            isFavorite: false,
+            dailyPerformance: 0.0,
+            gainers: 3,
+            losers: 3,
+            lastUpdated: Date()
         )
     }
 }

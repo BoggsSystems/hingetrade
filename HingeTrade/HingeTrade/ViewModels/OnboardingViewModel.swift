@@ -14,7 +14,7 @@ class OnboardingViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var selectedExperience: TradingExperience = .beginner
     @Published var selectedRiskProfile: RiskProfile = .moderate
-    @Published var notificationPreferences: [NotificationType: Bool] = [:]
+    @Published var notificationPreferences: [OnboardingNotificationType: Bool] = [:]
     @Published var displayName: String = ""
     @Published var email: String = ""
     
@@ -29,7 +29,7 @@ class OnboardingViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(onboardingService: OnboardingService = OnboardingService()) {
+    init(onboardingService: DefaultOnboardingService = DefaultOnboardingService()) {
         self.onboardingService = onboardingService
         setupInitialPreferences()
         setupBindings()
@@ -150,6 +150,14 @@ class OnboardingViewModel: ObservableObject {
             userSettings.enableStopLosses = false
             userSettings.defaultStopLossPercent = 0.15 // 15%
             userSettings.enablePositionSizing = false
+            
+        case .custom:
+            // For custom profiles, use moderate defaults
+            userSettings.maxPositionSize = 0.10 // 10%
+            userSettings.maxDailyLoss = 0.05 // 5%
+            userSettings.enableStopLosses = true
+            userSettings.defaultStopLossPercent = 0.08 // 8%
+            userSettings.enablePositionSizing = true
         }
     }
     
@@ -185,6 +193,8 @@ class OnboardingViewModel: ObservableObject {
             userSettings.colorScheme = ColorScheme.blue.rawValue
         case .aggressive:
             userSettings.colorScheme = ColorScheme.red.rawValue
+        case .custom:
+            userSettings.colorScheme = ColorScheme.blue.rawValue
         }
     }
     
@@ -214,7 +224,7 @@ class OnboardingViewModel: ObservableObject {
     
     private func setupInitialPreferences() {
         // Set default notification preferences
-        NotificationType.allCases.forEach { type in
+        OnboardingNotificationType.allCases.forEach { type in
             notificationPreferences[type] = type.defaultEnabled
         }
     }
@@ -260,7 +270,7 @@ enum OnboardingStepType: String, CaseIterable {
     }
 }
 
-enum TradingExperience: String, CaseIterable {
+enum TradingExperience: String, CaseIterable, Codable {
     case beginner = "beginner"
     case intermediate = "intermediate"
     case advanced = "advanced"
@@ -290,7 +300,7 @@ enum TradingExperience: String, CaseIterable {
 }
 
 extension RiskProfile {
-    var description: String {
+    var profileDescription: String {
         switch self {
         case .conservative:
             return "I prefer lower risk investments with steady, predictable returns. Capital preservation is my priority."
@@ -298,6 +308,8 @@ extension RiskProfile {
             return "I'm comfortable with some risk for potentially higher returns. I want a balanced approach."
         case .aggressive:
             return "I'm willing to accept higher risk for the potential of significant returns. I can handle volatility."
+        case .custom:
+            return "I prefer a customized risk approach tailored to my specific needs and preferences."
         }
     }
     
@@ -306,11 +318,12 @@ extension RiskProfile {
         case .conservative: return 2
         case .moderate: return 3
         case .aggressive: return 5
+        case .custom: return 4
         }
     }
 }
 
-enum NotificationType: String, CaseIterable {
+enum OnboardingNotificationType: String, CaseIterable, Codable {
     case priceAlerts = "price_alerts"
     case orderUpdates = "order_updates"
     case portfolioUpdates = "portfolio_updates"
@@ -365,7 +378,7 @@ enum NotificationType: String, CaseIterable {
 struct OnboardingData: Codable {
     let experience: TradingExperience
     let riskProfile: RiskProfile
-    let notificationPreferences: [NotificationType: Bool]
+    let notificationPreferences: [OnboardingNotificationType: Bool]
     let displayName: String
     let email: String
     let completedAt: Date
@@ -425,7 +438,7 @@ protocol OnboardingService {
     func hasCompletedOnboarding() -> Bool
 }
 
-class OnboardingService: OnboardingService {
+class DefaultOnboardingService: OnboardingService {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     

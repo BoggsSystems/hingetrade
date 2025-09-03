@@ -95,8 +95,11 @@ class WebSocketService: NSObject, WebSocketServiceProtocol {
     // MARK: - Connection Management
     
     func connect() {
-        guard _connectionState != .connected && _connectionState != .connecting else {
+        switch _connectionState {
+        case .connected, .connecting:
             return
+        default:
+            break
         }
         
         _connectionState = .connecting

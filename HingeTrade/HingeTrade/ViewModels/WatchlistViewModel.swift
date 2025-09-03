@@ -38,10 +38,10 @@ class WatchlistViewModel: ObservableObject {
     private var searchDebouncer: Timer?
     
     init(
-        watchlistService: WatchlistService = WatchlistService(),
-        marketDataService: MarketDataService = MarketDataService(),
-        searchService: SymbolSearchService = SymbolSearchService(),
-        webSocketService: WebSocketService = WebSocketService()
+        watchlistService: DefaultWatchlistService = DefaultWatchlistService(),
+        marketDataService: MarketDataService = MarketDataService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager())),
+        searchService: DefaultSymbolSearchService = DefaultSymbolSearchService(),
+        webSocketService: WebSocketService = WebSocketService(url: URL(string: "wss://api.alpaca.markets/stream")!)
     ) {
         self.watchlistService = watchlistService
         self.marketDataService = marketDataService
@@ -87,9 +87,22 @@ class WatchlistViewModel: ObservableObject {
         // Load quotes in batches to avoid rate limiting
         let batchSize = 10
         for batch in symbols.chunked(into: batchSize) {
-            let batchQuotes = try await marketDataService.getQuotes(symbols: batch)
-            for quote in batchQuotes {
-                quotes[quote.symbol] = quote
+            let batchQuotes = try await withCheckedThrowingContinuation { continuation in
+                marketDataService.getQuotes(symbols: batch)
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { quotes in
+                            continuation.resume(returning: quotes)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
+            for (symbol, quote) in batchQuotes {
+                quotes[symbol] = quote
             }
         }
         
@@ -107,18 +120,20 @@ class WatchlistViewModel: ObservableObject {
         
         for symbol in watchlist.symbols {
             if let quote = quotes[symbol] {
-                totalValue += quote.bidPrice
-                totalChange += quote.change
-                
-                if quote.change > 0 {
-                    gainers += 1
-                } else if quote.change < 0 {
-                    losers += 1
+                totalValue += Decimal(quote.bidPrice)
+                if let dailyChange = quote.dailyChange {
+                    totalChange += Decimal(dailyChange)
+                    
+                    if dailyChange > 0 {
+                        gainers += 1
+                    } else if dailyChange < 0 {
+                        losers += 1
+                    }
                 }
             }
         }
         
-        updatedWatchlist.dailyPerformance = totalValue > 0 ? Double(totalChange / totalValue) : 0
+        updatedWatchlist.dailyPerformance = totalValue > 0 ? Double(truncating: (totalChange / totalValue) as NSNumber) : 0
         updatedWatchlist.gainers = gainers
         updatedWatchlist.losers = losers
         updatedWatchlist.lastUpdated = Date()
@@ -315,7 +330,16 @@ class WatchlistViewModel: ObservableObject {
     
     private func setupRealTimeUpdates() {
         // Subscribe to quote updates for all watchlist symbols
-        webSocketService.quoteUpdates
+        webSocketService.messagePublisher
+            .compactMap { message -> Quote? in
+                // Filter for quote messages and decode them
+                guard message.type == .quote,
+                      let data = message.data,
+                      let quote = try? JSONDecoder().decode(Quote.self, from: data) else {
+                    return nil
+                }
+                return quote
+            }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] quote in
                 self?.handleQuoteUpdate(quote)
@@ -496,7 +520,7 @@ protocol SymbolSearchService {
 
 // MARK: - Default Implementations
 
-class WatchlistService: WatchlistService {
+class DefaultWatchlistService: WatchlistService {
     func getAllWatchlists() async throws -> [Watchlist] {
         try await Task.sleep(nanoseconds: 800_000_000)
         return Watchlist.sampleWatchlists
@@ -527,7 +551,7 @@ class WatchlistService: WatchlistService {
     }
 }
 
-class SymbolSearchService: SymbolSearchService {
+class DefaultSymbolSearchService: SymbolSearchService {
     func searchSymbols(query: String, limit: Int) async throws -> [SymbolSearchResult] {
         try await Task.sleep(nanoseconds: 600_000_000)
         

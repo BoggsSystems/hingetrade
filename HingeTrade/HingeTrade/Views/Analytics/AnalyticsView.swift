@@ -230,7 +230,7 @@ struct AnalyticsView: View {
             
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 16) {
                 if let performance = analyticsViewModel.currentPerformance {
-                    MetricCard(
+                    AnalyticsMetricCard(
                         title: "Total Return",
                         value: performance.returnMetrics.totalReturn.formatted(.percent.precision(.fractionLength(1))),
                         change: performance.returnMetrics.dayReturn.formatted(.percent.precision(.fractionLength(2))),
@@ -239,7 +239,7 @@ struct AnalyticsView: View {
                     )
                     .focused($focusedSection, equals: .metric("totalReturn"))
                     
-                    MetricCard(
+                    AnalyticsMetricCard(
                         title: "Annualized",
                         value: performance.returnMetrics.annualizedReturn.formatted(.percent.precision(.fractionLength(1))),
                         change: nil,
@@ -248,7 +248,7 @@ struct AnalyticsView: View {
                     )
                     .focused($focusedSection, equals: .metric("annualized"))
                     
-                    MetricCard(
+                    AnalyticsMetricCard(
                         title: "Sharpe Ratio",
                         value: performance.returnMetrics.sharpeRatio.formatted(.number.precision(.fractionLength(2))),
                         change: nil,
@@ -257,7 +257,7 @@ struct AnalyticsView: View {
                     )
                     .focused($focusedSection, equals: .metric("sharpe"))
                     
-                    MetricCard(
+                    AnalyticsMetricCard(
                         title: "Max Drawdown",
                         value: performance.riskMetrics.maximumDrawdown.formatted(.percent.precision(.fractionLength(1))),
                         change: nil,
@@ -282,10 +282,18 @@ struct AnalyticsView: View {
                 
                 HStack(spacing: 12) {
                     Toggle("Benchmark", isOn: $analyticsViewModel.showBenchmark)
+                        #if os(tvOS)
+                        .toggleStyle(DefaultToggleStyle())
+                        #else
                         .toggleStyle(SwitchToggleStyle(tint: .blue))
+                        #endif
                     
                     Toggle("Drawdown", isOn: $analyticsViewModel.showDrawdown)
+                        #if os(tvOS)
+                        .toggleStyle(DefaultToggleStyle())
+                        #else
                         .toggleStyle(SwitchToggleStyle(tint: .red))
+                        #endif
                 }
             }
             
@@ -620,7 +628,7 @@ struct AnalyticsTabButton: View {
     }
 }
 
-struct MetricCard: View {
+struct AnalyticsMetricCard: View {
     let title: String
     let value: String
     let change: String?

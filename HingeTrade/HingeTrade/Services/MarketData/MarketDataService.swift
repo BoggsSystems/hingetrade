@@ -197,8 +197,8 @@ class MarketDataService: MarketDataServiceProtocol {
         let queryItems = [URLQueryItem(name: "symbols", value: symbol)]
         let endpoint = APIEndpoint.get("/market-data/quotes", queryItems: queryItems)
         
-        return apiClient.request<QuoteResponse>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .tryMap { (response: APIResponse<QuoteResponse>) in
                 guard let quoteResponse = response.data,
                       let quote = quoteResponse.quotes[symbol] else {
                     throw APIError(
@@ -210,6 +210,13 @@ class MarketDataService: MarketDataServiceProtocol {
                 }
                 return quote
             }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -218,8 +225,8 @@ class MarketDataService: MarketDataServiceProtocol {
         let queryItems = [URLQueryItem(name: "symbols", value: symbolsString)]
         let endpoint = APIEndpoint.get("/market-data/quotes", queryItems: queryItems)
         
-        return apiClient.request<QuoteResponse>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .tryMap { (response: APIResponse<QuoteResponse>) in
                 guard let quoteResponse = response.data else {
                     throw APIError(
                         code: "QUOTES_FETCH_FAILED",
@@ -229,6 +236,13 @@ class MarketDataService: MarketDataServiceProtocol {
                     )
                 }
                 return quoteResponse.quotes
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -243,6 +257,13 @@ class MarketDataService: MarketDataServiceProtocol {
             }
             .compactMap { quotes in
                 quotes.values.first // Return first quote for demo
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -272,7 +293,7 @@ class MarketDataService: MarketDataServiceProtocol {
         let endpoint = APIEndpoint.get("/market-data/bars", queryItems: queryItems)
         
         return apiClient.request<BarsResponse>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<BarsResponse>) in
                 guard let barsResponse = response.data else {
                     throw APIError(
                         code: "BARS_FETCH_FAILED",
@@ -283,6 +304,13 @@ class MarketDataService: MarketDataServiceProtocol {
                 }
                 return barsResponse.bars
             }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -290,6 +318,13 @@ class MarketDataService: MarketDataServiceProtocol {
         return getBars(symbols: [symbol], timeframe: "1Day", start: nil, end: nil, limit: 1)
             .map { barsDict in
                 return barsDict[symbol]?.first
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -309,7 +344,7 @@ class MarketDataService: MarketDataServiceProtocol {
                                      queryItems: queryItems.isEmpty ? nil : queryItems)
         
         return apiClient.request<MarketHours>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<MarketHours>) in
                 guard let marketHours = response.data else {
                     throw APIError(
                         code: "MARKET_HOURS_FETCH_FAILED",
@@ -320,6 +355,13 @@ class MarketDataService: MarketDataServiceProtocol {
                 }
                 return marketHours
             }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -328,6 +370,13 @@ class MarketDataService: MarketDataServiceProtocol {
             .map { marketHours in
                 return marketHours.currentStatus == .open
             }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -335,6 +384,13 @@ class MarketDataService: MarketDataServiceProtocol {
         return getMarketHours(date: Date())
             .map { marketHours in
                 return marketHours.currentStatus
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -355,7 +411,7 @@ class MarketDataService: MarketDataServiceProtocol {
         let endpoint = APIEndpoint.get("/market-data/search", queryItems: queryItems)
         
         return apiClient.request<AssetSearchResponse>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<AssetSearchResponse>) in
                 guard let searchResponse = response.data else {
                     throw APIError(
                         code: "SEARCH_FAILED",
@@ -366,6 +422,13 @@ class MarketDataService: MarketDataServiceProtocol {
                 }
                 return searchResponse.assets
             }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -373,7 +436,7 @@ class MarketDataService: MarketDataServiceProtocol {
         let endpoint = APIEndpoint.get("/market-data/assets/\(symbol)")
         
         return apiClient.request<Asset>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<Asset>) in
                 guard let asset = response.data else {
                     throw APIError(
                         code: "ASSET_NOT_FOUND",
@@ -383,6 +446,13 @@ class MarketDataService: MarketDataServiceProtocol {
                     )
                 }
                 return asset
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -400,6 +470,13 @@ class MarketDataService: MarketDataServiceProtocol {
         return apiClient.request<[Asset]>(endpoint)
             .map { response in
                 return response.data ?? []
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -424,6 +501,13 @@ class MarketDataService: MarketDataServiceProtocol {
             .map { response in
                 return response.data ?? []
             }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -431,7 +515,7 @@ class MarketDataService: MarketDataServiceProtocol {
         let endpoint = APIEndpoint.get("/market-data/summary")
         
         return apiClient.request<MarketSummary>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<MarketSummary>) in
                 guard let summary = response.data else {
                     throw APIError(
                         code: "MARKET_SUMMARY_FETCH_FAILED",
@@ -441,6 +525,13 @@ class MarketDataService: MarketDataServiceProtocol {
                     )
                 }
                 return summary
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -494,6 +585,13 @@ class MockMarketDataService: MarketDataServiceProtocol {
                 }.randomElement()
             }
             .setFailureType(to: APIError.self)
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -536,12 +634,26 @@ class MockMarketDataService: MarketDataServiceProtocol {
     func isMarketOpen() -> AnyPublisher<Bool, APIError> {
         return Just(true)
             .setFailureType(to: APIError.self)
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
     func getMarketStatus() -> AnyPublisher<MarketStatus, APIError> {
         return Just(MarketStatus.open)
             .setFailureType(to: APIError.self)
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     

@@ -49,8 +49,8 @@ class AdvancedOrderViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        advancedOrderService: AdvancedOrderService = AdvancedOrderService(),
-        riskManagementService: RiskManagementService = RiskManagementService()
+        advancedOrderService: DefaultAdvancedOrderService = DefaultAdvancedOrderService(),
+        riskManagementService: RiskManagementService = DefaultRiskManagementService()
     ) {
         self.advancedOrderService = advancedOrderService
         self.riskManagementService = riskManagementService
@@ -159,7 +159,7 @@ class AdvancedOrderViewModel: ObservableObject {
                 let rewardDistance = abs(takeProfitDecimal - currentPrice)
                 
                 estimatedRiskAmount = riskDistance * Decimal(quantity)
-                riskRewardRatio = Double(rewardDistance / riskDistance)
+                riskRewardRatio = Double(truncating: (rewardDistance / riskDistance) as NSDecimalNumber)
             }
             
         default:
@@ -333,7 +333,7 @@ protocol AdvancedOrderService {
     func cancelAdvancedOrder(_ orderId: String) async throws
 }
 
-class AdvancedOrderService: AdvancedOrderService {
+class DefaultAdvancedOrderService: AdvancedOrderService {
     func submitAdvancedOrder(_ config: AdvancedOrderConfig) async throws -> String {
         // Simulate API call
         try await Task.sleep(nanoseconds: 1_500_000_000)
@@ -371,7 +371,7 @@ protocol RiskManagementService {
     ) -> OrderValidationResult
 }
 
-class RiskManagementService: RiskManagementService {
+class DefaultRiskManagementService: RiskManagementService {
     func assessOrderRisk(
         config: AdvancedOrderConfig,
         currentPrice: Decimal,
@@ -379,7 +379,7 @@ class RiskManagementService: RiskManagementService {
         accountBalance: Decimal
     ) -> RiskAssessment {
         
-        let positionRiskPercent = Double(positionValue / accountBalance)
+        let positionRiskPercent = Double(truncating: (positionValue / accountBalance) as NSDecimalNumber)
         
         // Assess different risk factors
         let positionSizeRisk: RiskLevel = {
@@ -460,7 +460,7 @@ class RiskManagementService: RiskManagementService {
         }
         
         // Check risk limits
-        let riskPercent = Double(positionValue / accountBalance)
+        let riskPercent = Double(truncating: (positionValue / accountBalance) as NSDecimalNumber)
         if riskPercent > 0.20 {
             errors.append(.exceedsRiskLimit(riskPercent: riskPercent, limit: 0.20))
         } else if riskPercent > 0.10 {

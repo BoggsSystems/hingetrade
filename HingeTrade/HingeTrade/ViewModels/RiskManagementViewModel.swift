@@ -47,8 +47,8 @@ class RiskManagementViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        riskAnalysisService: RiskAnalysisService = RiskAnalysisService(),
-        portfolioService: PortfolioService = PortfolioService()
+        riskAnalysisService: RiskAnalysisService = DefaultRiskAnalysisService(),
+        portfolioService: PortfolioService = DefaultPortfolioService()
     ) {
         self.riskAnalysisService = riskAnalysisService
         self.portfolioService = portfolioService
@@ -115,10 +115,10 @@ class RiskManagementViewModel: ObservableObject {
     private func updateRiskMetrics(_ metrics: RiskMetrics) {
         portfolioBeta = metrics.beta
         valueAtRisk = metrics.valueAtRisk95
-        maxDrawdown = metrics.maxDrawdown
-        sharpeRatio = metrics.sharpeRatio
+        maxDrawdown = metrics.maximumDrawdown
+        sharpeRatio = nil // RiskMetrics doesn't have sharpeRatio, calculate separately if needed
         portfolioVolatility = metrics.volatility
-        concentrationRisk = metrics.concentrationRisk
+        concentrationRisk = nil // RiskMetrics doesn't have concentrationRisk, calculate separately if needed
     }
     
     private func calculatePositionRisk(_ position: PortfolioPosition) -> RiskLevel {
@@ -385,15 +385,6 @@ struct RecommendedAction: Identifiable {
     }
 }
 
-struct RiskMetrics {
-    let beta: Double
-    let valueAtRisk95: Decimal
-    let maxDrawdown: Double
-    let sharpeRatio: Double
-    let volatility: Double
-    let concentrationRisk: Double
-    let correlationRisk: Double
-}
 
 struct PortfolioPosition {
     let symbol: String
@@ -405,7 +396,7 @@ struct PortfolioPosition {
     let sector: String?
 }
 
-enum RiskProfile: String, CaseIterable {
+enum RiskProfile: String, CaseIterable, Codable {
     case conservative = "Conservative"
     case moderate = "Moderate"
     case aggressive = "Aggressive"
@@ -467,19 +458,24 @@ protocol RiskAnalysisService {
     func calculatePositionRisk(_ position: PortfolioPosition) async throws -> PositionRisk
 }
 
-class RiskAnalysisService: RiskAnalysisService {
+class DefaultRiskAnalysisService: RiskAnalysisService {
     func calculateRiskMetrics() async throws -> RiskMetrics {
         // Simulate API call
         try await Task.sleep(nanoseconds: 1_000_000_000)
         
         return RiskMetrics(
             beta: 1.15,
-            valueAtRisk95: 2750, // $2,750 daily VaR at 95% confidence
-            maxDrawdown: 0.12, // 12% maximum historical drawdown
-            sharpeRatio: 0.85,
+            alpha: 0.05,
+            correlationToMarket: 0.65,
             volatility: 0.18, // 18% annualized volatility
-            concentrationRisk: 0.32, // 32% in top 5 positions
-            correlationRisk: 0.65 // Average correlation between positions
+            downsideVolatility: 0.15,
+            valueAtRisk95: Decimal(2750), // $2,750 daily VaR at 95% confidence
+            valueAtRisk99: Decimal(4200),
+            conditionalVaR95: Decimal(3500),
+            maximumDrawdown: 0.12, // 12% maximum historical drawdown
+            drawdownDuration: 15,
+            upsideCapture: 1.05,
+            downsideCapture: 0.92
         )
     }
     
@@ -533,7 +529,7 @@ protocol PortfolioService {
     func getPortfolioPositions() async throws -> [PortfolioPosition]
 }
 
-class PortfolioService: PortfolioService {
+class DefaultPortfolioService: PortfolioService {
     func getPortfolioPositions() async throws -> [PortfolioPosition] {
         try await Task.sleep(nanoseconds: 800_000_000)
         

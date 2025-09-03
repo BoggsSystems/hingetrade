@@ -24,7 +24,7 @@ class HelpViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(helpService: HelpService = HelpService()) {
+    init(helpService: HelpService = DefaultHelpService()) {
         self.helpService = helpService
         setupBindings()
     }
@@ -297,7 +297,7 @@ protocol HelpService {
     func reportArticleIssue(_ articleId: String, issue: String) async throws
 }
 
-class HelpService: HelpService {
+class DefaultHelpService: HelpService {
     
     func loadHelpCategories() async throws -> [HelpCategory] {
         // Simulate API call
@@ -366,7 +366,7 @@ class HelpService: HelpService {
                 readingTimeMinutes: 5,
                 isPopular: true,
                 isNew: false,
-                createdAt: Calendar.current.date(byAdding: .week, value: -1, to: Date())!,
+                createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -1, to: Date())!,
                 updatedAt: Date(),
                 authorName: "Sarah Johnson",
                 difficulty: .beginner,
@@ -384,7 +384,7 @@ class HelpService: HelpService {
                 readingTimeMinutes: 8,
                 isPopular: true,
                 isNew: false,
-                createdAt: Calendar.current.date(byAdding: .week, value: -2, to: Date())!,
+                createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date())!,
                 updatedAt: Date(),
                 authorName: "Michael Chen",
                 difficulty: .intermediate,
@@ -419,7 +419,7 @@ class HelpService: HelpService {
                 readingTimeMinutes: 6,
                 isPopular: true,
                 isNew: false,
-                createdAt: Calendar.current.date(byAdding: .week, value: -3, to: Date())!,
+                createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -3, to: Date())!,
                 updatedAt: Date(),
                 authorName: "Emily Davis",
                 difficulty: .intermediate,
@@ -437,7 +437,7 @@ class HelpService: HelpService {
                 readingTimeMinutes: 7,
                 isPopular: true,
                 isNew: false,
-                createdAt: Calendar.current.date(byAdding: .week, value: -4, to: Date())!,
+                createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!,
                 updatedAt: Date(),
                 authorName: "James Wilson",
                 difficulty: .intermediate,
@@ -472,7 +472,7 @@ class HelpService: HelpService {
                 readingTimeMinutes: 10,
                 isPopular: true,
                 isNew: false,
-                createdAt: Calendar.current.date(byAdding: .week, value: -5, to: Date())!,
+                createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -5, to: Date())!,
                 updatedAt: Date(),
                 authorName: "Robert Kim",
                 difficulty: .intermediate,

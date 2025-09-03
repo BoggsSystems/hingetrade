@@ -10,8 +10,8 @@ import Combine
 
 @MainActor
 class ChartViewModel: ObservableObject {
-    @Published var chartData: [ChartDataPoint] = []
-    @Published var selectedTimeframe: ChartTimeframe = .oneDay
+    @Published var chartData: [ViewModelChartDataPoint] = []
+    @Published var selectedTimeframe: ViewModelChartTimeframe = .oneDay
     @Published var isLoading: Bool = false
     @Published var error: ChartError?
     @Published var showingError: Bool = false
@@ -19,7 +19,7 @@ class ChartViewModel: ObservableObject {
     // Chart display options
     @Published var showVolume: Bool = true
     @Published var showIndicators: Bool = false
-    @Published var chartType: ChartType = .line
+    @Published var chartType: ViewModelChartType = .line
     @Published var selectedIndicators: Set<TechnicalIndicator> = []
     
     // Technical indicator data
@@ -45,7 +45,7 @@ class ChartViewModel: ObservableObject {
     private let technicalIndicatorsService: TechnicalIndicatorsService
     private var cancellables = Set<AnyCancellable>()
     
-    init(marketDataService: MarketDataService = MarketDataService(), webSocketService: WebSocketService = WebSocketService(), technicalIndicatorsService: TechnicalIndicatorsService = TechnicalIndicatorsService()) {
+    init(marketDataService: MarketDataService = MarketDataService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager())), webSocketService: WebSocketService = WebSocketService(url: URL(string: "wss://api.alpaca.markets/stream")!), technicalIndicatorsService: TechnicalIndicatorsService = TechnicalIndicatorsService()) {
         self.marketDataService = marketDataService
         self.webSocketService = webSocketService
         self.technicalIndicatorsService = technicalIndicatorsService
@@ -62,13 +62,15 @@ class ChartViewModel: ObservableObject {
         
         do {
             let bars = try await marketDataService.getBars(
-                symbol: symbol,
+                symbols: [symbol],
                 timeframe: selectedTimeframe.alpacaTimeframe,
+                start: nil,
+                end: nil,
                 limit: selectedTimeframe.defaultLimit
             )
             
-            self.chartData = bars.map { bar in
-                ChartDataPoint(
+            self.chartData = bars[symbol]?.map { bar in
+                ViewModelChartDataPoint(
                     timestamp: bar.timestamp,
                     price: bar.close,
                     volume: bar.volume,
@@ -77,7 +79,7 @@ class ChartViewModel: ObservableObject {
                     low: bar.low,
                     close: bar.close
                 )
-            }
+            } ?? []
             
             updatePriceInformation()
             
@@ -94,7 +96,7 @@ class ChartViewModel: ObservableObject {
         isLoading = false
     }
     
-    func changeTimeframe(to timeframe: ChartTimeframe) async {
+    func changeTimeframe(to timeframe: ViewModelChartTimeframe) async {
         selectedTimeframe = timeframe
         await loadChart(for: currentSymbol)
     }
@@ -105,37 +107,39 @@ class ChartViewModel: ObservableObject {
         let latestPoint = chartData.last!
         let firstPoint = chartData.first!
         
-        currentPrice = latestPoint.close
+        currentPrice = Double(truncating: latestPoint.close as NSDecimalNumber)
         priceChange = latestPoint.close - firstPoint.open
-        priceChangePercent = firstPoint.open > 0 ? Double(priceChange / firstPoint.open) : 0.0
+        priceChangePercent = firstPoint.open > 0 ? Double(truncating: (priceChange / firstPoint.open) as NSDecimalNumber) : 0.0
     }
     
     // MARK: - Real-Time Updates
     
     private func setupRealTimeUpdates() {
-        webSocketService.barUpdates
-            .filter { [weak self] bar in
-                bar.symbol == self?.currentSymbol
-            }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] bar in
-                self?.handleBarUpdate(bar)
-            }
-            .store(in: &cancellables)
+        // TODO: Fix when WebSocketService supports barUpdates
+        // webSocketService.barUpdates
+        //     .filter { [weak self] bar in
+        //         bar.symbol == self?.currentSymbol
+        //     }
+        //     .receive(on: DispatchQueue.main)
+        //     .sink { [weak self] bar in
+        //         self?.handleBarUpdate(bar)
+        //     }
+        //     .store(in: &cancellables)
         
-        webSocketService.quoteUpdates
-            .filter { [weak self] quote in
-                quote.symbol == self?.currentSymbol
-            }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] quote in
-                self?.handleQuoteUpdate(quote)
-            }
-            .store(in: &cancellables)
+        // TODO: Fix when WebSocketService supports quoteUpdates
+        // webSocketService.quoteUpdates
+        //     .filter { [weak self] quote in
+        //         quote.symbol == self?.currentSymbol
+        //     }
+        //     .receive(on: DispatchQueue.main)
+        //     .sink { [weak self] quote in
+        //         self?.handleQuoteUpdate(quote)
+        //     }
+        //     .store(in: &cancellables)
     }
     
     private func handleBarUpdate(_ bar: Bar) {
-        let newDataPoint = ChartDataPoint(
+        let newDataPoint = ViewModelChartDataPoint(
             timestamp: bar.timestamp,
             price: bar.close,
             volume: bar.volume,
@@ -318,7 +322,7 @@ class ChartViewModel: ObservableObject {
 
 // MARK: - Supporting Types
 
-struct ChartDataPoint {
+struct ViewModelChartDataPoint {
     let timestamp: Date
     var price: Decimal
     let volume: Decimal
@@ -328,7 +332,7 @@ struct ChartDataPoint {
     var close: Decimal
 }
 
-enum ChartTimeframe: String, CaseIterable {
+enum ViewModelChartTimeframe: String, CaseIterable {
     case oneMinute = "1Min"
     case fiveMinutes = "5Min"
     case fifteenMinutes = "15Min"
@@ -378,7 +382,7 @@ enum ChartTimeframe: String, CaseIterable {
     }
 }
 
-enum ChartType {
+enum ViewModelChartType {
     case line
     case candlestick
     case bar

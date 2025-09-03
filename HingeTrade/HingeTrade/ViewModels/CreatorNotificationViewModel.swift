@@ -28,13 +28,13 @@ class CreatorNotificationViewModel: ObservableObject {
     
     // Services
     private let notificationService: NotificationService
-    private let creatorService: CreatorService
+    private let creatorService: DefaultCreatorService
     
     private var cancellables = Set<AnyCancellable>()
     
     init(
         notificationService: NotificationService = NotificationService.shared,
-        creatorService: CreatorService = CreatorService()
+        creatorService: DefaultCreatorService = DefaultCreatorService()
     ) {
         self.notificationService = notificationService
         self.creatorService = creatorService
@@ -159,15 +159,28 @@ class CreatorNotificationViewModel: ObservableObject {
             description: notification.description,
             thumbnailURL: notification.thumbnailURL ?? "",
             videoURL: "https://example.com/video.mp4", // Placeholder
-            creator: notification.creator,
             duration: 300, // 5 minutes placeholder
+            publishedAt: notification.timestamp,
+            creator: notification.creator,
+            symbols: [],
+            category: .creatorSpotlights,
+            tags: [],
             viewCount: 0,
             likeCount: 0,
-            publishedAt: notification.timestamp,
-            tickers: [],
-            tags: [],
-            isLive: false,
-            category: .general
+            isSponsored: false,
+            sponsorInfo: nil,
+            performanceScore: nil,
+            createdAt: notification.timestamp,
+            marketDirection: nil,
+            priceTargets: [],
+            riskLevel: .moderate,
+            timeHorizon: .shortTerm,
+            averageWatchTime: 150,
+            clickThroughRate: 0.05,
+            tradingConversionRate: 0.02,
+            keyTakeaways: [],
+            transcript: nil,
+            aiSummary: nil
         )
         
         do {
@@ -283,7 +296,7 @@ protocol CreatorService {
     func toggleNotifications(for creatorId: String) async throws
 }
 
-class CreatorService: CreatorService {
+class DefaultCreatorService: CreatorService {
     func getFollowingCreators() async throws -> [Creator] {
         // Simulate API call
         try await Task.sleep(nanoseconds: 800_000_000)
@@ -291,39 +304,75 @@ class CreatorService: CreatorService {
         return [
             Creator(
                 id: "creator-1",
-                username: "tradingpro",
                 displayName: "Trading Pro",
-                bio: "Professional trader sharing daily market insights and strategies",
-                profileImageURL: "https://example.com/avatar1.jpg",
+                username: "tradingpro",
+                avatarURL: "https://example.com/avatar1.jpg",
                 isVerified: true,
-                followersCount: 125000,
-                totalVideos: 450,
-                notificationsEnabled: true,
-                hasNewContent: true
+                followerCount: 125000,
+                totalViews: 1500000,
+                joinedDate: Date().addingTimeInterval(-86400 * 365),
+                expertise: ["Technical Analysis", "Options Trading"],
+                trackRecord: nil,
+                profileImageURL: "https://example.com/avatar1.jpg",
+                bio: "Professional trader sharing daily market insights and strategies",
+                tagline: "Trading with precision",
+                website: "https://tradingpro.com",
+                twitterHandle: "tradingpro",
+                instagramHandle: nil,
+                linkedinHandle: nil,
+                winRate: 0.68,
+                averageReturn: 0.15,
+                totalTrades: 450,
+                riskRating: "Moderate",
+                specialties: ["Technical Analysis", "Options Trading"]
             ),
             Creator(
                 id: "creator-2",
-                username: "stockwhiz",
                 displayName: "Stock Whiz",
-                bio: "Teaching options trading and technical analysis to retail investors",
-                profileImageURL: "https://example.com/avatar2.jpg",
+                username: "stockwhiz",
+                avatarURL: "https://example.com/avatar2.jpg",
                 isVerified: true,
-                followersCount: 89000,
-                totalVideos: 320,
-                notificationsEnabled: false,
-                hasNewContent: false
+                followerCount: 89000,
+                totalViews: 980000,
+                joinedDate: Date().addingTimeInterval(-86400 * 200),
+                expertise: ["Options Trading", "Technical Analysis"],
+                trackRecord: nil,
+                profileImageURL: "https://example.com/avatar2.jpg",
+                bio: "Teaching options trading and technical analysis to retail investors",
+                tagline: "Options made simple",
+                website: nil,
+                twitterHandle: "stockwhiz",
+                instagramHandle: nil,
+                linkedinHandle: nil,
+                winRate: 0.72,
+                averageReturn: 0.18,
+                totalTrades: 320,
+                riskRating: "Conservative",
+                specialties: ["Options Trading", "Technical Analysis"]
             ),
             Creator(
                 id: "creator-3",
-                username: "cryptoking",
                 displayName: "Crypto King",
-                bio: "Cryptocurrency expert covering DeFi, NFTs, and blockchain technology",
-                profileImageURL: "https://example.com/avatar3.jpg",
+                username: "cryptoking",
+                avatarURL: "https://example.com/avatar3.jpg",
                 isVerified: false,
-                followersCount: 67000,
-                totalVideos: 280,
-                notificationsEnabled: true,
-                hasNewContent: true
+                followerCount: 67000,
+                totalViews: 720000,
+                joinedDate: Date().addingTimeInterval(-86400 * 150),
+                expertise: ["Cryptocurrency", "DeFi", "Blockchain"],
+                trackRecord: nil,
+                profileImageURL: "https://example.com/avatar3.jpg",
+                bio: "Cryptocurrency expert covering DeFi, NFTs, and blockchain technology",
+                tagline: "Crypto to the moon",
+                website: "https://cryptoking.com",
+                twitterHandle: "cryptoking",
+                instagramHandle: "cryptoking",
+                linkedinHandle: nil,
+                winRate: 0.65,
+                averageReturn: 0.25,
+                totalTrades: 280,
+                riskRating: "Aggressive",
+                specialties: ["Cryptocurrency", "DeFi", "Blockchain"]
             )
         ]
     }
@@ -378,27 +427,51 @@ class CreatorService: CreatorService {
         return [
             Creator(
                 id: "trending-1",
-                username: "daytradermax",
                 displayName: "Day Trader Max",
-                bio: "Day trading strategies and real-time market analysis",
-                profileImageURL: "https://example.com/trending1.jpg",
+                username: "daytradermax",
+                avatarURL: "https://example.com/trending1.jpg",
                 isVerified: false,
-                followersCount: 45000,
-                totalVideos: 180,
-                notificationsEnabled: false,
-                hasNewContent: false
+                followerCount: 45000,
+                totalViews: 540000,
+                joinedDate: Date().addingTimeInterval(-86400 * 90),
+                expertise: ["Day Trading", "Market Analysis"],
+                trackRecord: nil,
+                profileImageURL: "https://example.com/trending1.jpg",
+                bio: "Day trading strategies and real-time market analysis",
+                tagline: "Trade like a pro",
+                website: nil,
+                twitterHandle: "daytradermax",
+                instagramHandle: nil,
+                linkedinHandle: nil,
+                winRate: 0.58,
+                averageReturn: 0.12,
+                totalTrades: 180,
+                riskRating: "Aggressive",
+                specialties: ["Day Trading", "Market Analysis"]
             ),
             Creator(
                 id: "trending-2",
-                username: "optionsqueen",
                 displayName: "Options Queen",
-                bio: "Options trading education and weekly market outlooks",
-                profileImageURL: "https://example.com/trending2.jpg",
+                username: "optionsqueen",
+                avatarURL: "https://example.com/trending2.jpg",
                 isVerified: true,
-                followersCount: 78000,
-                totalVideos: 220,
-                notificationsEnabled: false,
-                hasNewContent: false
+                followerCount: 78000,
+                totalViews: 890000,
+                joinedDate: Date().addingTimeInterval(-86400 * 180),
+                expertise: ["Options Trading", "Market Outlook"],
+                trackRecord: nil,
+                profileImageURL: "https://example.com/trending2.jpg",
+                bio: "Options trading education and weekly market outlooks",
+                tagline: "Queen of the options market",
+                website: "https://optionsqueen.com",
+                twitterHandle: "optionsqueen",
+                instagramHandle: "optionsqueen",
+                linkedinHandle: "optionsqueen",
+                winRate: 0.74,
+                averageReturn: 0.20,
+                totalTrades: 220,
+                riskRating: "Moderate",
+                specialties: ["Options Trading", "Market Outlook"]
             )
         ]
     }

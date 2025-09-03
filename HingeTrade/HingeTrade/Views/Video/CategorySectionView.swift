@@ -309,7 +309,7 @@ struct VideoThumbnailCard: View {
     }
     
     private var durationBadge: some View {
-        Text(video.duration.formatted(.time(pattern: .minuteSecond)))
+        Text(Duration.seconds(video.duration).formatted(.time(pattern: .minuteSecond)))
             .font(.caption)
             .fontWeight(.medium)
             .foregroundColor(.white)

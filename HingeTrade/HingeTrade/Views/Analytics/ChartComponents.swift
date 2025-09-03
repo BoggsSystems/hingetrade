@@ -215,6 +215,7 @@ struct LineChartView: View {
             }
         }
         .contentShape(Rectangle())
+        #if !os(tvOS)
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
@@ -222,6 +223,7 @@ struct LineChartView: View {
                     handlePointSelection(at: value.location)
                 }
         )
+        #endif
     }
     
     private func handlePointSelection(at location: CGPoint) {
@@ -317,7 +319,7 @@ struct PieChartView: View {
             let radius = min(geometry.size.width, geometry.size.height) / 2 - 20
             
             ZStack {
-                ForEach(Array(chartData.series.first?.dataPoints.enumerated() ?? []), id: \.offset) { index, dataPoint in
+                ForEach(Array((chartData.series.first?.dataPoints ?? []).enumerated()), id: \.offset) { index, dataPoint in
                     PieSliceView(
                         dataPoint: dataPoint,
                         startAngle: calculateStartAngle(for: index),
@@ -356,7 +358,7 @@ struct DonutChartView: View {
             
             ZStack {
                 // Donut slices
-                ForEach(Array(chartData.series.first?.dataPoints.enumerated() ?? []), id: \.offset) { index, dataPoint in
+                ForEach(Array((chartData.series.first?.dataPoints ?? []).enumerated()), id: \.offset) { index, dataPoint in
                     DonutSliceView(
                         dataPoint: dataPoint,
                         startAngle: calculateStartAngle(for: index),
@@ -686,7 +688,10 @@ struct PlaceholderChartView: View {
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(hex: theme.gridColor).opacity(0.1))
-                .stroke(Color(hex: theme.gridColor), lineWidth: 1, lineCap: .round, dash: [5, 5])
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(hex: theme.gridColor), style: StrokeStyle(lineWidth: 1, lineCap: .round, dash: [5, 5]))
         )
     }
 }

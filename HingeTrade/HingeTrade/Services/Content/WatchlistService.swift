@@ -119,7 +119,7 @@ struct SymbolPerformance: Codable, Identifiable {
     let percentChange: Double
     let volume: Int?
     let marketCap: Double?
-    let performance: PerformanceRating
+    let performance: WatchlistPerformanceRating
     
     var id: String { symbol }
     
@@ -144,7 +144,7 @@ struct SymbolPerformance: Codable, Identifiable {
     var formattedMarketCap: String { marketCap?.asAbbreviated() ?? "--" }
 }
 
-enum PerformanceRating: String, CaseIterable, Codable {
+enum WatchlistPerformanceRating: String, CaseIterable, Codable {
     case excellent = "excellent"
     case good = "good"
     case neutral = "neutral"
@@ -175,7 +175,7 @@ enum PerformanceColor {
 }
 
 // MARK: - Watchlist Service Implementation
-class WatchlistService: WatchlistServiceProtocol {
+class DefaultWatchlistServiceImpl: WatchlistServiceProtocol {
     private let apiClient: APIClientProtocol
     private let cacheKey = "cached_watchlists"
     private var cancellables = Set<AnyCancellable>()
@@ -189,8 +189,8 @@ class WatchlistService: WatchlistServiceProtocol {
     func getWatchlists() -> AnyPublisher<[Watchlist], APIError> {
         let endpoint = APIEndpoint.get("/watchlists")
         
-        return apiClient.request<[Watchlist]>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .map { (response: APIResponse<[Watchlist]>) in
                 let watchlists = response.data ?? []
                 return watchlists
             }
@@ -204,7 +204,7 @@ class WatchlistService: WatchlistServiceProtocol {
         let endpoint = APIEndpoint.get("/watchlists/\(id)")
         
         return apiClient.request<Watchlist>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<Watchlist>) in
                 guard let watchlist = response.data else {
                     throw APIError(
                         code: "WATCHLIST_NOT_FOUND",
@@ -215,6 +215,13 @@ class WatchlistService: WatchlistServiceProtocol {
                 }
                 return watchlist
             }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -223,7 +230,7 @@ class WatchlistService: WatchlistServiceProtocol {
             let endpoint = try APIEndpoint.post("/watchlists", body: request)
             
             return apiClient.request<Watchlist>(endpoint)
-                .map { response in
+                .tryMap { (response: APIResponse<Watchlist>) in
                     guard let watchlist = response.data else {
                         throw APIError(
                             code: "WATCHLIST_CREATION_FAILED",
@@ -233,6 +240,21 @@ class WatchlistService: WatchlistServiceProtocol {
                         )
                     }
                     return watchlist
+                }
+                .mapError { error in
+                    if let apiError = error as? APIError {
+                        return apiError
+                    } else {
+                        return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                    }
+                }
+                .mapError { error -> APIError in
+                    return error as? APIError ?? APIError(
+                        code: "REQUEST_ERROR",
+                        message: "Request failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
                 }
                 .eraseToAnyPublisher()
                 
@@ -251,8 +273,8 @@ class WatchlistService: WatchlistServiceProtocol {
         do {
             let endpoint = try APIEndpoint.put("/watchlists/\(id)", body: request)
             
-            return apiClient.request<Watchlist>(endpoint)
-                .map { response in
+            return apiClient.request(endpoint)
+                .tryMap { (response: APIResponse<Watchlist>) in
                     guard let watchlist = response.data else {
                         throw APIError(
                             code: "WATCHLIST_UPDATE_FAILED",
@@ -262,6 +284,14 @@ class WatchlistService: WatchlistServiceProtocol {
                         )
                     }
                     return watchlist
+                }
+                .mapError { error -> APIError in
+                    return error as? APIError ?? APIError(
+                        code: "REQUEST_ERROR",
+                        message: "Request failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
                 }
                 .eraseToAnyPublisher()
                 
@@ -279,8 +309,16 @@ class WatchlistService: WatchlistServiceProtocol {
     func deleteWatchlist(id: String) -> AnyPublisher<Void, APIError> {
         let endpoint = APIEndpoint.delete("/watchlists/\(id)")
         
-        return apiClient.request<String>(endpoint)
+        return apiClient.request(endpoint)
+            .map { (_: APIResponse<String>) -> String in "" }
             .map { _ in () }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
+            }
             .eraseToAnyPublisher()
     }
     
@@ -292,8 +330,8 @@ class WatchlistService: WatchlistServiceProtocol {
         do {
             let endpoint = try APIEndpoint.post("/watchlists/\(watchlistId)/symbols", body: request)
             
-            return apiClient.request<Watchlist>(endpoint)
-                .map { response in
+            return apiClient.request(endpoint)
+                .tryMap { (response: APIResponse<Watchlist>) in
                     guard let watchlist = response.data else {
                         throw APIError(
                             code: "SYMBOL_ADD_FAILED",
@@ -303,6 +341,14 @@ class WatchlistService: WatchlistServiceProtocol {
                         )
                     }
                     return watchlist
+                }
+                .mapError { error -> APIError in
+                    return error as? APIError ?? APIError(
+                        code: "REQUEST_ERROR",
+                        message: "Request failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
                 }
                 .eraseToAnyPublisher()
                 
@@ -320,8 +366,8 @@ class WatchlistService: WatchlistServiceProtocol {
     func removeSymbolFromWatchlist(watchlistId: String, symbol: String) -> AnyPublisher<Watchlist, APIError> {
         let endpoint = APIEndpoint.delete("/watchlists/\(watchlistId)/symbols/\(symbol.uppercased())")
         
-        return apiClient.request<Watchlist>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .tryMap { (response: APIResponse<Watchlist>) in
                 guard let watchlist = response.data else {
                     throw APIError(
                         code: "SYMBOL_REMOVE_FAILED",
@@ -332,6 +378,14 @@ class WatchlistService: WatchlistServiceProtocol {
                 }
                 return watchlist
             }
+            .mapError { error -> APIError in
+                return error as? APIError ?? APIError(
+                    code: "REQUEST_ERROR",
+                    message: "Request failed",
+                    details: error.localizedDescription,
+                    field: nil
+                )
+            }
             .eraseToAnyPublisher()
     }
     
@@ -341,8 +395,8 @@ class WatchlistService: WatchlistServiceProtocol {
         do {
             let endpoint = try APIEndpoint.put("/watchlists/\(watchlistId)/reorder", body: request)
             
-            return apiClient.request<Watchlist>(endpoint)
-                .map { response in
+            return apiClient.request(endpoint)
+                .tryMap { (response: APIResponse<Watchlist>) in
                     guard let watchlist = response.data else {
                         throw APIError(
                             code: "REORDER_FAILED",
@@ -352,6 +406,14 @@ class WatchlistService: WatchlistServiceProtocol {
                         )
                     }
                     return watchlist
+                }
+                .mapError { error -> APIError in
+                    return error as? APIError ?? APIError(
+                        code: "REQUEST_ERROR",
+                        message: "Request failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
                 }
                 .eraseToAnyPublisher()
                 
@@ -370,16 +432,16 @@ class WatchlistService: WatchlistServiceProtocol {
     
     func getDefaultWatchlist() -> AnyPublisher<Watchlist?, APIError> {
         return getWatchlists()
-            .map { watchlists in
+            .map { (watchlists: [Watchlist]) -> Watchlist? in
                 return watchlists.first { $0.isDefaultWatchlist }
             }
             .eraseToAnyPublisher()
     }
     
     func setDefaultWatchlist(id: String) -> AnyPublisher<Void, APIError> {
-        let endpoint = APIEndpoint.post("/watchlists/\(id)/set-default", method: .POST)
+        let endpoint = APIEndpoint(path: "/watchlists/\(id)/set-default", method: .POST)
         
-        return apiClient.request<String>(endpoint)
+        return apiClient.request(endpoint)
             .map { _ in () }
             .eraseToAnyPublisher()
     }
@@ -419,7 +481,7 @@ class WatchlistService: WatchlistServiceProtocol {
                 
                 let request = CreateWatchlistRequest(
                     name: newName,
-                    symbols: originalWatchlist.items
+                    symbols: originalWatchlist.symbols
                 )
                 return self.createWatchlist(request)
             }
@@ -437,8 +499,8 @@ class WatchlistService: WatchlistServiceProtocol {
         let endpoint = APIEndpoint.get("/watchlists/\(id)/performance", 
                                      queryItems: queryItems.isEmpty ? nil : queryItems)
         
-        return apiClient.request<WatchlistPerformanceReport>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .tryMap { (response: APIResponse<WatchlistPerformanceReport>) in
                 guard let report = response.data else {
                     throw APIError(
                         code: "PERFORMANCE_FETCH_FAILED",
@@ -449,15 +511,31 @@ class WatchlistService: WatchlistServiceProtocol {
                 }
                 return report
             }
+            .mapError { error -> APIError in
+                return error as? APIError ?? APIError(
+                    code: "REQUEST_ERROR",
+                    message: "Request failed",
+                    details: error.localizedDescription,
+                    field: nil
+                )
+            }
             .eraseToAnyPublisher()
     }
     
     func getWatchlistAlerts(id: String) -> AnyPublisher<[PriceAlert], APIError> {
         let endpoint = APIEndpoint.get("/watchlists/\(id)/alerts")
         
-        return apiClient.request<[PriceAlert]>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .tryMap { (response: APIResponse<[PriceAlert]>) in
                 return response.data ?? []
+            }
+            .mapError { error -> APIError in
+                return error as? APIError ?? APIError(
+                    code: "REQUEST_ERROR",
+                    message: "Request failed",
+                    details: error.localizedDescription,
+                    field: nil
+                )
             }
             .eraseToAnyPublisher()
     }
@@ -556,7 +634,12 @@ class MockWatchlistService: WatchlistServiceProtocol {
                     isDefault: false,
                     sortOrder: nil,
                     color: WatchlistColor.blue.hexString,
-                    isPublic: false
+                    isPublic: false,
+                    isFavorite: false,
+                    dailyPerformance: nil,
+                    gainers: 0,
+                    losers: 0,
+                    lastUpdated: Date()
                 )
                 
                 self?.mockWatchlists.append(newWatchlist)
@@ -748,7 +831,7 @@ class MockWatchlistService: WatchlistServiceProtocol {
                 percentChange: Double.random(in: -0.1...0.1),
                 volume: Int.random(in: 1000000...50000000),
                 marketCap: Double.random(in: 10000000000...2000000000000),
-                performance: PerformanceRating.allCases.randomElement()!
+                performance: WatchlistPerformanceRating.allCases.randomElement()!
             )
         }
         

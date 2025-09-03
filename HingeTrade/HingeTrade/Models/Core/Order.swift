@@ -14,7 +14,7 @@ enum OrderSide: String, CaseIterable, Codable {
         }
     }
     
-    var color: OrderSideColor {
+    var sideColor: OrderSideColor {
         switch self {
         case .buy:
             return .buy
@@ -186,7 +186,7 @@ enum OrderStatus: String, CaseIterable, Codable {
 }
 
 // MARK: - Order Model
-struct Order: Codable, Identifiable, Equatable {
+struct Order: Identifiable, Equatable {
     let id: String
     let clientOrderId: String?
     let createdAt: Date
@@ -318,6 +318,73 @@ struct Order: Codable, Identifiable, Equatable {
     /// Age of the order in human readable format
     var ageDescription: String {
         return createdAt.timeAgoDisplay
+    }
+}
+
+// MARK: - Order Codable Implementation
+extension Order: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        self.id = try container.decode(String.self, forKey: .id)
+        self.clientOrderId = try container.decodeIfPresent(String.self, forKey: .clientOrderId)
+        self.createdAt = try container.decode(Date.self, forKey: .createdAt)
+        self.updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+        self.submittedAt = try container.decodeIfPresent(Date.self, forKey: .submittedAt)
+        self.filledAt = try container.decodeIfPresent(Date.self, forKey: .filledAt)
+        self.expiredAt = try container.decodeIfPresent(Date.self, forKey: .expiredAt)
+        self.canceledAt = try container.decodeIfPresent(Date.self, forKey: .canceledAt)
+        self.failedAt = try container.decodeIfPresent(Date.self, forKey: .failedAt)
+        self.replacedAt = try container.decodeIfPresent(Date.self, forKey: .replacedAt)
+        self.replacedBy = try container.decodeIfPresent(String.self, forKey: .replacedBy)
+        self.replaces = try container.decodeIfPresent(String.self, forKey: .replaces)
+        self.assetId = try container.decode(String.self, forKey: .assetId)
+        self.symbol = try container.decode(String.self, forKey: .symbol)
+        self.assetClass = try container.decode(AssetClass.self, forKey: .assetClass)
+        self.qty = try container.decodeIfPresent(String.self, forKey: .qty)
+        self.filledQty = try container.decodeIfPresent(String.self, forKey: .filledQty)
+        self.notional = try container.decodeIfPresent(String.self, forKey: .notional)
+        self.filledAvgPrice = try container.decodeIfPresent(String.self, forKey: .filledAvgPrice)
+        self.side = try container.decode(OrderSide.self, forKey: .side)
+        self.type = try container.decode(OrderType.self, forKey: .type)
+        self.timeInForce = try container.decode(OrderTimeInForce.self, forKey: .timeInForce)
+        self.limitPrice = try container.decodeIfPresent(String.self, forKey: .limitPrice)
+        self.stopPrice = try container.decodeIfPresent(String.self, forKey: .stopPrice)
+        self.status = try container.decode(OrderStatus.self, forKey: .status)
+        self.extendedHours = try container.decode(Bool.self, forKey: .extendedHours)
+        self.legs = try container.decodeIfPresent([Order].self, forKey: .legs)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(clientOrderId, forKey: .clientOrderId)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(submittedAt, forKey: .submittedAt)
+        try container.encodeIfPresent(filledAt, forKey: .filledAt)
+        try container.encodeIfPresent(expiredAt, forKey: .expiredAt)
+        try container.encodeIfPresent(canceledAt, forKey: .canceledAt)
+        try container.encodeIfPresent(failedAt, forKey: .failedAt)
+        try container.encodeIfPresent(replacedAt, forKey: .replacedAt)
+        try container.encodeIfPresent(replacedBy, forKey: .replacedBy)
+        try container.encodeIfPresent(replaces, forKey: .replaces)
+        try container.encode(assetId, forKey: .assetId)
+        try container.encode(symbol, forKey: .symbol)
+        try container.encode(assetClass, forKey: .assetClass)
+        try container.encodeIfPresent(qty, forKey: .qty)
+        try container.encodeIfPresent(filledQty, forKey: .filledQty)
+        try container.encodeIfPresent(notional, forKey: .notional)
+        try container.encodeIfPresent(filledAvgPrice, forKey: .filledAvgPrice)
+        try container.encode(side, forKey: .side)
+        try container.encode(type, forKey: .type)
+        try container.encode(timeInForce, forKey: .timeInForce)
+        try container.encodeIfPresent(limitPrice, forKey: .limitPrice)
+        try container.encodeIfPresent(stopPrice, forKey: .stopPrice)
+        try container.encode(status, forKey: .status)
+        try container.encode(extendedHours, forKey: .extendedHours)
+        try container.encodeIfPresent(legs, forKey: .legs)
     }
 }
 

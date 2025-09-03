@@ -113,7 +113,7 @@ struct OrderManagementView: View {
             // Filter Buttons
             HStack(spacing: 16) {
                 ForEach(OrderFilterType.allCases, id: \.self) { filterType in
-                    OrderFilterButton(
+                    OrderManagementFilterButton(
                         filterType: filterType,
                         isSelected: selectedOrderType == filterType,
                         isFocused: focusedFilter == filterType,
@@ -236,7 +236,7 @@ struct OrderStatCard: View {
     }
 }
 
-struct OrderFilterButton: View {
+struct OrderManagementFilterButton: View {
     let filterType: OrderManagementView.OrderFilterType
     let isSelected: Bool
     let isFocused: Bool
@@ -377,7 +377,7 @@ struct OrderRowView: View {
                         Text(order.status.displayName)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(order.status.color)
+                            .foregroundColor(order.status.uiColor)
                     }
                 }
                 
@@ -403,7 +403,7 @@ struct OrderRowView: View {
     
     private var orderStatusIndicator: some View {
         Circle()
-            .fill(order.status.color)
+            .fill(order.status.uiColor)
             .frame(width: 12, height: 12)
     }
     
@@ -503,13 +503,13 @@ struct OrderDetailView: View {
                     
                     HStack(spacing: 8) {
                         Circle()
-                            .fill(order.status.color)
+                            .fill(order.status.uiColor)
                             .frame(width: 10, height: 10)
                         
                         Text(order.status.displayName)
                             .font(.headline)
                             .fontWeight(.medium)
-                            .foregroundColor(order.status.color)
+                            .foregroundColor(order.status.uiColor)
                     }
                 }
                 
@@ -574,7 +574,7 @@ struct OrderDetailView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
-                .stroke(order.status.color.opacity(0.3), lineWidth: 1)
+                .stroke(order.status.uiColor.opacity(0.3), lineWidth: 1)
         )
     }
     
@@ -709,52 +709,24 @@ struct OrderDetailRow: View {
 
 // MARK: - Extensions
 
-extension Order.Status {
-    var color: Color {
+extension OrderStatus {
+    var uiColor: Color {
         switch self {
-        case .open, .partiallyFilled:
+        case .new, .partiallyFilled, .accepted, .pendingNew:
             return .blue
         case .filled:
             return .green
-        case .cancelled, .rejected:
+        case .canceled, .rejected:
             return .red
-        case .pending:
+        case .pendingCancel, .pendingReplace:
             return .orange
-        }
-    }
-    
-    var displayName: String {
-        switch self {
-        case .open:
-            return "Open"
-        case .filled:
-            return "Filled"
-        case .cancelled:
-            return "Cancelled"
-        case .rejected:
-            return "Rejected"
-        case .pending:
-            return "Pending"
-        case .partiallyFilled:
-            return "Partial"
+        default:
+            return .gray
         }
     }
 }
 
-extension Order.OrderType {
-    var displayName: String {
-        switch self {
-        case .market:
-            return "Market"
-        case .limit:
-            return "Limit"
-        case .stop:
-            return "Stop"
-        case .stopLimit:
-            return "Stop Limit"
-        }
-    }
-}
+// OrderType displayName is already defined in the main Order.swift file
 
 #Preview {
     OrderManagementView()

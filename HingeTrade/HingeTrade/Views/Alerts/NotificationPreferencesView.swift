@@ -216,7 +216,7 @@ struct NotificationPreferencesView: View {
                     selectedIndex: preferencesViewModel.notificationStyle.rawValue,
                     isFocused: focusedSection == .option("style")
                 ) { index in
-                    preferencesViewModel.notificationStyle = NotificationStyle(rawValue: index) ?? .banner
+                    preferencesViewModel.notificationStyle = NotificationPreferencesViewModel.NotificationStyle(rawValue: index) ?? .banner
                 }
                 .focused($focusedSection, equals: .option("style"))
                 .disabled(!preferencesViewModel.notificationsEnabled)
@@ -731,10 +731,32 @@ struct PreferenceSlider: View {
     let isFocused: Bool
     
     var body: some View {
+        #if os(tvOS)
+        // tvOS doesn't support Slider - use a simple stepper or value display
+        HStack {
+            Text("Value: \(value, specifier: "%.2f")")
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Button("-") { 
+                value = max(range.lowerBound, value - 0.1) 
+            }
+            .foregroundColor(.blue)
+            
+            Button("+") { 
+                value = min(range.upperBound, value + 0.1) 
+            }
+            .foregroundColor(.blue)
+        }
+        .scaleEffect(isFocused ? 1.1 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isFocused)
+        #else
         Slider(value: $value, in: range)
             .tint(.blue)
             .scaleEffect(isFocused ? 1.1 : 1.0)
             .animation(.easeInOut(duration: 0.2), value: isFocused)
+        #endif
     }
 }
 

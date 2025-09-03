@@ -8,6 +8,7 @@
 import Foundation
 import UserNotifications
 import Combine
+import SwiftUI
 
 @MainActor
 class NotificationService: NSObject, ObservableObject {
@@ -23,8 +24,12 @@ class NotificationService: NSObject, ObservableObject {
     
     override init() {
         super.init()
+        #if !os(tvOS)
         notificationCenter.delegate = self
-        checkAuthorizationStatus()
+        #endif
+        Task {
+            await checkAuthorizationStatus()
+        }
         setupBindings()
     }
     
@@ -64,6 +69,21 @@ class NotificationService: NSObject, ObservableObject {
     // MARK: - Notification Scheduling
     
     func schedulePriceAlert(_ alert: PriceAlert) async throws {
+        #if os(tvOS)
+        // tvOS doesn't support UserNotifications the same way
+        // For tvOS, we'll just track the notification internally
+        let notification = HingeNotification(
+            id: alert.id,
+            type: .priceAlert,
+            title: "Price Alert: \(alert.symbol)",
+            body: priceAlertBody(for: alert),
+            timestamp: Date(),
+            data: ["alert": alert],
+            isRead: false
+        )
+        pendingNotifications.append(notification)
+        return
+        #else
         let content = UNMutableNotificationContent()
         content.title = "Price Alert: \(alert.symbol)"
         content.body = priceAlertBody(for: alert)
@@ -72,7 +92,7 @@ class NotificationService: NSObject, ObservableObject {
         content.userInfo = [
             "alertId": alert.id,
             "symbol": alert.symbol,
-            "type": alert.alertType.rawValue
+            "type": alert.condition.rawValue
         ]
         
         // For price alerts, we'll use a trigger based on market data updates
@@ -99,12 +119,17 @@ class NotificationService: NSObject, ObservableObject {
         )
         
         pendingNotifications.append(notification)
+        #endif
     }
     
     func scheduleOrderFillNotification(_ order: Order) async throws {
+        #if os(tvOS)
+        // tvOS doesn't support UserNotifications the same way
+        return
+        #else
         let content = UNMutableNotificationContent()
         content.title = "Order Filled"
-        content.body = "Your \(order.side.rawValue) order for \(order.quantity) shares of \(order.symbol) has been filled"
+        content.body = "Your \(order.side.rawValue) order for \(order.qty ?? "0") shares of \(order.symbol) has been filled"
         content.sound = .default
         content.categoryIdentifier = NotificationCategory.orderFill.rawValue
         content.userInfo = [
@@ -122,9 +147,14 @@ class NotificationService: NSObject, ObservableObject {
         )
         
         try await notificationCenter.add(request)
+        #endif
     }
     
     func scheduleCreatorContentNotification(_ video: VideoContent) async throws {
+        #if os(tvOS)
+        // tvOS doesn't support UserNotifications the same way
+        return
+        #else
         let content = UNMutableNotificationContent()
         content.title = "New Video from \(video.creator.displayName)"
         content.body = video.title
@@ -144,9 +174,14 @@ class NotificationService: NSObject, ObservableObject {
         )
         
         try await notificationCenter.add(request)
+        #endif
     }
     
     func scheduleMarketNewsAlert(_ newsItem: MarketNewsItem) async throws {
+        #if os(tvOS)
+        // tvOS doesn't support UserNotifications the same way
+        return
+        #else
         let content = UNMutableNotificationContent()
         content.title = newsItem.headline
         content.body = newsItem.summary
@@ -166,6 +201,7 @@ class NotificationService: NSObject, ObservableObject {
         )
         
         try await notificationCenter.add(request)
+        #endif
     }
     
     // MARK: - Notification Management
@@ -181,6 +217,10 @@ class NotificationService: NSObject, ObservableObject {
     }
     
     func getDeliveredNotifications() async {
+        #if os(tvOS)
+        // tvOS doesn't support deliveredNotifications the same way
+        deliveredNotifications = []
+        #else
         let delivered = await notificationCenter.deliveredNotifications()
         
         deliveredNotifications = delivered.map { notification in
@@ -194,6 +234,7 @@ class NotificationService: NSObject, ObservableObject {
                 isRead: false
             )
         }
+        #endif
     }
     
     func markNotificationAsRead(_ notificationId: String) {
@@ -203,22 +244,24 @@ class NotificationService: NSObject, ObservableObject {
     }
     
     func clearDeliveredNotifications() {
+        #if !os(tvOS)
         notificationCenter.removeAllDeliveredNotifications()
+        #endif
         deliveredNotifications.removeAll()
     }
     
     // MARK: - Helper Methods
     
     private func priceAlertBody(for alert: PriceAlert) -> String {
-        switch alert.alertType {
-        case .priceAbove:
-            return "\(alert.symbol) is now above \(alert.targetPrice.formatted(.currency(code: "USD")))"
-        case .priceBelow:
-            return "\(alert.symbol) is now below \(alert.targetPrice.formatted(.currency(code: "USD")))"
-        case .percentChange:
-            return "\(alert.symbol) has moved \(alert.percentChange?.formatted(.percent) ?? "0%")"
-        case .volumeSpike:
-            return "\(alert.symbol) is experiencing high trading volume"
+        switch alert.condition {
+        case .above:
+            return "\(alert.symbol) is now above \(alert.price.formatted(.currency(code: "USD")))"
+        case .below:
+            return "\(alert.symbol) is now below \(alert.price.formatted(.currency(code: "USD")))"
+        case .crossesAbove:
+            return "\(alert.symbol) has crossed above \(alert.price.formatted(.currency(code: "USD")))"
+        case .crossesBelow:
+            return "\(alert.symbol) has crossed below \(alert.price.formatted(.currency(code: "USD")))"
         }
     }
     
@@ -236,6 +279,7 @@ class NotificationService: NSObject, ObservableObject {
 
 // MARK: - UNUserNotificationCenterDelegate
 
+#if os(iOS)
 extension NotificationService: UNUserNotificationCenterDelegate {
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
@@ -314,6 +358,7 @@ extension NotificationService: UNUserNotificationCenterDelegate {
         )
     }
 }
+#endif
 
 // MARK: - Notification Models
 
@@ -387,35 +432,7 @@ enum NotificationCategory: String {
     case marketNews = "MARKET_NEWS"
 }
 
-// MARK: - Price Alert Model
-
-struct PriceAlert: Identifiable, Codable {
-    let id: String
-    let symbol: String
-    let alertType: PriceAlertType
-    let targetPrice: Decimal
-    let percentChange: Double?
-    let createdAt: Date
-    var isActive: Bool
-    var triggeredAt: Date?
-    var expiresAt: Date?
-    
-    enum PriceAlertType: String, Codable {
-        case priceAbove = "price_above"
-        case priceBelow = "price_below"
-        case percentChange = "percent_change"
-        case volumeSpike = "volume_spike"
-        
-        var displayName: String {
-            switch self {
-            case .priceAbove: return "Price Above"
-            case .priceBelow: return "Price Below"
-            case .percentChange: return "Percent Change"
-            case .volumeSpike: return "Volume Spike"
-            }
-        }
-    }
-}
+// MARK: - Price Alert Model (using import from APIModels)
 
 // MARK: - Market News Model
 
@@ -431,7 +448,7 @@ struct MarketNewsItem: Identifiable {
     let imageURL: String?
     let importance: NewsImportance
     
-    enum NewsCategory: String {
+    enum NewsCategory: String, CaseIterable {
         case earnings = "earnings"
         case economicData = "economic_data"
         case companyNews = "company_news"

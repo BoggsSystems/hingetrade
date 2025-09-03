@@ -35,9 +35,9 @@ class PositionsViewModel: ObservableObject {
     private var refreshTimer: Timer?
     
     init(
-        tradingService: TradingService = TradingService(),
-        webSocketService: WebSocketService = WebSocketService(),
-        marketDataService: MarketDataService = MarketDataService()
+        tradingService: TradingService = TradingService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager())),
+        webSocketService: WebSocketService = WebSocketService(url: URL(string: "wss://api.alpaca.markets/stream")!),
+        marketDataService: MarketDataService = MarketDataService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager()))
     ) {
         self.tradingService = tradingService
         self.webSocketService = webSocketService
@@ -55,8 +55,8 @@ class PositionsViewModel: ObservableObject {
         do {
             let loadedPositions = try await tradingService.getPositions()
             
-            // Filter out zero positions
-            self.positions = loadedPositions.filter { $0.quantity != 0 }
+            // Filter out zero positions  
+            self.positions = loadedPositions.filter { Double($0.qty) != 0 }
             
             // Apply current filters and sorting
             applyFiltersAndSorting()
@@ -80,7 +80,9 @@ class PositionsViewModel: ObservableObject {
             let updatedPosition = try await tradingService.getPosition(symbol: symbol)
             
             if let index = positions.firstIndex(where: { $0.symbol == symbol }) {
-                positions[index] = updatedPosition
+                if let position = updatedPosition {
+                    positions[index] = position
+                }
                 applyFiltersAndSorting()
                 calculateSummaries()
             }
@@ -109,9 +111,9 @@ class PositionsViewModel: ObservableObject {
         case .all:
             break // No filtering
         case .profitable:
-            filtered = filtered.filter { $0.unrealizedPL > 0 }
+            filtered = filtered.filter { Double($0.unrealizedPl ?? "0") ?? 0 > 0 }
         case .losing:
-            filtered = filtered.filter { $0.unrealizedPL < 0 }
+            filtered = filtered.filter { Double($0.unrealizedPl ?? "0") ?? 0 < 0 }
         case .longPositions:
             filtered = filtered.filter { $0.side == .long }
         case .shortPositions:
@@ -123,11 +125,11 @@ class PositionsViewModel: ObservableObject {
         case .symbol:
             filtered.sort { $0.symbol < $1.symbol }
         case .unrealizedPL:
-            filtered.sort { $0.unrealizedPL > $1.unrealizedPL }
+            filtered.sort { (Double($0.unrealizedPl ?? "0") ?? 0) > (Double($1.unrealizedPl ?? "0") ?? 0) }
         case .marketValue:
-            filtered.sort { $0.marketValue > $1.marketValue }
+            filtered.sort { (Double($0.marketValue) ?? 0) > (Double($1.marketValue) ?? 0) }
         case .quantity:
-            filtered.sort { abs($0.quantity) > abs($1.quantity) }
+            filtered.sort { abs(Double($0.qty) ?? 0) > abs(Double($1.qty) ?? 0) }
         }
         
         filteredPositions = filtered

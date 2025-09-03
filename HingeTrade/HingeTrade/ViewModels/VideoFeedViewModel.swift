@@ -36,9 +36,9 @@ class VideoFeedViewModel: ObservableObject {
     private var refreshTimer: Timer?
     
     init(
-        videoService: VideoService = VideoService(),
-        marketDataService: MarketDataService = MarketDataService(),
-        creatorStudioService: CreatorStudioService = CreatorStudioService()
+        videoService: VideoService = DefaultVideoService(),
+        marketDataService: MarketDataService = MarketDataService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager())),
+        creatorStudioService: CreatorStudioService = DefaultCreatorStudioService()
     ) {
         self.videoService = videoService
         self.marketDataService = marketDataService
@@ -54,15 +54,10 @@ class VideoFeedViewModel: ObservableObject {
         error = nil
         
         do {
-            async let heroContent = loadHeroContent()
-            async let categoryContent = loadCategoryContent()
-            async let marketData = loadMarketData()
-            async let personalizedContent = loadPersonalizedContent()
-            
-            await heroContent
-            await categoryContent
-            await marketData
-            await personalizedContent
+            await loadHeroContent()
+            await loadCategoryContent() 
+            await loadMarketData()
+            await loadPersonalizedContent()
             
             lastUpdated = Date()
         } catch {
@@ -109,11 +104,37 @@ class VideoFeedViewModel: ObservableObject {
     private func loadMarketData() async {
         do {
             // Load market status
-            let status = try await marketDataService.getMarketStatus()
+            let status = try await withCheckedThrowingContinuation { continuation in
+                marketDataService.getMarketStatus()
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { status in
+                            continuation.resume(returning: status)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             self.marketStatus = status
             
             // Load top movers
-            let movers = try await marketDataService.getTopMovers(limit: 5)
+            let movers = try await withCheckedThrowingContinuation { continuation in
+                marketDataService.getTopMovers(direction: nil, limit: 5)
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { movers in
+                            continuation.resume(returning: movers)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             self.topMovers = movers
         } catch {
             print("Failed to load market data: \(error)")

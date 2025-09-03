@@ -339,7 +339,7 @@ struct FollowingCreatorRow: View {
         Button(action: onTap) {
             HStack(spacing: 16) {
                 // Creator Avatar
-                AsyncImage(url: URL(string: creator.profileImageURL)) { image in
+                AsyncImage(url: URL(string: creator.profileImageURL ?? "")) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -433,7 +433,7 @@ struct CreatorNotificationRow: View {
         Button(action: onTap) {
             HStack(spacing: 16) {
                 // Creator Avatar
-                AsyncImage(url: URL(string: notification.creator.profileImageURL)) { image in
+                AsyncImage(url: URL(string: notification.creator.profileImageURL ?? "")) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -525,7 +525,7 @@ struct TrendingCreatorRow: View {
         HStack(spacing: 16) {
             // Creator Avatar with trending indicator
             ZStack {
-                AsyncImage(url: URL(string: creator.profileImageURL)) { image in
+                AsyncImage(url: URL(string: creator.profileImageURL ?? "")) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)

@@ -27,7 +27,7 @@ class MarketNewsAlertsViewModel: ObservableObject {
     
     // Services
     private let notificationService: NotificationService
-    private let newsService: NewsService
+    private let newsService: DefaultNewsService
     
     // User preferences
     @Published var enabledCategories: Set<MarketNewsItem.NewsCategory> = Set(MarketNewsItem.NewsCategory.allCases)
@@ -38,7 +38,7 @@ class MarketNewsAlertsViewModel: ObservableObject {
     
     init(
         notificationService: NotificationService = NotificationService.shared,
-        newsService: NewsService = NewsService()
+        newsService: DefaultNewsService = DefaultNewsService()
     ) {
         self.notificationService = notificationService
         self.newsService = newsService
@@ -306,7 +306,7 @@ protocol NewsService {
     func getNewsItem(id: String) async throws -> MarketNewsItem?
 }
 
-class NewsService: NewsService {
+class DefaultNewsService: NewsService {
     func getMarketNews() async throws -> [MarketNewsItem] {
         // Simulate API call
         try await Task.sleep(nanoseconds: 1_200_000_000)

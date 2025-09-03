@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct QRCodeOnboardingView: View {
-    @StateObject private var onboardingViewModel = OnboardingViewModel()
+    @StateObject private var onboardingViewModel = QRCodeOnboardingViewModel()
     @State private var sessionToken: String = ""
     @FocusState private var isFocused: Bool
     
@@ -65,7 +65,9 @@ struct QRCodeOnboardingView: View {
                     Text("Or visit: \(onboardingViewModel.shortURL)")
                         .font(.body)
                         .foregroundColor(.gray)
+                        #if os(iOS)
                         .textSelection(.enabled)
+                        #endif
                 }
             }
             
@@ -170,7 +172,7 @@ struct QRCodeDisplay: View {
 // MARK: - OnboardingViewModel
 
 @MainActor
-class OnboardingViewModel: ObservableObject {
+class QRCodeOnboardingViewModel: ObservableObject {
     @Published var isGeneratingQR: Bool = false
     @Published var mobileOnboardingURL: String = ""
     @Published var shortURL: String = ""

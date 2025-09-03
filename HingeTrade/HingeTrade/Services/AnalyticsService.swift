@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Service Implementations
 
-class AnalyticsService: AnalyticsService {
+class DefaultAnalyticsService: AnalyticsServiceProtocol {
     
     func analyzePerformance(period: PerformancePeriod, benchmark: String) async throws -> PerformanceAnalysisResult {
         // Simulate API call
@@ -342,13 +342,13 @@ class AnalyticsService: AnalyticsService {
     }
 }
 
-class PerformanceService: PerformanceService {
+class DefaultPerformanceService: PerformanceService {
     
     func getCurrentPerformance() async throws -> PortfolioPerformance {
         try await Task.sleep(nanoseconds: 1_000_000_000)
         
         // Use the same mock generation as AnalyticsService
-        let analyticsService = AnalyticsService()
+        let analyticsService = DefaultAnalyticsService()
         let analysis = try await analyticsService.analyzePerformance(period: .month1, benchmark: "SPY")
         return analysis.portfolioPerformance
     }
@@ -398,7 +398,7 @@ class PerformanceService: PerformanceService {
                 id: UUID().uuidString,
                 date: date,
                 value: currentValue,
-                return: dailyReturn,
+                returnValue: dailyReturn,
                 cumulativeReturn: cumulativeReturn,
                 benchmarkValue: benchmarkValue,
                 benchmarkReturn: benchmarkReturn,
@@ -436,7 +436,7 @@ class PerformanceService: PerformanceService {
     }
 }
 
-class ChartService: ChartService {
+class DefaultChartService: ChartService {
     
     func createPerformanceChart(history: PerformanceHistory, benchmark: String, showBenchmark: Bool, showDrawdown: Bool) async throws -> PerformanceChart {
         try await Task.sleep(nanoseconds: 600_000_000)
@@ -446,7 +446,7 @@ class ChartService: ChartService {
             ChartDataPoint(
                 date: dataPoint.date,
                 value: dataPoint.cumulativeReturn * 100, // Convert to percentage
-                volume: dataPoint.volume,
+                volume: dataPoint.volume.map(Double.init),
                 metadata: nil
             )
         }
@@ -647,14 +647,14 @@ struct DetailedBenchmarkAnalysis {
 
 struct PeriodReturn {
     let period: String
-    let return: Double
+    let returnValue: Double
     let benchmark: Double
     let outperformance: Double
 }
 
 struct RollingReturn {
     let period: String
-    let return: Double
+    let returnValue: Double
     let volatility: Double
     let sharpe: Double
 }

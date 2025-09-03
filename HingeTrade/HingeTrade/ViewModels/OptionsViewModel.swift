@@ -37,14 +37,14 @@ class OptionsViewModel: ObservableObject {
     @Published var showingError = false
     
     // Services
-    private let optionsService: OptionsService
-    private let optionsAnalyticsService: OptionsAnalyticsService
+    private let optionsService: DefaultOptionsService
+    private let optionsAnalyticsService: DefaultOptionsAnalyticsService
     
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        optionsService: OptionsService = OptionsService(),
-        optionsAnalyticsService: OptionsAnalyticsService = OptionsAnalyticsService()
+        optionsService: DefaultOptionsService = DefaultOptionsService(),
+        optionsAnalyticsService: DefaultOptionsAnalyticsService = DefaultOptionsAnalyticsService()
     ) {
         self.optionsService = optionsService
         self.optionsAnalyticsService = optionsAnalyticsService
@@ -229,8 +229,9 @@ class OptionsViewModel: ObservableObject {
             maxLoss: nil,
             breakEvenPoints: [],
             probabilityOfProfit: nil,
-            status: .pending,
-            submittedAt: Date()
+            status: .pendingNew,
+            submittedAt: Date(),
+            filledAt: nil
         )
     }
     
@@ -453,7 +454,7 @@ protocol OptionsService {
     func getOptionsQuote(contractSymbol: String) async throws -> OptionsContract
 }
 
-class OptionsService: OptionsService {
+class DefaultOptionsService: OptionsService {
     func getOptionsChain(symbol: String) async throws -> OptionsChain {
         // Simulate API call
         try await Task.sleep(nanoseconds: 1_500_000_000)
@@ -548,10 +549,11 @@ class OptionsService: OptionsService {
         let increment: Decimal = 2.50
         
         // Generate strikes from 20% below to 20% above current price
-        let lowerBound = baseStrike * 0.8
-        let upperBound = baseStrike * 1.2
+        let lowerBound = baseStrike * Decimal(0.8)
+        let upperBound = baseStrike * Decimal(1.2)
         
-        var currentStrike = (lowerBound / increment).rounded(.down) * increment
+        var currentStrikeDouble = ((Double(truncating: lowerBound as NSDecimalNumber) / Double(truncating: increment as NSDecimalNumber)).rounded(.down) * Double(truncating: increment as NSDecimalNumber))
+        var currentStrike = Decimal(currentStrikeDouble)
         
         while currentStrike <= upperBound {
             strikes.append(currentStrike)
@@ -690,7 +692,7 @@ protocol OptionsAnalyticsService {
     func analyzeStrategyRisk(strategy: OptionsStrategy, legs: [OptionsOrderLeg]) async throws -> OptionsRiskAnalysis
 }
 
-class OptionsAnalyticsService: OptionsAnalyticsService {
+class DefaultOptionsAnalyticsService: OptionsAnalyticsService {
     func calculatePortfolioGreeks(positions: [OptionsPosition]) async throws -> PortfolioGreeks {
         try await Task.sleep(nanoseconds: 600_000_000)
         

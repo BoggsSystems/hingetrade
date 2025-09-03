@@ -11,7 +11,7 @@ import Combine
 // MARK: - App State Management
 
 @MainActor
-class AppStateViewModel: ObservableObject {
+class AppLifecycleViewModel: ObservableObject {
     
     // MARK: - App Lifecycle
     @Published var appPhase: AppPhase = .inactive
@@ -44,16 +44,16 @@ class AppStateViewModel: ObservableObject {
     @Published var backgroundRefreshEnabled: Bool = true
     
     // MARK: - Error Handling
-    @Published var globalError: AppError?
+    @Published var globalError: AppLifecycleError?
     @Published var showingGlobalError: Bool = false
-    @Published var errorHistory: [AppError] = []
+    @Published var errorHistory: [AppLifecycleError] = []
     
     // MARK: - Feature Flags
     @Published var featureFlags: FeatureFlags = FeatureFlags()
     @Published var betaFeaturesEnabled: Bool = false
     
     // MARK: - Services
-    private let persistenceService: PersistenceService
+    private let persistenceService: DefaultPersistenceServiceImpl
     private let performanceMonitor: PerformanceMonitor
     private let errorLogger: ErrorLogger
     private let featureFlagService: FeatureFlagService
@@ -61,10 +61,10 @@ class AppStateViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        persistenceService: PersistenceService = PersistenceService(),
-        performanceMonitor: PerformanceMonitor = PerformanceMonitor(),
-        errorLogger: ErrorLogger = ErrorLogger(),
-        featureFlagService: FeatureFlagService = FeatureFlagService()
+        persistenceService: DefaultPersistenceServiceImpl = DefaultPersistenceServiceImpl(),
+        performanceMonitor: PerformanceMonitor = DefaultPerformanceMonitor(),
+        errorLogger: ErrorLogger = DefaultErrorLogger(),
+        featureFlagService: FeatureFlagService = DefaultFeatureFlagService()
     ) {
         self.persistenceService = persistenceService
         self.performanceMonitor = performanceMonitor
@@ -132,7 +132,7 @@ class AppStateViewModel: ObservableObject {
             await checkForAppUpdates()
             
         } catch {
-            handleGlobalError(AppError.initializationFailed(error.localizedDescription))
+            handleGlobalError(AppLifecycleError.initializationFailed(error.localizedDescription))
         }
     }
     
@@ -147,7 +147,7 @@ class AppStateViewModel: ObservableObject {
             }
         } catch {
             authenticationState = .unauthenticated
-            errorLogger.log(AppError.authenticationFailed(error.localizedDescription))
+            errorLogger.log("Authentication failed: \(error.localizedDescription)", level: AppLogLevel.error)
         }
     }
     
@@ -208,7 +208,7 @@ class AppStateViewModel: ObservableObject {
             
         } catch {
             dataLoadingState = .error(error.localizedDescription)
-            handleGlobalError(AppError.dataRefreshFailed(error.localizedDescription))
+            handleGlobalError(AppLifecycleError.dataRefreshFailed(error.localizedDescription))
         }
     }
     
@@ -231,7 +231,7 @@ class AppStateViewModel: ObservableObject {
         do {
             cacheStatus = try await persistenceService.getCacheStatus()
         } catch {
-            errorLogger.log(AppError.cacheLoadFailed(error.localizedDescription))
+            errorLogger.log("Cache loading failed: \(error.localizedDescription)", level: AppLogLevel.error)
         }
     }
     
@@ -274,18 +274,18 @@ class AppStateViewModel: ObservableObject {
         }
         
         // Log memory warning
-        errorLogger.log(AppError.memoryWarning("High memory usage: \(memoryUsage.percentageUsed * 100)%"))
+        errorLogger.log("High memory usage: \(memoryUsage.percentageUsed * 100)%", level: AppLogLevel.warning)
     }
     
     // MARK: - Error Handling
     
-    func handleGlobalError(_ error: AppError) {
+    func handleGlobalError(_ error: AppLifecycleError) {
         globalError = error
         showingGlobalError = true
         errorHistory.append(error)
         
         // Log error
-        errorLogger.log(error)
+        errorLogger.log("App lifecycle error: \(error.localizedDescription)", level: AppLogLevel.error)
         
         // Limit error history
         if errorHistory.count > 100 {
@@ -340,7 +340,7 @@ class AppStateViewModel: ObservableObject {
                     }
                 }
             } catch {
-                errorLogger.log(AppError.persistenceLoadFailed(error.localizedDescription))
+                errorLogger.log("Persistence loading failed: \(error.localizedDescription)", level: AppLogLevel.error)
             }
         }
     }
@@ -383,7 +383,7 @@ class AppStateViewModel: ObservableObject {
         do {
             featureFlags = try await featureFlagService.loadFeatureFlags()
         } catch {
-            errorLogger.log(AppError.featureFlagLoadFailed(error.localizedDescription))
+            errorLogger.log("Feature flag loading failed: \(error.localizedDescription)", level: AppLogLevel.error)
         }
     }
     
@@ -420,7 +420,7 @@ class AppStateViewModel: ObservableObject {
     
     deinit {
         cancellables.removeAll()
-        persistAppState()
+        // Note: persistAppState() is called during app lifecycle events, not in deinit
     }
 }
 
@@ -432,7 +432,7 @@ enum AppPhase {
     case background
 }
 
-enum MainTab: String, CaseIterable {
+enum MainTab: String, CaseIterable, Codable {
     case portfolio = "Portfolio"
     case watchlist = "Watchlist"
     case trading = "Trading"
@@ -537,6 +537,14 @@ struct CacheStatus {
         self.imagesCacheMB = Double.random(in: 5...30)
         self.lastClearedAt = Calendar.current.date(byAdding: .day, value: -Int.random(in: 1...7), to: Date())
     }
+    
+    init(totalSizeMB: Double, portfolioCacheMB: Double, marketDataCacheMB: Double, imagesCacheMB: Double, lastClearedAt: Date?) {
+        self.totalSizeMB = totalSizeMB
+        self.portfolioCacheMB = portfolioCacheMB
+        self.marketDataCacheMB = marketDataCacheMB
+        self.imagesCacheMB = imagesCacheMB
+        self.lastClearedAt = lastClearedAt
+    }
 }
 
 struct FeatureFlags: Codable {
@@ -567,7 +575,7 @@ struct PersistedAppState: Codable {
 
 // MARK: - Error Types
 
-enum AppError: LocalizedError, Identifiable {
+enum AppLifecycleError: LocalizedError, Identifiable {
     case initializationFailed(String)
     case authenticationFailed(String)
     case dataRefreshFailed(String)

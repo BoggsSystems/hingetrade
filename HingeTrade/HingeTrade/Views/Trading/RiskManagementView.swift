@@ -632,7 +632,7 @@ struct RiskAnalyticsDashboardView: View {
     }
 }
 
-struct RiskSettingsView: View {
+struct TradingRiskSettingsView: View {
     @EnvironmentObject private var riskManagementViewModel: RiskManagementViewModel
     @Environment(\.dismiss) private var dismiss
     

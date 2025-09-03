@@ -130,25 +130,25 @@ struct OrderFillNotificationsView: View {
     
     private var orderStatsView: some View {
         HStack(spacing: 40) {
-            OrderStatCard(
+            OrderFillStatCard(
                 title: "Filled Today",
                 value: orderFillViewModel.filledTodayCount.formatted(.number),
                 color: .green
             )
             
-            OrderStatCard(
+            OrderFillStatCard(
                 title: "Pending Orders",
                 value: orderFillViewModel.pendingOrdersCount.formatted(.number),
                 color: .orange
             )
             
-            OrderStatCard(
+            OrderFillStatCard(
                 title: "Total Volume",
                 value: orderFillViewModel.totalVolumeToday.formatted(.currency(code: "USD").precision(.fractionLength(0))),
                 color: .blue
             )
             
-            OrderStatCard(
+            OrderFillStatCard(
                 title: "Fill Rate",
                 value: orderFillViewModel.fillRate.formatted(.percent.precision(.fractionLength(0))),
                 color: orderFillViewModel.fillRate > 0.8 ? .green : .orange
@@ -246,7 +246,7 @@ struct OrderFillNotificationsView: View {
 
 // MARK: - Supporting Views
 
-struct OrderStatCard: View {
+struct OrderFillStatCard: View {
     let title: String
     let value: String
     let color: Color

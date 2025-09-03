@@ -369,108 +369,135 @@ struct PriceAlertRow: View {
     
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 16) {
-                // Status Indicator
-                Circle()
-                    .fill(statusColor)
-                    .frame(width: 12, height: 12)
-                
-                // Alert Info
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(alert.symbol)
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        Text("•")
-                            .foregroundColor(.gray)
-                        
-                        Text(alert.alertType.displayName)
-                            .font(.body)
-                            .foregroundColor(.gray)
-                        
-                        Spacer()
-                        
-                        // Current Price (would be real-time)
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("$175.50")
-                                .font(.body)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                            
-                            Text("+1.2%")
-                                .font(.caption)
-                                .foregroundColor(.green)
-                        }
-                    }
-                    
-                    HStack {
-                        // Target Info
-                        HStack(spacing: 4) {
-                            Text("Target:")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            
-                            Text(alert.targetPrice.formatted(.currency(code: "USD")))
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.orange)
-                        }
-                        
-                        Text("•")
-                            .foregroundColor(.gray)
-                        
-                        // Distance from target
-                        Text("5.2% away")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
-                        Spacer()
-                        
-                        // Created date
-                        Text(alert.createdAt.formatted(.relative(presentation: .named)))
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                }
-                
-                // Actions
-                if alert.isActive {
-                    HStack(spacing: 12) {
-                        Button(action: onToggle) {
-                            Image(systemName: "pause.circle")
-                                .font(.title3)
-                                .foregroundColor(.orange)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Button(action: onDelete) {
-                            Image(systemName: "trash")
-                                .font(.title3)
-                                .foregroundColor(.red)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                } else if alert.triggeredAt != nil {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.green)
-                }
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(isFocused ? 0.1 : 0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(borderColor, lineWidth: isFocused ? 2 : 0)
-            )
+            contentView
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isFocused ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isFocused)
+    }
+    
+    private var contentView: some View {
+        HStack(spacing: 16) {
+            statusIndicator
+            alertInfoView
+            actionButtonsView
+        }
+        .padding(16)
+        .background(backgroundView)
+        .overlay(overlayView)
+    }
+    
+    private var statusIndicator: some View {
+        Circle()
+            .fill(statusColor)
+            .frame(width: 12, height: 12)
+    }
+    
+    private var alertInfoView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            headerRow
+            detailsRow
+        }
+    }
+    
+    private var headerRow: some View {
+        HStack {
+            Text(alert.symbol)
+                .font(.headline)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+            
+            Text("•")
+                .foregroundColor(.gray)
+            
+            Text(String(describing: alert.condition))
+                .font(.body)
+                .foregroundColor(.gray)
+            
+            Spacer()
+            
+            currentPriceView
+        }
+    }
+    
+    private var currentPriceView: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            Text("$175.50")
+                .font(.body)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+            
+            Text("+1.2%")
+                .font(.caption)
+                .foregroundColor(.green)
+        }
+    }
+    
+    private var detailsRow: some View {
+        HStack {
+            targetInfoView
+            
+            Text("•")
+                .foregroundColor(.gray)
+            
+            Text("5.2% away")
+                .font(.caption)
+                .foregroundColor(.gray)
+            
+            Spacer()
+            
+            Text(alert.createdAt.formatted(.relative(presentation: .named)))
+                .font(.caption)
+                .foregroundColor(.gray)
+        }
+    }
+    
+    private var targetInfoView: some View {
+        HStack(spacing: 4) {
+            Text("Target:")
+                .font(.caption)
+                .foregroundColor(.gray)
+            
+            Text(String(format: "$%.2f", alert.price))
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.orange)
+        }
+    }
+    
+    @ViewBuilder
+    private var actionButtonsView: some View {
+        if alert.isActive {
+            HStack(spacing: 12) {
+                Button(action: onToggle) {
+                    Image(systemName: "pause.circle")
+                        .font(.title3)
+                        .foregroundColor(.orange)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.title3)
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        } else if alert.triggeredAt != nil {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title2)
+                .foregroundColor(.green)
+        }
+    }
+    
+    private var backgroundView: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color.white.opacity(isFocused ? 0.1 : 0.05))
+    }
+    
+    private var overlayView: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .stroke(borderColor, lineWidth: isFocused ? 2 : 0)
     }
     
     private var statusColor: Color {

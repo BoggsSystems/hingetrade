@@ -47,6 +47,7 @@ class NotificationPreferencesViewModel: ObservableObject {
     
     // MARK: - State
     @Published var isLoading = false
+    @Published var testingNotifications = false
     @Published var error: PreferencesError?
     @Published var showingError = false
     
@@ -72,7 +73,7 @@ class NotificationPreferencesViewModel: ObservableObject {
     
     init(
         notificationService: NotificationService = NotificationService.shared,
-        preferencesService: PreferencesService = PreferencesService()
+        preferencesService: PreferencesService = DefaultPreferencesService()
     ) {
         self.notificationService = notificationService
         self.preferencesService = preferencesService
@@ -244,6 +245,11 @@ class NotificationPreferencesViewModel: ObservableObject {
         }
         
         do {
+            #if os(tvOS)
+            // tvOS doesn't support UserNotifications the same way
+            testingNotifications = false
+            return
+            #else
             // Create a test notification
             let content = UNMutableNotificationContent()
             content.title = "HingeTrade Test"
@@ -256,6 +262,7 @@ class NotificationPreferencesViewModel: ObservableObject {
             
             let center = UNUserNotificationCenter.current()
             try await center.add(request)
+            #endif
             
         } catch {
             self.error = PreferencesError.testNotificationFailed(error.localizedDescription)
@@ -381,7 +388,7 @@ protocol PreferencesService {
     func savePreferences(_ preferences: NotificationPreferences) async throws
 }
 
-class PreferencesService: PreferencesService {
+class DefaultPreferencesService: PreferencesService {
     func getPreferences() async throws -> NotificationPreferences {
         // Simulate loading from storage
         try await Task.sleep(nanoseconds: 500_000_000)

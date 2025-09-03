@@ -48,9 +48,9 @@ class SettingsViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        settingsService: SettingsService = SettingsService(),
-        securityService: SecurityService = SecurityService(),
-        accountService: AccountService = AccountService()
+        settingsService: SettingsService = DefaultSettingsService(),
+        securityService: SecurityService = DefaultSecurityService(),
+        accountService: AccountService = DefaultAccountService()
     ) {
         self.settingsService = settingsService
         self.securityService = securityService
@@ -466,7 +466,7 @@ struct AccountInformation: Codable {
         case pending = "pending"
     }
     
-    enum TradingLevel: String, Codable {
+    enum TradingLevel: String, Codable, CaseIterable {
         case level0 = "level0" // Cash only
         case level1 = "level1" // Cash + covered calls/puts
         case level2 = "level2" // Level 1 + long options

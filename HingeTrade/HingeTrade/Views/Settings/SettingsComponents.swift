@@ -75,7 +75,9 @@ struct SettingsToggle: View {
                 Spacer()
                 
                 Toggle("", isOn: $isOn)
+                    #if !os(tvOS)
                     .toggleStyle(SwitchToggleStyle(tint: .blue))
+                    #endif
                     .labelsHidden()
                     .allowsHitTesting(false)
             }
@@ -205,9 +207,30 @@ struct SettingsSlider: View {
                     .foregroundColor(.blue)
             }
             
+            #if os(tvOS)
+            // tvOS doesn't support Slider - use a simple stepper or value display
+            HStack {
+                Text("Value: \(value, specifier: "%.2f")")
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Button("-") { 
+                    value = max(range.lowerBound, value - 0.1) 
+                }
+                .foregroundColor(.blue)
+                
+                Button("+") { 
+                    value = min(range.upperBound, value + 0.1) 
+                }
+                .foregroundColor(.blue)
+            }
+            .focused($isFocused)
+            #else
             Slider(value: $value, in: range)
                 .tint(.blue)
                 .focused($isFocused)
+            #endif
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

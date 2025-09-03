@@ -226,23 +226,23 @@ struct PositionSizingCalculator {
     ) -> PositionSizeResult {
         guard let stopLoss = stopLoss else {
             // If no stop loss, use maximum position size based on risk parameters
-            let maxShares = Int(riskAmount / entryPrice)
+            let maxShares = Int(truncating: (riskAmount / entryPrice) as NSDecimalNumber)
             let positionValue = entryPrice * Decimal(maxShares)
             
             return PositionSizeResult(
                 recommendedShares: maxShares,
                 positionValue: positionValue,
                 riskAmount: riskAmount,
-                riskPercentage: Double(riskAmount / accountBalance),
+                riskPercentage: Double(truncating: (riskAmount / accountBalance) as NSDecimalNumber),
                 stopLossDistance: nil,
                 riskRewardRatio: nil,
-                maxPositionSize: Int(riskParameters.maxPositionSize / entryPrice)
+                maxPositionSize: Int(truncating: (riskParameters.maxPositionSize / entryPrice) as NSDecimalNumber)
             )
         }
         
         let stopLossDistance = abs(entryPrice - stopLoss)
-        let sharesBasedOnRisk = Int(riskAmount / stopLossDistance)
-        let maxSharesBasedOnPosition = Int(riskParameters.maxPositionSize / entryPrice)
+        let sharesBasedOnRisk = Int(truncating: (riskAmount / stopLossDistance) as NSDecimalNumber)
+        let maxSharesBasedOnPosition = Int(truncating: (riskParameters.maxPositionSize / entryPrice) as NSDecimalNumber)
         
         let recommendedShares = min(sharesBasedOnRisk, maxSharesBasedOnPosition)
         let positionValue = entryPrice * Decimal(recommendedShares)
@@ -252,7 +252,7 @@ struct PositionSizingCalculator {
             recommendedShares: recommendedShares,
             positionValue: positionValue,
             riskAmount: actualRiskAmount,
-            riskPercentage: Double(actualRiskAmount / accountBalance),
+            riskPercentage: Double(truncating: (actualRiskAmount / accountBalance) as NSDecimalNumber),
             stopLossDistance: stopLossDistance,
             riskRewardRatio: nil, // Would calculate based on take profit
             maxPositionSize: maxSharesBasedOnPosition

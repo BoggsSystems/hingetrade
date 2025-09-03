@@ -36,7 +36,10 @@ class AppStateViewModel: ObservableObject {
         case alert(id: String)
     }
     
-    init(authenticationService: AuthenticationService = AuthenticationService()) {
+    init(authenticationService: AuthenticationService = AuthenticationService(
+        apiClient: APIClient(baseURL: URL(string: "https://api.alpaca.markets")!, tokenManager: TokenManager()), 
+        tokenManager: TokenManager()
+    )) {
         self.authenticationService = authenticationService
         setupErrorHandling()
         checkAuthenticationStatus()
@@ -44,28 +47,43 @@ class AppStateViewModel: ObservableObject {
     
     // MARK: - Authentication
     
-    func signIn(email: String, password: String) async {
+    func signIn(email: String, password: String) {
         isLoading = true
         error = nil
         
-        do {
-            let user = try await authenticationService.signIn(email: email, password: password)
-            self.currentUser = user
-            self.isAuthenticated = true
-            await loadAccountMetrics()
-        } catch {
-            self.error = AppError.authenticationFailed(error.localizedDescription)
-            self.showingError = true
-        }
-        
-        isLoading = false
+        authenticationService.login(email: email, password: password)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.isLoading = false
+                    if case .failure(let error) = completion {
+                        self?.error = AppError.authenticationFailed(error.localizedDescription)
+                        self?.showingError = true
+                    }
+                },
+                receiveValue: { [weak self] user in
+                    self?.currentUser = user
+                    self?.isAuthenticated = true
+                    Task {
+                        await self?.loadAccountMetrics()
+                    }
+                }
+            )
+            .store(in: &cancellables)
     }
     
     func signOut() {
-        authenticationService.signOut()
-        currentUser = nil
-        isAuthenticated = false
-        resetAccountMetrics()
+        authenticationService.logout()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { [weak self] _ in
+                    self?.currentUser = nil
+                    self?.isAuthenticated = false
+                    self?.resetAccountMetrics()
+                }
+            )
+            .store(in: &cancellables)
     }
     
     private func checkAuthenticationStatus() {
@@ -155,6 +173,21 @@ enum AppError: LocalizedError, Identifiable {
              .dataError(let message),
              .unknown(let message):
             return message
+        }
+    }
+    
+    var severity: ErrorSeverity {
+        switch self {
+        case .authenticationFailed:
+            return .severe
+        case .networkError:
+            return .moderate
+        case .tradingError:
+            return .severe
+        case .dataError:
+            return .warning
+        case .unknown:
+            return .moderate
         }
     }
     

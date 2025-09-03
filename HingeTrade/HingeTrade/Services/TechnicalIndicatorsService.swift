@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 class TechnicalIndicatorsService {
     
@@ -102,7 +103,7 @@ class TechnicalIndicatorsService {
         
         for i in (period - 1)..<prices.count {
             let subset = Array(prices[(i - period + 1)...i])
-            let sma = subset.reduce(0, +) / Decimal(period)
+            let sma = subset.reduce(0, +) / Decimal(Double(period))
             
             // Calculate standard deviation
             let variance = subset.map { pow(Double($0 - sma), 2) }.reduce(0, +) / Double(period)

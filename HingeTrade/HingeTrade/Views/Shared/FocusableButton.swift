@@ -51,9 +51,10 @@ struct FocusableButton: View {
         .scaleEffect(isFocused ? 1.1 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isFocused)
         .animation(.easeInOut(duration: 0.1), value: isPressed)
+        #if !os(tvOS)
         .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
             isPressed = pressing
-        }, perform: {})
+        }, perform: {})\n        #endif
     }
     
     private var backgroundColor: Color {
@@ -112,11 +113,12 @@ struct FocusableCard<Content: View>: View {
                     .stroke(Color.green, lineWidth: isFocused ? 2 : 0)
             )
             .animation(.easeInOut(duration: 0.1), value: isPressed)
-            .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            #if !os(tvOS)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
                 if action != nil {
                     isPressed = pressing
                 }
-            }, perform: {})
+            }, perform: {})\n        #endif
     }
 }
 

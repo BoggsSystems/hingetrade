@@ -49,17 +49,17 @@ class CreatorProfileViewModel: ObservableObject {
     @Published var showingError: Bool = false
     
     // Services
-    private let socialService: SocialService
-    private let contentService: ContentService
-    private let analyticsService: AnalyticsService
+    private let socialService: DefaultSocialService
+    private let contentService: DefaultContentService
+    private let analyticsService: DefaultCreatorAnalyticsService
     
     private var cancellables = Set<AnyCancellable>()
     
     init(
         creator: VideoCreator,
-        socialService: SocialService = SocialService(),
-        contentService: ContentService = ContentService(),
-        analyticsService: AnalyticsService = AnalyticsService()
+        socialService: DefaultSocialService = DefaultSocialService(),
+        contentService: DefaultContentService = DefaultContentService(),
+        analyticsService: DefaultCreatorAnalyticsService = DefaultCreatorAnalyticsService()
     ) {
         self.creator = creator
         self.socialService = socialService
@@ -299,7 +299,7 @@ class CreatorProfileViewModel: ObservableObject {
 
 // MARK: - Supporting Types
 
-struct PerformanceDataPoint {
+struct CreatorCreatorPerformanceDataPoint {
     let date: Date
     let cumulativeReturn: Double
     let dailyReturn: Double
@@ -365,12 +365,6 @@ struct TradingStyle {
     )
 }
 
-struct RiskMetrics {
-    let sharpeRatio: Double
-    let maxDrawdown: Double
-    let volatility: Double
-    let betaToMarket: Double
-}
 
 struct FollowStatus {
     let isFollowing: Bool
@@ -468,7 +462,7 @@ enum CreatorProfileAnalyticsEvent: String {
 
 // MARK: - Service Protocols
 
-protocol SocialService {
+protocol SocialServiceProtocol {
     func getFollowStatus(creatorId: String) async throws -> FollowStatus
     func getCreatorStats(creatorId: String) async throws -> CreatorStats
     func followCreator(creatorId: String) async throws
@@ -477,12 +471,12 @@ protocol SocialService {
     func getCreatorFollowing(creatorId: String) async throws -> CreatorFollowingData
 }
 
-protocol ContentService {
+protocol ContentServiceProtocol {
     func getCreatorVideos(creatorId: String, limit: Int, offset: Int, sortBy: VideoSortOrder) async throws -> [VideoContent]
     func getCreatorVideos(creatorId: String, limit: Int, sortBy: VideoSortOrder) async throws -> [VideoContent]
 }
 
-protocol AnalyticsService {
+protocol CreatorAnalyticsServiceProtocol {
     func getCreatorPerformance(creatorId: String, timeframe: PerformanceTimeframe) async throws -> CreatorPerformanceData
     func getCreatorInsights(creatorId: String) async throws -> CreatorInsights
     func trackEvent(_ eventName: String, properties: [String: Any]) async
@@ -514,7 +508,7 @@ enum SocialServiceError: Error {
 
 // MARK: - Default Implementations
 
-class SocialService: SocialService {
+class DefaultSocialService: SocialServiceProtocol {
     func getFollowStatus(creatorId: String) async throws -> FollowStatus {
         // Simulate API call
         try await Task.sleep(nanoseconds: 500_000_000)
@@ -564,7 +558,7 @@ class SocialService: SocialService {
     }
 }
 
-class ContentService: ContentService {
+class DefaultContentService: ContentServiceProtocol {
     func getCreatorVideos(creatorId: String, limit: Int, offset: Int = 0, sortBy: VideoSortOrder) async throws -> [VideoContent] {
         try await Task.sleep(nanoseconds: 700_000_000)
         // Return sample videos
@@ -576,17 +570,25 @@ class ContentService: ContentService {
     }
 }
 
-class AnalyticsService: AnalyticsService {
+class DefaultCreatorAnalyticsService: CreatorAnalyticsServiceProtocol {
     func getCreatorPerformance(creatorId: String, timeframe: PerformanceTimeframe) async throws -> CreatorPerformanceData {
         try await Task.sleep(nanoseconds: 1_000_000_000)
         return CreatorPerformanceData(
             dataPoints: [],
             recentTradeCalls: [],
             metrics: RiskMetrics(
-                sharpeRatio: Double.random(in: 0.5...2.0),
-                maxDrawdown: Double.random(in: -0.3...(-0.05)),
+                beta: Double.random(in: 0.8...1.5),
+                alpha: Double.random(in: -0.05...0.15),
+                correlationToMarket: Double.random(in: 0.3...0.9),
                 volatility: Double.random(in: 0.15...0.4),
-                betaToMarket: Double.random(in: 0.8...1.5)
+                downsideVolatility: Double.random(in: 0.12...0.35),
+                valueAtRisk95: Decimal(Double.random(in: 0.02...0.08)),
+                valueAtRisk99: Decimal(Double.random(in: 0.04...0.12)),
+                conditionalVaR95: Decimal(Double.random(in: 0.03...0.10)),
+                maximumDrawdown: Double.random(in: -0.3...(-0.05)),
+                drawdownDuration: Int.random(in: 5...30),
+                upsideCapture: Double.random(in: 0.8...1.2),
+                downsideCapture: Double.random(in: 0.7...1.1)
             )
         )
     }
@@ -602,10 +604,18 @@ class AnalyticsService: AnalyticsService {
             ],
             tradingStyle: TradingStyle.defaultStyle,
             riskMetrics: RiskMetrics(
-                sharpeRatio: 1.2,
-                maxDrawdown: -0.15,
+                beta: 1.1,
+                alpha: 0.08,
+                correlationToMarket: 0.75,
                 volatility: 0.22,
-                betaToMarket: 1.1
+                downsideVolatility: 0.18,
+                valueAtRisk95: Decimal(0.05),
+                valueAtRisk99: Decimal(0.08),
+                conditionalVaR95: Decimal(0.06),
+                maximumDrawdown: -0.15,
+                drawdownDuration: 12,
+                upsideCapture: 1.05,
+                downsideCapture: 0.85
             ),
             consistencyScore: Double.random(in: 0.6...0.9)
         )

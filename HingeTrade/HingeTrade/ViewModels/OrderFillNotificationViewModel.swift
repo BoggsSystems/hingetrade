@@ -27,13 +27,13 @@ class OrderFillNotificationViewModel: ObservableObject {
     
     // Services
     private let notificationService: NotificationService
-    private let orderService: OrderService
+    private let orderService: OrderServiceProtocol
     
     private var cancellables = Set<AnyCancellable>()
     
     init(
         notificationService: NotificationService = NotificationService.shared,
-        orderService: OrderService = OrderService()
+        orderService: DefaultOrderService = DefaultOrderService()
     ) {
         self.notificationService = notificationService
         self.orderService = orderService
@@ -82,16 +82,16 @@ class OrderFillNotificationViewModel: ObservableObject {
         case .partialFill:
             filteredOrders = orders.filter { $0.status == .partiallyFilled }
         case .pending:
-            filteredOrders = orders.filter { $0.status == .pending }
+            filteredOrders = orders.filter { $0.status == .pendingNew }
         case .cancelled:
-            filteredOrders = orders.filter { $0.status == .cancelled }
+            filteredOrders = orders.filter { $0.status == .canceled }
         }
         
         // Sort by most recent first
         filteredOrders.sort { order1, order2 in
             let date1 = order1.filledAt ?? order1.updatedAt ?? order1.submittedAt
             let date2 = order2.filledAt ?? order2.updatedAt ?? order2.submittedAt
-            return date1 > date2
+            return (date1 ?? Date.distantPast) > (date2 ?? Date.distantPast)
         }
     }
     
@@ -104,9 +104,9 @@ class OrderFillNotificationViewModel: ObservableObject {
         case .partialFill:
             return orders.filter { $0.status == .partiallyFilled }.count
         case .pending:
-            return orders.filter { $0.status == .pending }.count
+            return orders.filter { $0.status == .pendingNew }.count
         case .cancelled:
-            return orders.filter { $0.status == .cancelled }.count
+            return orders.filter { $0.status == .canceled }.count
         }
     }
     
@@ -159,7 +159,7 @@ class OrderFillNotificationViewModel: ObservableObject {
     private func checkForOrderUpdates() async {
         // In a real app, this would check with the trading service for order updates
         // For now, simulate some order fills
-        let pendingOrders = orders.filter { $0.status == .pending }
+        let pendingOrders = orders.filter { $0.status == .pendingNew }
         
         for order in pendingOrders.prefix(1) { // Simulate one order filling
             if Bool.random() && order.filledAt == nil { // 50% chance
@@ -171,12 +171,40 @@ class OrderFillNotificationViewModel: ObservableObject {
     private func simulateOrderFill(_ order: Order) async {
         // Simulate order fill
         if let index = orders.firstIndex(where: { $0.id == order.id }) {
-            orders[index].status = .filled
-            orders[index].filledAt = Date()
-            orders[index].fillPrice = order.limitPrice ?? Decimal(Double.random(in: 150...200))
+            let filledOrder = Order(
+                id: order.id,
+                clientOrderId: order.clientOrderId,
+                createdAt: order.createdAt,
+                updatedAt: Date(),
+                submittedAt: order.submittedAt,
+                filledAt: Date(),
+                expiredAt: order.expiredAt,
+                canceledAt: order.canceledAt,
+                failedAt: order.failedAt,
+                replacedAt: order.replacedAt,
+                replacedBy: order.replacedBy,
+                replaces: order.replaces,
+                assetId: order.assetId,
+                symbol: order.symbol,
+                assetClass: order.assetClass,
+                qty: order.qty,
+                filledQty: order.qty,
+                notional: order.notional,
+                filledAvgPrice: order.limitPrice ?? "\(Double.random(in: 150...200))",
+                side: order.side,
+                type: order.type,
+                timeInForce: order.timeInForce,
+                limitPrice: order.limitPrice,
+                stopPrice: order.stopPrice,
+                status: .filled,
+                extendedHours: order.extendedHours,
+                legs: nil
+            )
+            
+            orders[index] = filledOrder
             
             // Send notification for the filled order
-            await sendOrderFillNotification(for: orders[index])
+            await sendOrderFillNotification(for: filledOrder)
             
             updateStatistics()
             applyFilter()
@@ -196,7 +224,7 @@ class OrderFillNotificationViewModel: ObservableObject {
         }.count
         
         // Pending orders count
-        pendingOrdersCount = orders.filter { $0.status == .pending }.count
+        pendingOrdersCount = orders.filter { $0.status == .pendingNew }.count
         
         // Total volume today
         let filledTodayOrders = orders.filter { order in
@@ -204,9 +232,9 @@ class OrderFillNotificationViewModel: ObservableObject {
             return calendar.startOfDay(for: filledAt) == today
         }
         
-        totalVolumeToday = filledTodayOrders.reduce(0) { total, order in
-            let price = order.fillPrice ?? order.limitPrice ?? 0
-            return total + (price * Decimal(order.quantity))
+        totalVolumeToday = filledTodayOrders.reduce(Decimal(0)) { total, order in
+            let price = Decimal(string: order.limitPrice ?? "100") ?? Decimal(100) // Use limit price as approximation
+            return total + (price * (Decimal(string: order.qty ?? "0") ?? 0))
         }
         
         // Fill rate (filled orders / total submitted orders)
@@ -243,12 +271,12 @@ class OrderFillNotificationViewModel: ObservableObject {
 
 // MARK: - Order Service
 
-protocol OrderService {
+protocol OrderServiceProtocol {
     func getAllOrders() async throws -> [Order]
     func getOrder(id: String) async throws -> Order?
 }
 
-class OrderService: OrderService {
+class DefaultOrderService: OrderServiceProtocol {
     func getAllOrders() async throws -> [Order] {
         // Simulate API call
         try await Task.sleep(nanoseconds: 1_000_000_000)
@@ -256,71 +284,119 @@ class OrderService: OrderService {
         return [
             Order(
                 id: "order-1",
-                accountId: "account-001",
+                clientOrderId: "client_order_001",
+                createdAt: Date().addingTimeInterval(-3600),
+                updatedAt: Date().addingTimeInterval(-3500),
+                submittedAt: Date().addingTimeInterval(-3600),
+                filledAt: Date().addingTimeInterval(-3500),
+                expiredAt: nil,
+                canceledAt: nil,
+                failedAt: nil,
+                replacedAt: nil,
+                replacedBy: nil,
+                replaces: nil,
+                assetId: "aapl-asset-id",
                 symbol: "AAPL",
-                quantity: 100,
+                assetClass: .usEquity,
+                qty: "100",
+                filledQty: "100",
+                notional: nil,
+                filledAvgPrice: "175.50",
                 side: .buy,
-                orderType: .market,
+                type: .market,
                 timeInForce: .day,
                 limitPrice: nil,
                 stopPrice: nil,
-                submittedAt: Date().addingTimeInterval(-3600),
                 status: .filled,
-                filledAt: Date().addingTimeInterval(-3500),
-                fillPrice: Decimal(175.50),
-                updatedAt: Date().addingTimeInterval(-3500),
-                hasNotificationBeenSent: true
+                extendedHours: false,
+                legs: nil
             ),
             Order(
                 id: "order-2",
-                accountId: "account-001",
-                symbol: "TSLA",
-                quantity: 50,
-                side: .sell,
-                orderType: .limit,
-                timeInForce: .gtc,
-                limitPrice: Decimal(245.00),
-                stopPrice: nil,
-                submittedAt: Date().addingTimeInterval(-1800),
-                status: .pending,
-                filledAt: nil,
-                fillPrice: nil,
+                clientOrderId: "client_order_002",
+                createdAt: Date().addingTimeInterval(-1800),
                 updatedAt: Date().addingTimeInterval(-1800),
-                hasNotificationBeenSent: false
+                submittedAt: Date().addingTimeInterval(-1800),
+                filledAt: nil,
+                expiredAt: nil,
+                canceledAt: nil,
+                failedAt: nil,
+                replacedAt: nil,
+                replacedBy: nil,
+                replaces: nil,
+                assetId: "tsla-asset-id",
+                symbol: "TSLA",
+                assetClass: .usEquity,
+                qty: "50",
+                filledQty: nil,
+                notional: nil,
+                filledAvgPrice: nil,
+                side: .sell,
+                type: .limit,
+                timeInForce: .gtc,
+                limitPrice: "245.00",
+                stopPrice: nil,
+                status: .pendingNew,
+                extendedHours: false,
+                legs: nil
             ),
             Order(
                 id: "order-3",
-                accountId: "account-001",
+                clientOrderId: "client_order_003",
+                createdAt: Date().addingTimeInterval(-900),
+                updatedAt: Date().addingTimeInterval(-600),
+                submittedAt: Date().addingTimeInterval(-900),
+                filledAt: Date().addingTimeInterval(-600),
+                expiredAt: nil,
+                canceledAt: nil,
+                failedAt: nil,
+                replacedAt: nil,
+                replacedBy: nil,
+                replaces: nil,
+                assetId: "nvda-asset-id",
                 symbol: "NVDA",
-                quantity: 25,
+                assetClass: .usEquity,
+                qty: "25",
+                filledQty: "12",
+                notional: nil,
+                filledAvgPrice: "418.75",
                 side: .buy,
-                orderType: .stop,
+                type: .stop,
                 timeInForce: .day,
                 limitPrice: nil,
-                stopPrice: Decimal(420.00),
-                submittedAt: Date().addingTimeInterval(-900),
+                stopPrice: "420.00",
                 status: .partiallyFilled,
-                filledAt: Date().addingTimeInterval(-600),
-                fillPrice: Decimal(418.75),
-                updatedAt: Date().addingTimeInterval(-600),
-                hasNotificationBeenSent: false
+                extendedHours: false,
+                legs: nil
             ),
             Order(
                 id: "order-4",
-                accountId: "account-001",
-                symbol: "MSFT",
-                quantity: 75,
-                side: .buy,
-                orderType: .limit,
-                timeInForce: .day,
-                limitPrice: Decimal(340.00),
-                stopPrice: nil,
-                submittedAt: Date().addingTimeInterval(-7200),
-                status: .cancelled,
-                filledAt: nil,
-                fillPrice: nil,
+                clientOrderId: "client_order_004",
+                createdAt: Date().addingTimeInterval(-7200),
                 updatedAt: Date().addingTimeInterval(-3600),
-                hasNotificationBeenSent: true
+                submittedAt: Date().addingTimeInterval(-7200),
+                filledAt: nil,
+                expiredAt: nil,
+                canceledAt: Date().addingTimeInterval(-3600),
+                failedAt: nil,
+                replacedAt: nil,
+                replacedBy: nil,
+                replaces: nil,
+                assetId: "msft-asset-id",
+                symbol: "MSFT",
+                assetClass: .usEquity,
+                qty: "75",
+                filledQty: nil,
+                notional: nil,
+                filledAvgPrice: nil,
+                side: .buy,
+                type: .limit,
+                timeInForce: .day,
+                limitPrice: "340.00",
+                stopPrice: nil,
+                status: .canceled,
+                extendedHours: false,
+                legs: nil
             )
         ]
     }

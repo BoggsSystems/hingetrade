@@ -447,8 +447,8 @@ extension APIError {
 
 // MARK: - Sample API Responses
 extension APIResponse {
-    static func success<T: Codable>(_ data: T) -> APIResponse<T> {
-        return APIResponse<T>(
+    static func success<U: Codable>(_ data: U) -> APIResponse<U> {
+        return APIResponse<U>(
             data: data,
             message: "Success",
             success: true,
@@ -458,8 +458,8 @@ extension APIResponse {
         )
     }
     
-    static func error<T: Codable>(_ error: APIError) -> APIResponse<T> {
-        return APIResponse<T>(
+    static func error<U: Codable>(_ error: APIError) -> APIResponse<U> {
+        return APIResponse<U>(
             data: nil,
             message: error.message,
             success: false,

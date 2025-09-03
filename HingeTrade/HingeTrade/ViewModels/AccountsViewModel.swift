@@ -63,7 +63,7 @@ class AccountsViewModel: ObservableObject {
         let unrealizedPLPercent: Double
     }
     
-    init(tradingService: TradingService = TradingService(), webSocketService: WebSocketService = WebSocketService()) {
+    init(tradingService: TradingService = TradingService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager())), webSocketService: WebSocketService = WebSocketService(url: URL(string: "wss://api.alpaca.markets/stream")!)) {
         self.tradingService = tradingService
         self.webSocketService = webSocketService
         setupRealTimeUpdates()
@@ -78,7 +78,20 @@ class AccountsViewModel: ObservableObject {
         
         do {
             // Load account information
-            let accountData = try await tradingService.getAccount()
+            let accountData = try await withCheckedThrowingContinuation { continuation in
+                tradingService.getAccount()
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { account in
+                            continuation.resume(returning: account)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             self.account = accountData
             updateAccountMetrics(from: accountData)
             
@@ -100,26 +113,51 @@ class AccountsViewModel: ObservableObject {
     
     private func loadPositionSummaries() async {
         do {
-            let positions = try await tradingService.getPositions()
+            let positions = try await withCheckedThrowingContinuation { continuation in
+                tradingService.getPositions()
+                    .sink(
+                        receiveCompletion: { completion in
+                            if case .failure(let error) = completion {
+                                continuation.resume(throwing: error)
+                            }
+                        },
+                        receiveValue: { positions in
+                            continuation.resume(returning: positions)
+                        }
+                    )
+                    .store(in: &cancellables)
+            }
             openPositionsCount = positions.count
             
             // Calculate biggest winner and loser
-            let sortedByPL = positions.sorted { $0.unrealizedPL > $1.unrealizedPL }
-            
-            if let winner = sortedByPL.first, winner.unrealizedPL > 0 {
-                biggestWinner = PositionSummary(
-                    symbol: winner.symbol,
-                    unrealizedPL: winner.unrealizedPL,
-                    unrealizedPLPercent: Double(winner.unrealizedPL / winner.marketValue)
-                )
+            let sortedByPL = positions.sorted { position1, position2 in
+                let pl1 = Decimal(string: position1.unrealizedPl ?? "0") ?? 0
+                let pl2 = Decimal(string: position2.unrealizedPl ?? "0") ?? 0
+                return pl1 > pl2
             }
             
-            if let loser = sortedByPL.last, loser.unrealizedPL < 0 {
-                biggestLoser = PositionSummary(
-                    symbol: loser.symbol,
-                    unrealizedPL: loser.unrealizedPL,
-                    unrealizedPLPercent: Double(loser.unrealizedPL / loser.marketValue)
-                )
+            if let winner = sortedByPL.first {
+                let winnerPL = Decimal(string: winner.unrealizedPl ?? "0") ?? 0
+                if winnerPL > 0 {
+                    let marketValue = Decimal(string: winner.marketValue) ?? 1
+                    biggestWinner = PositionSummary(
+                        symbol: winner.symbol,
+                        unrealizedPL: winnerPL,
+                        unrealizedPLPercent: Double(truncating: (winnerPL / marketValue) as NSDecimalNumber)
+                    )
+                }
+            }
+            
+            if let loser = sortedByPL.last {
+                let loserPL = Decimal(string: loser.unrealizedPl ?? "0") ?? 0
+                if loserPL < 0 {
+                    let marketValue = Decimal(string: loser.marketValue) ?? 1
+                    biggestLoser = PositionSummary(
+                        symbol: loser.symbol,
+                        unrealizedPL: loserPL,
+                        unrealizedPLPercent: Double(truncating: (loserPL / marketValue) as NSDecimalNumber)
+                    )
+                }
             }
             
         } catch {
@@ -128,34 +166,35 @@ class AccountsViewModel: ObservableObject {
     }
     
     private func updateAccountMetrics(from account: Account) {
-        totalEquity = account.equity
-        buyingPower = account.buyingPower
-        cashBalance = account.cash
-        longMarketValue = account.longMarketValue
-        shortMarketValue = account.shortMarketValue
+        totalEquity = Decimal(string: account.equity) ?? 0
+        buyingPower = Decimal(string: account.buyingPower) ?? 0
+        cashBalance = Decimal(string: account.cash) ?? 0
+        longMarketValue = Decimal(string: account.longMarketValue) ?? 0
+        shortMarketValue = Decimal(string: account.shortMarketValue) ?? 0
         
         // Calculate today's P&L
-        let previousEquity = account.lastDayEquity
+        let previousEquity = Decimal(string: account.lastEquity) ?? 0
         todaysPL = totalEquity - previousEquity
-        todaysPLPercentage = previousEquity > 0 ? Double(todaysPL / previousEquity) : 0.0
+        todaysPLPercentage = previousEquity > 0 ? Double(truncating: (todaysPL / previousEquity) as NSDecimalNumber) : 0.0
         
         // Account type and settings
-        accountType = account.marginEnabled ? .margin : .cash
-        marginEnabled = account.marginEnabled
-        dayTradesUsed = account.dayTradeCount
-        dayTradesLimit = account.marginEnabled ? (totalEquity >= 25000 ? Int.max : 3) : 3
+        let isMarginAccount = account.patternDayTrader || (Decimal(string: account.multiplier) ?? 1) > 1
+        accountType = isMarginAccount ? .margin : .cash
+        marginEnabled = isMarginAccount
+        dayTradesUsed = account.daytradeCount
+        dayTradesLimit = isMarginAccount ? (totalEquity >= 25000 ? Int.max : 3) : 3
     }
     
     // MARK: - Real-Time Updates
     
     private func setupRealTimeUpdates() {
-        // Subscribe to WebSocket account updates
-        webSocketService.accountUpdates
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] accountUpdate in
-                self?.handleAccountUpdate(accountUpdate)
-            }
-            .store(in: &cancellables)
+        // TODO: Subscribe to WebSocket account updates when available
+        // webSocketService.accountUpdates
+        //     .receive(on: DispatchQueue.main)
+        //     .sink { [weak self] accountUpdate in
+        //         self?.handleAccountUpdate(accountUpdate)
+        //     }
+        //     .store(in: &cancellables)
         
         // Set up periodic refresh timer (every 30 seconds)
         updateTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
@@ -180,7 +219,7 @@ class AccountsViewModel: ObservableObject {
     var marginUtilization: Double {
         guard marginEnabled, buyingPower > 0 else { return 0.0 }
         let usedMargin = longMarketValue - cashBalance
-        return Double(usedMargin / buyingPower)
+        return Double(truncating: (usedMargin / buyingPower) as NSDecimalNumber)
     }
     
     var accountHealthScore: Double {

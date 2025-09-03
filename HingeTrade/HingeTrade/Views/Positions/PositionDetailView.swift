@@ -478,13 +478,22 @@ struct OrderHistoryRow: View {
 #Preview {
     PositionDetailView(
         position: Position(
+            assetId: "sample-asset-id",
             symbol: "AAPL",
-            quantity: 100,
+            exchange: "NASDAQ",
+            assetClass: .usEquity,
+            avgEntryPrice: "140.50",
+            qty: "100",
             side: .long,
-            marketValue: 15000,
-            avgEntryPrice: 140.50,
-            unrealizedPL: 950.00,
-            unrealizedPLPercent: 0.067
+            marketValue: "15000.00",
+            costBasis: "14050.00",
+            unrealizedPl: "950.00",
+            unrealizedPlpc: "0.067",
+            unrealizedIntradayPl: "25.00",
+            unrealizedIntradayPlpc: "0.0017",
+            currentPrice: "150.00",
+            lastdayPrice: "149.75",
+            changeToday: "0.25"
         )
     )
     .preferredColorScheme(.dark)

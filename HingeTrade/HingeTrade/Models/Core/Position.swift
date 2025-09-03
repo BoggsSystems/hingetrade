@@ -261,7 +261,7 @@ extension Position {
         Position(
             assetId: "276e2673-764b-4ab6-a611-caf665ca6340",
             symbol: "BTC",
-            exchange: nil,
+            exchange: "NASDAQ",
             assetClass: .crypto,
             avgEntryPrice: "65432.10",
             qty: "0.1534",

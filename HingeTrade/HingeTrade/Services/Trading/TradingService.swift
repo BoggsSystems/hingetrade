@@ -70,7 +70,7 @@ class TradingService: TradingServiceProtocol {
         let endpoint = APIEndpoint.get("/account")
         
         return apiClient.request<Account>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<Account>) in
                 guard let account = response.data else {
                     throw APIError(
                         code: "ACCOUNT_FETCH_FAILED",
@@ -80,6 +80,13 @@ class TradingService: TradingServiceProtocol {
                     )
                 }
                 return account
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -98,7 +105,7 @@ class TradingService: TradingServiceProtocol {
         let endpoint = APIEndpoint.get("/account/portfolio/history", queryItems: queryItems)
         
         return apiClient.request<PortfolioHistoryResponse>(endpoint)
-            .map { response in
+            .tryMap { (response: APIResponse<PortfolioHistoryResponse>) in
                 guard let history = response.data else {
                     throw APIError(
                         code: "HISTORY_FETCH_FAILED",
@@ -108,6 +115,13 @@ class TradingService: TradingServiceProtocol {
                     )
                 }
                 return history
+            }
+            .mapError { error in
+                if let apiError = error as? APIError {
+                    return apiError
+                } else {
+                    return APIError(code: "UNKNOWN_ERROR", message: error.localizedDescription, details: nil, field: nil)
+                }
             }
             .eraseToAnyPublisher()
     }
@@ -179,8 +193,8 @@ class TradingService: TradingServiceProtocol {
         do {
             let endpoint = try APIEndpoint.post("/orders", body: request)
             
-            return apiClient.request<OrderResponse>(endpoint)
-                .map { response in
+            return apiClient.request(endpoint)
+                .tryMap { (response: APIResponse<OrderResponse>) -> Order in
                     guard let orderResponse = response.data else {
                         throw APIError(
                             code: "ORDER_PLACEMENT_FAILED",
@@ -190,6 +204,14 @@ class TradingService: TradingServiceProtocol {
                         )
                     }
                     return orderResponse.order
+                }
+                .mapError { error -> APIError in
+                    return error as? APIError ?? APIError(
+                        code: "REQUEST_ERROR",
+                        message: "Request failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
                 }
                 .eraseToAnyPublisher()
                 
@@ -212,9 +234,17 @@ class TradingService: TradingServiceProtocol {
         
         let endpoint = APIEndpoint.get("/orders", queryItems: queryItems.isEmpty ? nil : queryItems)
         
-        return apiClient.request<[Order]>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .map { (response: APIResponse<[Order]>) -> [Order] in
                 return response.data ?? []
+            }
+            .mapError { error -> APIError in
+                return error as? APIError ?? APIError(
+                    code: "REQUEST_ERROR",
+                    message: "Request failed",
+                    details: error.localizedDescription,
+                    field: nil
+                )
             }
             .eraseToAnyPublisher()
     }
@@ -222,8 +252,8 @@ class TradingService: TradingServiceProtocol {
     func getOrder(id: String) -> AnyPublisher<Order, APIError> {
         let endpoint = APIEndpoint.get("/orders/\(id)")
         
-        return apiClient.request<Order>(endpoint)
-            .map { response in
+        return apiClient.request(endpoint)
+            .tryMap { (response: APIResponse<Order>) -> Order in
                 guard let order = response.data else {
                     throw APIError(
                         code: "ORDER_FETCH_FAILED",
@@ -234,14 +264,30 @@ class TradingService: TradingServiceProtocol {
                 }
                 return order
             }
+            .mapError { error -> APIError in
+                return error as? APIError ?? APIError(
+                    code: "REQUEST_ERROR",
+                    message: "Request failed",
+                    details: error.localizedDescription,
+                    field: nil
+                )
+            }
             .eraseToAnyPublisher()
     }
     
     func cancelOrder(id: String) -> AnyPublisher<Void, APIError> {
         let endpoint = APIEndpoint.delete("/orders/\(id)")
         
-        return apiClient.request<String>(endpoint)
-            .map { _ in () }
+        return apiClient.request(endpoint)
+            .map { (_: APIResponse<String>) -> Void in () }
+            .mapError { error -> APIError in
+                return error as? APIError ?? APIError(
+                    code: "REQUEST_ERROR",
+                    message: "Request failed",
+                    details: error.localizedDescription,
+                    field: nil
+                )
+            }
             .eraseToAnyPublisher()
     }
     
@@ -249,8 +295,8 @@ class TradingService: TradingServiceProtocol {
         do {
             let endpoint = try APIEndpoint.put("/orders/\(id)", body: request)
             
-            return apiClient.request<Order>(endpoint)
-                .map { response in
+            return apiClient.request(endpoint)
+                .tryMap { (response: APIResponse<Order>) -> Order in
                     guard let order = response.data else {
                         throw APIError(
                             code: "ORDER_REPLACE_FAILED",
@@ -260,6 +306,14 @@ class TradingService: TradingServiceProtocol {
                         )
                     }
                     return order
+                }
+                .mapError { error -> APIError in
+                    return error as? APIError ?? APIError(
+                        code: "REQUEST_ERROR",
+                        message: "Request failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
                 }
                 .eraseToAnyPublisher()
                 
@@ -280,8 +334,8 @@ class TradingService: TradingServiceProtocol {
         do {
             let endpoint = try APIEndpoint.post("/orders/validate", body: request)
             
-            return apiClient.request<OrderValidation>(endpoint)
-                .map { response in
+            return apiClient.request(endpoint)
+                .tryMap { (response: APIResponse<OrderValidation>) -> OrderValidation in
                     guard let validation = response.data else {
                         throw APIError(
                             code: "VALIDATION_FAILED",
@@ -291,6 +345,14 @@ class TradingService: TradingServiceProtocol {
                         )
                     }
                     return validation
+                }
+                .mapError { error -> APIError in
+                    return error as? APIError ?? APIError(
+                        code: "REQUEST_ERROR",
+                        message: "Request failed",
+                        details: error.localizedDescription,
+                        field: nil
+                    )
                 }
                 .eraseToAnyPublisher()
                 

@@ -23,247 +23,357 @@ struct UserDefault<T> {
             UserDefaults.standard.set(newValue, forKey: key)
         }
     }
+    
+    var projectedValue: UserDefault<T> {
+        return self
+    }
 }
 
 class UserSettings: ObservableObject {
     
     // MARK: - Account & Profile Settings
     
-    @Published @UserDefault(key: "user_display_name", defaultValue: "")
-    var displayName: String
+    @Published var displayName: String {
+        didSet { UserDefaults.standard.set(displayName, forKey: "user_display_name") }
+    }
     
-    @Published @UserDefault(key: "user_email", defaultValue: "")
-    var emailAddress: String
+    @Published var emailAddress: String {
+        didSet { UserDefaults.standard.set(emailAddress, forKey: "user_email") }
+    }
     
-    @Published @UserDefault(key: "account_type", defaultValue: AccountType.individual.rawValue)
-    var accountType: String
+    @Published var accountType: String {
+        didSet { UserDefaults.standard.set(accountType, forKey: "account_type") }
+    }
     
-    @Published @UserDefault(key: "profile_image_url", defaultValue: "")
-    var profileImageURL: String
+    @Published var profileImageURL: String {
+        didSet { UserDefaults.standard.set(profileImageURL, forKey: "profile_image_url") }
+    }
     
     // MARK: - Trading Preferences
     
-    @Published @UserDefault(key: "trading_default_order_type", defaultValue: OrderType.market.rawValue)
-    var defaultOrderType: String
+    @Published var defaultOrderType: String {
+        didSet { UserDefaults.standard.set(defaultOrderType, forKey: "trading_default_order_type") }
+    }
     
-    @Published @UserDefault(key: "trading_default_time_in_force", defaultValue: TimeInForce.day.rawValue)
-    var defaultTimeInForce: String
+    @Published var defaultTimeInForce: String {
+        didSet { UserDefaults.standard.set(defaultTimeInForce, forKey: "trading_default_time_in_force") }
+    }
     
-    @Published @UserDefault(key: "trading_auto_confirm_orders", defaultValue: false)
-    var autoConfirmOrders: Bool
+    @Published var autoConfirmOrders: Bool {
+        didSet { UserDefaults.standard.set(autoConfirmOrders, forKey: "trading_auto_confirm_orders") }
+    }
     
-    @Published @UserDefault(key: "trading_enable_fractional_shares", defaultValue: true)
-    var enableFractionalShares: Bool
+    @Published var enableFractionalShares: Bool {
+        didSet { UserDefaults.standard.set(enableFractionalShares, forKey: "trading_enable_fractional_shares") }
+    }
     
-    @Published @UserDefault(key: "trading_default_quantity", defaultValue: 1)
-    var defaultQuantity: Int
+    @Published var defaultQuantity: Int {
+        didSet { UserDefaults.standard.set(defaultQuantity, forKey: "trading_default_quantity") }
+    }
     
-    @Published @UserDefault(key: "trading_enable_extended_hours", defaultValue: false)
-    var enableExtendedHours: Bool
+    @Published var enableExtendedHours: Bool {
+        didSet { UserDefaults.standard.set(enableExtendedHours, forKey: "trading_enable_extended_hours") }
+    }
     
     // MARK: - Risk Management Settings
     
-    @Published @UserDefault(key: "risk_profile", defaultValue: RiskProfile.moderate.rawValue)
-    var riskProfile: String
+    @Published var riskProfile: String {
+        didSet { UserDefaults.standard.set(riskProfile, forKey: "risk_profile") }
+    }
     
-    @Published @UserDefault(key: "risk_max_position_size", defaultValue: 0.10)
-    var maxPositionSize: Double
+    @Published var maxPositionSize: Double {
+        didSet { UserDefaults.standard.set(maxPositionSize, forKey: "risk_max_position_size") }
+    }
     
-    @Published @UserDefault(key: "risk_max_daily_loss", defaultValue: 0.05)
-    var maxDailyLoss: Double
+    @Published var maxDailyLoss: Double {
+        didSet { UserDefaults.standard.set(maxDailyLoss, forKey: "risk_max_daily_loss") }
+    }
     
-    @Published @UserDefault(key: "risk_enable_stop_losses", defaultValue: true)
-    var enableStopLosses: Bool
+    @Published var enableStopLosses: Bool {
+        didSet { UserDefaults.standard.set(enableStopLosses, forKey: "risk_enable_stop_losses") }
+    }
     
-    @Published @UserDefault(key: "risk_default_stop_loss_percent", defaultValue: 0.08)
-    var defaultStopLossPercent: Double
+    @Published var defaultStopLossPercent: Double {
+        didSet { UserDefaults.standard.set(defaultStopLossPercent, forKey: "risk_default_stop_loss_percent") }
+    }
     
-    @Published @UserDefault(key: "risk_enable_position_sizing", defaultValue: true)
-    var enablePositionSizing: Bool
+    @Published var enablePositionSizing: Bool {
+        didSet { UserDefaults.standard.set(enablePositionSizing, forKey: "risk_enable_position_sizing") }
+    }
     
     // MARK: - Display & Appearance Settings
     
-    @Published @UserDefault(key: "display_theme", defaultValue: AppTheme.dark.rawValue)
-    var theme: String
+    @Published var theme: String {
+        didSet { UserDefaults.standard.set(theme, forKey: "display_theme") }
+    }
     
-    @Published @UserDefault(key: "display_color_scheme", defaultValue: ColorScheme.blue.rawValue)
-    var colorScheme: String
+    @Published var colorScheme: String {
+        didSet { UserDefaults.standard.set(colorScheme, forKey: "display_color_scheme") }
+    }
     
-    @Published @UserDefault(key: "display_show_after_hours", defaultValue: true)
-    var showAfterHours: Bool
+    @Published var showAfterHours: Bool {
+        didSet { UserDefaults.standard.set(showAfterHours, forKey: "display_show_after_hours") }
+    }
     
-    @Published @UserDefault(key: "display_show_extended_quotes", defaultValue: false)
-    var showExtendedQuotes: Bool
+    @Published var showExtendedQuotes: Bool {
+        didSet { UserDefaults.standard.set(showExtendedQuotes, forKey: "display_show_extended_quotes") }
+    }
     
-    @Published @UserDefault(key: "display_chart_type", defaultValue: ChartDisplayType.candlestick.rawValue)
-    var defaultChartType: String
+    @Published var defaultChartType: String {
+        didSet { UserDefaults.standard.set(defaultChartType, forKey: "display_chart_type") }
+    }
     
-    @Published @UserDefault(key: "display_price_format", defaultValue: PriceFormat.currency.rawValue)
-    var priceFormat: String
+    @Published var priceFormat: String {
+        didSet { UserDefaults.standard.set(priceFormat, forKey: "display_price_format") }
+    }
     
-    @Published @UserDefault(key: "display_percent_format", defaultValue: PercentFormat.decimal.rawValue)
-    var percentFormat: String
+    @Published var percentFormat: String {
+        didSet { UserDefaults.standard.set(percentFormat, forKey: "display_percent_format") }
+    }
     
     // MARK: - Notification Settings
     
-    @Published @UserDefault(key: "notifications_enabled", defaultValue: true)
-    var notificationsEnabled: Bool
+    @Published var notificationsEnabled: Bool {
+        didSet { UserDefaults.standard.set(notificationsEnabled, forKey: "notifications_enabled") }
+    }
     
-    @Published @UserDefault(key: "notifications_price_alerts", defaultValue: true)
-    var priceAlertsEnabled: Bool
+    @Published var priceAlertsEnabled: Bool {
+        didSet { UserDefaults.standard.set(priceAlertsEnabled, forKey: "notifications_price_alerts") }
+    }
     
-    @Published @UserDefault(key: "notifications_order_updates", defaultValue: true)
-    var orderUpdatesEnabled: Bool
+    @Published var orderUpdatesEnabled: Bool {
+        didSet { UserDefaults.standard.set(orderUpdatesEnabled, forKey: "notifications_order_updates") }
+    }
     
-    @Published @UserDefault(key: "notifications_market_news", defaultValue: false)
-    var marketNewsEnabled: Bool
+    @Published var marketNewsEnabled: Bool {
+        didSet { UserDefaults.standard.set(marketNewsEnabled, forKey: "notifications_market_news") }
+    }
     
-    @Published @UserDefault(key: "notifications_portfolio_updates", defaultValue: true)
-    var portfolioUpdatesEnabled: Bool
+    @Published var portfolioUpdatesEnabled: Bool {
+        didSet { UserDefaults.standard.set(portfolioUpdatesEnabled, forKey: "notifications_portfolio_updates") }
+    }
     
-    @Published @UserDefault(key: "notifications_research_reports", defaultValue: false)
-    var researchReportsEnabled: Bool
+    @Published var researchReportsEnabled: Bool {
+        didSet { UserDefaults.standard.set(researchReportsEnabled, forKey: "notifications_research_reports") }
+    }
     
-    @Published @UserDefault(key: "notifications_sound_enabled", defaultValue: true)
-    var notificationSounds: Bool
+    @Published var notificationSounds: Bool {
+        didSet { UserDefaults.standard.set(notificationSounds, forKey: "notifications_sound_enabled") }
+    }
     
     // MARK: - Data & Privacy Settings
     
-    @Published @UserDefault(key: "data_real_time_quotes", defaultValue: true)
-    var realTimeQuotes: Bool
+    @Published var realTimeQuotes: Bool {
+        didSet { UserDefaults.standard.set(realTimeQuotes, forKey: "data_real_time_quotes") }
+    }
     
-    @Published @UserDefault(key: "data_analytics_enabled", defaultValue: true)
-    var analyticsEnabled: Bool
+    @Published var analyticsEnabled: Bool {
+        didSet { UserDefaults.standard.set(analyticsEnabled, forKey: "data_analytics_enabled") }
+    }
     
-    @Published @UserDefault(key: "data_crash_reporting", defaultValue: true)
-    var crashReporting: Bool
+    @Published var crashReporting: Bool {
+        didSet { UserDefaults.standard.set(crashReporting, forKey: "data_crash_reporting") }
+    }
     
-    @Published @UserDefault(key: "data_usage_statistics", defaultValue: false)
-    var usageStatistics: Bool
+    @Published var usageStatistics: Bool {
+        didSet { UserDefaults.standard.set(usageStatistics, forKey: "data_usage_statistics") }
+    }
     
-    @Published @UserDefault(key: "data_personalization", defaultValue: true)
-    var personalizationEnabled: Bool
+    @Published var personalizationEnabled: Bool {
+        didSet { UserDefaults.standard.set(personalizationEnabled, forKey: "data_personalization") }
+    }
     
     // MARK: - Security Settings
     
-    @Published @UserDefault(key: "security_biometric_enabled", defaultValue: false)
-    var biometricAuthEnabled: Bool
+    @Published var biometricAuthEnabled: Bool {
+        didSet { UserDefaults.standard.set(biometricAuthEnabled, forKey: "security_biometric_enabled") }
+    }
     
-    @Published @UserDefault(key: "security_auto_logout_minutes", defaultValue: 30)
-    var autoLogoutMinutes: Int
+    @Published var autoLogoutMinutes: Int {
+        didSet { UserDefaults.standard.set(autoLogoutMinutes, forKey: "security_auto_logout_minutes") }
+    }
     
-    @Published @UserDefault(key: "security_require_auth_for_trades", defaultValue: true)
-    var requireAuthForTrades: Bool
+    @Published var requireAuthForTrades: Bool {
+        didSet { UserDefaults.standard.set(requireAuthForTrades, forKey: "security_require_auth_for_trades") }
+    }
     
-    @Published @UserDefault(key: "security_mask_sensitive_data", defaultValue: false)
-    var maskSensitiveData: Bool
+    @Published var maskSensitiveData: Bool {
+        didSet { UserDefaults.standard.set(maskSensitiveData, forKey: "security_mask_sensitive_data") }
+    }
     
-    @Published @UserDefault(key: "security_two_factor_enabled", defaultValue: false)
-    var twoFactorEnabled: Bool
+    @Published var twoFactorEnabled: Bool {
+        didSet { UserDefaults.standard.set(twoFactorEnabled, forKey: "security_two_factor_enabled") }
+    }
     
     // MARK: - Accessibility Settings
     
-    @Published @UserDefault(key: "accessibility_large_text", defaultValue: false)
-    var largeText: Bool
+    @Published var largeText: Bool {
+        didSet { UserDefaults.standard.set(largeText, forKey: "accessibility_large_text") }
+    }
     
-    @Published @UserDefault(key: "accessibility_high_contrast", defaultValue: false)
-    var highContrast: Bool
+    @Published var highContrast: Bool {
+        didSet { UserDefaults.standard.set(highContrast, forKey: "accessibility_high_contrast") }
+    }
     
-    @Published @UserDefault(key: "accessibility_reduce_motion", defaultValue: false)
-    var reduceMotion: Bool
+    @Published var reduceMotion: Bool {
+        didSet { UserDefaults.standard.set(reduceMotion, forKey: "accessibility_reduce_motion") }
+    }
     
-    @Published @UserDefault(key: "accessibility_voice_over", defaultValue: false)
-    var voiceOverEnabled: Bool
+    @Published var voiceOverEnabled: Bool {
+        didSet { UserDefaults.standard.set(voiceOverEnabled, forKey: "accessibility_voice_over") }
+    }
     
-    @Published @UserDefault(key: "accessibility_haptic_feedback", defaultValue: true)
-    var hapticFeedback: Bool
+    @Published var hapticFeedback: Bool {
+        didSet { UserDefaults.standard.set(hapticFeedback, forKey: "accessibility_haptic_feedback") }
+    }
     
     // MARK: - Advanced Settings
     
-    @Published @UserDefault(key: "advanced_debug_mode", defaultValue: false)
-    var debugMode: Bool
+    @Published var debugMode: Bool {
+        didSet { UserDefaults.standard.set(debugMode, forKey: "advanced_debug_mode") }
+    }
     
-    @Published @UserDefault(key: "advanced_beta_features", defaultValue: false)
-    var betaFeatures: Bool
+    @Published var betaFeatures: Bool {
+        didSet { UserDefaults.standard.set(betaFeatures, forKey: "advanced_beta_features") }
+    }
     
-    @Published @UserDefault(key: "advanced_api_environment", defaultValue: APIEnvironment.production.rawValue)
-    var apiEnvironment: String
+    @Published var apiEnvironment: String {
+        didSet { UserDefaults.standard.set(apiEnvironment, forKey: "advanced_api_environment") }
+    }
     
-    @Published @UserDefault(key: "advanced_cache_size_mb", defaultValue: 100)
-    var cacheSizeMB: Int
+    @Published var cacheSizeMB: Int {
+        didSet { UserDefaults.standard.set(cacheSizeMB, forKey: "advanced_cache_size_mb") }
+    }
     
-    @Published @UserDefault(key: "advanced_log_level", defaultValue: LogLevel.info.rawValue)
-    var logLevel: String
+    @Published var logLevel: String {
+        didSet { UserDefaults.standard.set(logLevel, forKey: "advanced_log_level") }
+    }
     
     // MARK: - Watchlist Settings
     
-    @Published @UserDefault(key: "watchlist_auto_sync", defaultValue: true)
-    var watchlistAutoSync: Bool
+    @Published var watchlistAutoSync: Bool {
+        didSet { UserDefaults.standard.set(watchlistAutoSync, forKey: "watchlist_auto_sync") }
+    }
     
-    @Published @UserDefault(key: "watchlist_default_sort", defaultValue: WatchlistSort.alphabetical.rawValue)
-    var defaultWatchlistSort: String
+    @Published var defaultWatchlistSort: String {
+        didSet { UserDefaults.standard.set(defaultWatchlistSort, forKey: "watchlist_default_sort") }
+    }
     
-    @Published @UserDefault(key: "watchlist_show_change_percent", defaultValue: true)
-    var showChangePercent: Bool
+    @Published var showChangePercent: Bool {
+        didSet { UserDefaults.standard.set(showChangePercent, forKey: "watchlist_show_change_percent") }
+    }
     
-    @Published @UserDefault(key: "watchlist_show_volume", defaultValue: false)
-    var showVolume: Bool
+    @Published var showVolume: Bool {
+        didSet { UserDefaults.standard.set(showVolume, forKey: "watchlist_show_volume") }
+    }
     
-    @Published @UserDefault(key: "watchlist_show_market_cap", defaultValue: false)
-    var showMarketCap: Bool
+    @Published var showMarketCap: Bool {
+        didSet { UserDefaults.standard.set(showMarketCap, forKey: "watchlist_show_market_cap") }
+    }
     
     // MARK: - Chart Settings
     
-    @Published @UserDefault(key: "charts_default_timeframe", defaultValue: ChartTimeframe.oneDay.rawValue)
-    var defaultChartTimeframe: String
+    @Published var defaultChartTimeframe: String {
+        didSet { UserDefaults.standard.set(defaultChartTimeframe, forKey: "charts_default_timeframe") }
+    }
     
-    @Published @UserDefault(key: "charts_show_volume", defaultValue: true)
-    var chartsShowVolume: Bool
+    @Published var chartsShowVolume: Bool {
+        didSet { UserDefaults.standard.set(chartsShowVolume, forKey: "charts_show_volume") }
+    }
     
-    @Published @UserDefault(key: "charts_show_indicators", defaultValue: false)
-    var chartsShowIndicators: Bool
+    @Published var chartsShowIndicators: Bool {
+        didSet { UserDefaults.standard.set(chartsShowIndicators, forKey: "charts_show_indicators") }
+    }
     
-    @Published @UserDefault(key: "charts_auto_scale", defaultValue: true)
-    var chartsAutoScale: Bool
+    @Published var chartsAutoScale: Bool {
+        didSet { UserDefaults.standard.set(chartsAutoScale, forKey: "charts_auto_scale") }
+    }
     
     // MARK: - Helper Methods
     
     static let shared = UserSettings()
     
     private init() {
-        // Initialize property wrappers
-        _displayName = UserDefault(key: "user_display_name", defaultValue: "")
-        _emailAddress = UserDefault(key: "user_email", defaultValue: "")
-        _accountType = UserDefault(key: "account_type", defaultValue: AccountType.individual.rawValue)
-        _profileImageURL = UserDefault(key: "profile_image_url", defaultValue: "")
+        // Load values from UserDefaults with fallback to defaults
+        self.displayName = UserDefaults.standard.object(forKey: "user_display_name") as? String ?? ""
+        self.emailAddress = UserDefaults.standard.object(forKey: "user_email") as? String ?? ""
+        self.accountType = UserDefaults.standard.object(forKey: "account_type") as? String ?? AccountType.individual.rawValue
+        self.profileImageURL = UserDefaults.standard.object(forKey: "profile_image_url") as? String ?? ""
         
         // Trading preferences
-        _defaultOrderType = UserDefault(key: "trading_default_order_type", defaultValue: OrderType.market.rawValue)
-        _defaultTimeInForce = UserDefault(key: "trading_default_time_in_force", defaultValue: TimeInForce.day.rawValue)
-        _autoConfirmOrders = UserDefault(key: "trading_auto_confirm_orders", defaultValue: false)
-        _enableFractionalShares = UserDefault(key: "trading_enable_fractional_shares", defaultValue: true)
-        _defaultQuantity = UserDefault(key: "trading_default_quantity", defaultValue: 1)
-        _enableExtendedHours = UserDefault(key: "trading_enable_extended_hours", defaultValue: false)
+        self.defaultOrderType = UserDefaults.standard.object(forKey: "trading_default_order_type") as? String ?? OrderType.market.rawValue
+        self.defaultTimeInForce = UserDefaults.standard.object(forKey: "trading_default_time_in_force") as? String ?? OrderTimeInForce.day.rawValue
+        self.autoConfirmOrders = UserDefaults.standard.object(forKey: "trading_auto_confirm_orders") as? Bool ?? false
+        self.enableFractionalShares = UserDefaults.standard.object(forKey: "trading_enable_fractional_shares") as? Bool ?? true
+        self.defaultQuantity = UserDefaults.standard.object(forKey: "trading_default_quantity") as? Int ?? 1
+        self.enableExtendedHours = UserDefaults.standard.object(forKey: "trading_enable_extended_hours") as? Bool ?? false
         
         // Risk management
-        _riskProfile = UserDefault(key: "risk_profile", defaultValue: RiskProfile.moderate.rawValue)
-        _maxPositionSize = UserDefault(key: "risk_max_position_size", defaultValue: 0.10)
-        _maxDailyLoss = UserDefault(key: "risk_max_daily_loss", defaultValue: 0.05)
-        _enableStopLosses = UserDefault(key: "risk_enable_stop_losses", defaultValue: true)
-        _defaultStopLossPercent = UserDefault(key: "risk_default_stop_loss_percent", defaultValue: 0.08)
-        _enablePositionSizing = UserDefault(key: "risk_enable_position_sizing", defaultValue: true)
+        self.riskProfile = UserDefaults.standard.object(forKey: "risk_profile") as? String ?? RiskProfile.moderate.rawValue
+        self.maxPositionSize = UserDefaults.standard.object(forKey: "risk_max_position_size") as? Double ?? 0.10
+        self.maxDailyLoss = UserDefaults.standard.object(forKey: "risk_max_daily_loss") as? Double ?? 0.05
+        self.enableStopLosses = UserDefaults.standard.object(forKey: "risk_enable_stop_losses") as? Bool ?? true
+        self.defaultStopLossPercent = UserDefaults.standard.object(forKey: "risk_default_stop_loss_percent") as? Double ?? 0.08
+        self.enablePositionSizing = UserDefaults.standard.object(forKey: "risk_enable_position_sizing") as? Bool ?? true
         
         // Display settings
-        _theme = UserDefault(key: "display_theme", defaultValue: AppTheme.dark.rawValue)
-        _colorScheme = UserDefault(key: "display_color_scheme", defaultValue: ColorScheme.blue.rawValue)
-        _showAfterHours = UserDefault(key: "display_show_after_hours", defaultValue: true)
-        _showExtendedQuotes = UserDefault(key: "display_show_extended_quotes", defaultValue: false)
-        _defaultChartType = UserDefault(key: "display_chart_type", defaultValue: ChartDisplayType.candlestick.rawValue)
-        _priceFormat = UserDefault(key: "display_price_format", defaultValue: PriceFormat.currency.rawValue)
-        _percentFormat = UserDefault(key: "display_percent_format", defaultValue: PercentFormat.decimal.rawValue)
+        self.theme = UserDefaults.standard.object(forKey: "display_theme") as? String ?? "dark" // AppTheme.dark.rawValue
+        self.colorScheme = UserDefaults.standard.object(forKey: "display_color_scheme") as? String ?? "blue" // ColorScheme.blue.rawValue
+        self.showAfterHours = UserDefaults.standard.object(forKey: "display_show_after_hours") as? Bool ?? true
+        self.showExtendedQuotes = UserDefaults.standard.object(forKey: "display_show_extended_quotes") as? Bool ?? false
+        self.defaultChartType = UserDefaults.standard.object(forKey: "display_chart_type") as? String ?? "candlestick" // ChartDisplayType.candlestick.rawValue
+        self.priceFormat = UserDefaults.standard.object(forKey: "display_price_format") as? String ?? "currency" // PriceFormat.currency.rawValue
+        self.percentFormat = UserDefaults.standard.object(forKey: "display_percent_format") as? String ?? "decimal" // PercentFormat.decimal.rawValue
         
-        // Continue with other property wrapper initializations...
-        // (Abbreviated for brevity - would include all other properties)
+        // Notifications
+        self.notificationsEnabled = UserDefaults.standard.object(forKey: "notifications_enabled") as? Bool ?? true
+        self.priceAlertsEnabled = UserDefaults.standard.object(forKey: "notifications_price_alerts") as? Bool ?? true
+        self.orderUpdatesEnabled = UserDefaults.standard.object(forKey: "notifications_order_updates") as? Bool ?? true
+        self.marketNewsEnabled = UserDefaults.standard.object(forKey: "notifications_market_news") as? Bool ?? false
+        self.portfolioUpdatesEnabled = UserDefaults.standard.object(forKey: "notifications_portfolio_updates") as? Bool ?? true
+        self.researchReportsEnabled = UserDefaults.standard.object(forKey: "notifications_research_reports") as? Bool ?? false
+        self.notificationSounds = UserDefaults.standard.object(forKey: "notifications_sound_enabled") as? Bool ?? true
+        
+        // Data & Privacy
+        self.realTimeQuotes = UserDefaults.standard.object(forKey: "data_real_time_quotes") as? Bool ?? true
+        self.analyticsEnabled = UserDefaults.standard.object(forKey: "data_analytics_enabled") as? Bool ?? true
+        self.crashReporting = UserDefaults.standard.object(forKey: "data_crash_reporting") as? Bool ?? true
+        self.usageStatistics = UserDefaults.standard.object(forKey: "data_usage_statistics") as? Bool ?? false
+        self.personalizationEnabled = UserDefaults.standard.object(forKey: "data_personalization") as? Bool ?? true
+        
+        // Security
+        self.biometricAuthEnabled = UserDefaults.standard.object(forKey: "security_biometric_enabled") as? Bool ?? false
+        self.autoLogoutMinutes = UserDefaults.standard.object(forKey: "security_auto_logout_minutes") as? Int ?? 30
+        self.requireAuthForTrades = UserDefaults.standard.object(forKey: "security_require_auth_for_trades") as? Bool ?? true
+        self.maskSensitiveData = UserDefaults.standard.object(forKey: "security_mask_sensitive_data") as? Bool ?? false
+        self.twoFactorEnabled = UserDefaults.standard.object(forKey: "security_two_factor_enabled") as? Bool ?? false
+        
+        // Accessibility
+        self.largeText = UserDefaults.standard.object(forKey: "accessibility_large_text") as? Bool ?? false
+        self.highContrast = UserDefaults.standard.object(forKey: "accessibility_high_contrast") as? Bool ?? false
+        self.reduceMotion = UserDefaults.standard.object(forKey: "accessibility_reduce_motion") as? Bool ?? false
+        self.voiceOverEnabled = UserDefaults.standard.object(forKey: "accessibility_voice_over") as? Bool ?? false
+        self.hapticFeedback = UserDefaults.standard.object(forKey: "accessibility_haptic_feedback") as? Bool ?? true
+        
+        // Advanced
+        self.debugMode = UserDefaults.standard.object(forKey: "advanced_debug_mode") as? Bool ?? false
+        self.betaFeatures = UserDefaults.standard.object(forKey: "advanced_beta_features") as? Bool ?? false
+        self.apiEnvironment = UserDefaults.standard.object(forKey: "advanced_api_environment") as? String ?? "production" // APIEnvironment.production.rawValue
+        self.cacheSizeMB = UserDefaults.standard.object(forKey: "advanced_cache_size_mb") as? Int ?? 100
+        self.logLevel = UserDefaults.standard.object(forKey: "advanced_log_level") as? String ?? "info" // LogLevel.info.rawValue
+        
+        // Watchlist
+        self.watchlistAutoSync = UserDefaults.standard.object(forKey: "watchlist_auto_sync") as? Bool ?? true
+        self.defaultWatchlistSort = UserDefaults.standard.object(forKey: "watchlist_default_sort") as? String ?? "alphabetical" // WatchlistSort.alphabetical.rawValue
+        self.showChangePercent = UserDefaults.standard.object(forKey: "watchlist_show_change_percent") as? Bool ?? true
+        self.showVolume = UserDefaults.standard.object(forKey: "watchlist_show_volume") as? Bool ?? false
+        self.showMarketCap = UserDefaults.standard.object(forKey: "watchlist_show_market_cap") as? Bool ?? false
+        
+        // Charts
+        self.defaultChartTimeframe = UserDefaults.standard.object(forKey: "charts_default_timeframe") as? String ?? "oneDay" // ChartTimeframe.oneDay.rawValue
+        self.chartsShowVolume = UserDefaults.standard.object(forKey: "charts_show_volume") as? Bool ?? true
+        self.chartsShowIndicators = UserDefaults.standard.object(forKey: "charts_show_indicators") as? Bool ?? false
+        self.chartsAutoScale = UserDefaults.standard.object(forKey: "charts_auto_scale") as? Bool ?? true
     }
     
     func resetToDefaults() {
@@ -287,7 +397,7 @@ class UserSettings: ObservableObject {
 
 // MARK: - Supporting Enums
 
-enum AccountType: String, CaseIterable {
+enum AccountType: String, CaseIterable, Codable {
     case individual = "individual"
     case joint = "joint"
     case business = "business"

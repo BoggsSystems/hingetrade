@@ -55,9 +55,9 @@ class VideoPlayerViewModel: ObservableObject {
     
     init(
         video: VideoContent,
-        marketDataService: MarketDataService = MarketDataService(),
+        marketDataService: MarketDataService = MarketDataService(apiClient: APIClient(baseURL: URL(string: "https://api.alpaca.markets")!, tokenManager: TokenManager())),
         videoService: VideoService = DefaultVideoService(),
-        webSocketService: WebSocketService = WebSocketService(),
+        webSocketService: WebSocketService = WebSocketService(url: URL(string: "wss://api.alpaca.markets/stream")!),
         tipService: TipService = DefaultTipService()
     ) {
         self.video = video
@@ -243,13 +243,26 @@ class VideoPlayerViewModel: ObservableObject {
     // MARK: - Market Data Integration
     
     private func loadMarketData() async {
-        do {
-            for symbol in video.symbols {
-                let quote = try await marketDataService.getQuote(symbol: symbol)
+        for symbol in video.symbols {
+            do {
+                let quote = try await withCheckedThrowingContinuation { continuation in
+                    marketDataService.getQuote(symbol: symbol)
+                        .sink(
+                            receiveCompletion: { completion in
+                                if case .failure(let error) = completion {
+                                    continuation.resume(throwing: error)
+                                }
+                            },
+                            receiveValue: { quote in
+                                continuation.resume(returning: quote)
+                            }
+                        )
+                        .store(in: &cancellables)
+                }
                 symbolQuotes[symbol] = quote
+            } catch {
+                print("Failed to load market data for \(symbol): \(error)")
             }
-        } catch {
-            print("Failed to load market data: \(error)")
         }
     }
     
@@ -286,7 +299,7 @@ class VideoPlayerViewModel: ObservableObject {
             hasLiked = true
             
             // Track interaction
-            await trackUserInteraction(.like)
+            await trackPlayerUserInteraction(.like)
             
         } catch {
             print("Failed to like video: \(error)")
@@ -304,7 +317,7 @@ class VideoPlayerViewModel: ObservableObject {
             tipAmount += amount
             
             // Track interaction
-            await trackUserInteraction(.tip(amount: amount))
+            await trackPlayerUserInteraction(.tip(amount: amount))
             
         } catch {
             print("Failed to send tip: \(error)")
@@ -319,7 +332,7 @@ class VideoPlayerViewModel: ObservableObject {
             print("Adding \(primarySymbol) to watchlist")
             
             // Track interaction
-            await trackUserInteraction(.addToWatchlist)
+            await trackPlayerUserInteraction(.addToWatchlist)
             
         } catch {
             print("Failed to add to watchlist")
@@ -354,7 +367,7 @@ class VideoPlayerViewModel: ObservableObject {
         }
     }
     
-    private func trackUserInteraction(_ interaction: UserInteraction) async {
+    private func trackPlayerUserInteraction(_ interaction: PlayerUserInteraction) async {
         do {
             try await videoService.trackInteraction(
                 videoId: video.id,
@@ -371,7 +384,7 @@ class VideoPlayerViewModel: ObservableObject {
         showControls()
         
         Task {
-            await trackUserInteraction(.completed)
+            await trackPlayerUserInteraction(.completed)
             await finalizeAnalytics()
         }
     }
@@ -474,7 +487,7 @@ class VideoPlayerViewModel: ObservableObject {
 
 // MARK: - Supporting Types
 
-enum UserInteraction {
+enum PlayerUserInteraction {
     case like
     case tip(amount: Double)
     case addToWatchlist
@@ -520,8 +533,9 @@ enum VideoPlayerError: LocalizedError, Identifiable {
     
     var id: String {
         switch self {
-        case .invalidURL(let url),
-             .loadingFailed(let message),
+        case .invalidURL(let url):
+            return url
+        case .loadingFailed(let message),
              .playbackFailed(let message),
              .networkError(let message),
              .unknown(let message):
@@ -572,7 +586,7 @@ extension VideoService {
         print("Progress: \(progress * 100)% for video \(videoId)")
     }
     
-    func trackInteraction(videoId: String, interaction: UserInteraction, timestamp: TimeInterval) async throws {
+    func trackInteraction(videoId: String, interaction: PlayerUserInteraction, timestamp: TimeInterval) async throws {
         // Default implementation - would integrate with analytics service
         print("Interaction: \(interaction.name) at \(timestamp)s for video \(videoId)")
     }

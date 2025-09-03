@@ -34,9 +34,9 @@ class PriceAlertsViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init(
-        alertService: AlertService = AlertService(),
+        alertService: AlertService = DefaultAlertService(),
         notificationService: NotificationService = NotificationService.shared,
-        marketDataService: MarketDataService = MarketDataService()
+        marketDataService: MarketDataService = MarketDataService(apiClient: APIClient(baseURL: URL(string: "https://paper-api.alpaca.markets")!, tokenManager: TokenManager()))
     ) {
         self.alertService = alertService
         self.notificationService = notificationService
@@ -56,7 +56,7 @@ class PriceAlertsViewModel: ObservableObject {
             let loadedAlerts = try await alertService.getAllAlerts()
             
             // Load current prices for active alerts
-            let activeSymbols = Set(loadedAlerts.filter { $0.isActive }.map { $0.symbol })
+            let activeSymbols = Set(loadedAlerts.filter { alert in alert.isActive }.map { $0.symbol })
             let quotes = try await loadQuotes(for: Array(activeSymbols))
             
             // Update alerts with current market data
@@ -85,8 +85,24 @@ class PriceAlertsViewModel: ObservableObject {
         var quotes: [String: Quote] = [:]
         
         for symbol in symbols {
-            if let quote = try? await marketDataService.getQuote(symbol: symbol) {
+            do {
+                let quote = try await withCheckedThrowingContinuation { continuation in
+                    marketDataService.getQuote(symbol: symbol)
+                        .sink(
+                            receiveCompletion: { completion in
+                                if case .failure(let error) = completion {
+                                    continuation.resume(throwing: error)
+                                }
+                            },
+                            receiveValue: { quote in
+                                continuation.resume(returning: quote)
+                            }
+                        )
+                        .store(in: &cancellables)
+                }
                 quotes[symbol] = quote
+            } catch {
+                print("Failed to get quote for \(symbol): \(error)")
             }
         }
         
@@ -95,36 +111,41 @@ class PriceAlertsViewModel: ObservableObject {
     
     private func updateAlertWithQuote(_ alert: PriceAlert, quote: Quote) -> PriceAlert {
         // Check if alert should be triggered
-        var updatedAlert = alert
-        
         if alert.isActive && alert.triggeredAt == nil {
             let shouldTrigger = checkAlertCondition(alert: alert, quote: quote)
             
             if shouldTrigger {
-                updatedAlert.triggeredAt = Date()
+                let updatedAlert = PriceAlert(
+                    id: alert.id,
+                    userId: alert.userId,
+                    symbol: alert.symbol,
+                    price: alert.price,
+                    condition: alert.condition,
+                    message: alert.message,
+                    isActive: alert.isActive,
+                    createdAt: alert.createdAt,
+                    updatedAt: Date(),
+                    triggeredAt: Date()
+                )
                 
                 // Schedule notification
                 Task {
                     try? await notificationService.schedulePriceAlert(updatedAlert)
                 }
+                
+                return updatedAlert
             }
         }
         
-        return updatedAlert
+        return alert
     }
     
     private func checkAlertCondition(alert: PriceAlert, quote: Quote) -> Bool {
-        switch alert.alertType {
-        case .priceAbove:
-            return quote.bidPrice >= alert.targetPrice
-        case .priceBelow:
-            return quote.bidPrice <= alert.targetPrice
-        case .percentChange:
-            guard let percentTarget = alert.percentChange else { return false }
-            return abs(quote.changePercent ?? 0) >= abs(percentTarget)
-        case .volumeSpike:
-            // Would need to compare against average volume
-            return false
+        switch alert.condition {
+        case .above, .crossesAbove:
+            return quote.bidPrice >= alert.price
+        case .below, .crossesBelow:
+            return quote.bidPrice <= alert.price
         }
     }
     
@@ -197,8 +218,18 @@ class PriceAlertsViewModel: ObservableObject {
     }
     
     func toggleAlert(_ alert: PriceAlert) async {
-        var updatedAlert = alert
-        updatedAlert.isActive.toggle()
+        let updatedAlert = PriceAlert(
+            id: alert.id,
+            userId: alert.userId,
+            symbol: alert.symbol,
+            price: alert.price,
+            condition: alert.condition,
+            message: alert.message,
+            isActive: !alert.isActive,
+            createdAt: alert.createdAt,
+            updatedAt: Date(),
+            triggeredAt: alert.triggeredAt
+        )
         await updateAlert(updatedAlert)
     }
     
@@ -217,23 +248,23 @@ class PriceAlertsViewModel: ObservableObject {
         case .all:
             break
         case .active:
-            filtered = filtered.filter { $0.isActive && $0.triggeredAt == nil }
+            filtered = filtered.filter { alert in alert.isActive && alert.triggeredAt == nil }
         case .triggered:
-            filtered = filtered.filter { $0.triggeredAt != nil }
+            filtered = filtered.filter { alert in alert.triggeredAt != nil }
         case .expired:
-            filtered = filtered.filter { 
-                if let expiresAt = $0.expiresAt {
-                    return Date() > expiresAt
+            filtered = filtered.compactMap { (alert: PriceAlert) -> PriceAlert? in
+                if let expiresAt = alert.expiresAt {
+                    return Date() > expiresAt ? alert : nil
                 }
-                return false
+                return nil
             }
         }
         
         // Apply search filter
         if !searchText.isEmpty {
             let searchLower = searchText.lowercased()
-            filtered = filtered.filter { 
-                $0.symbol.lowercased().contains(searchLower)
+            filtered = filtered.filter { alert in
+                alert.symbol.lowercased().contains(searchLower)
             }
         }
         
@@ -248,15 +279,15 @@ class PriceAlertsViewModel: ObservableObject {
         case .all:
             return alerts.count
         case .active:
-            return alerts.filter { $0.isActive && $0.triggeredAt == nil }.count
+            return alerts.filter { alert in alert.isActive && alert.triggeredAt == nil }.count
         case .triggered:
-            return alerts.filter { $0.triggeredAt != nil }.count
+            return alerts.filter { alert in alert.triggeredAt != nil }.count
         case .expired:
-            return alerts.filter { 
-                if let expiresAt = $0.expiresAt {
-                    return Date() > expiresAt
+            return alerts.compactMap { (alert: PriceAlert) -> PriceAlert? in
+                if let expiresAt = alert.expiresAt {
+                    return Date() > expiresAt ? alert : nil
                 }
-                return false
+                return nil
             }.count
         }
     }
@@ -276,7 +307,7 @@ class PriceAlertsViewModel: ObservableObject {
     }
     
     private func checkTriggeredAlerts() async {
-        let activeAlerts = alerts.filter { $0.isActive && $0.triggeredAt == nil }
+        let activeAlerts = alerts.filter { alert in alert.isActive && alert.triggeredAt == nil }
         guard !activeAlerts.isEmpty else { return }
         
         let symbols = Set(activeAlerts.map { $0.symbol })
@@ -305,7 +336,7 @@ class PriceAlertsViewModel: ObservableObject {
     
     private func updateStatistics() {
         totalAlertsCount = alerts.count
-        activeAlertsCount = alerts.filter { $0.isActive && $0.triggeredAt == nil }.count
+        activeAlertsCount = alerts.filter { alert in alert.isActive && alert.triggeredAt == nil }.count
         
         // Count triggered today
         let calendar = Calendar.current
@@ -316,15 +347,16 @@ class PriceAlertsViewModel: ObservableObject {
         }.count
         
         // Calculate success rate
-        let triggeredAlerts = alerts.filter { $0.triggeredAt != nil }
+        let triggeredAlerts = alerts.filter { alert in alert.triggeredAt != nil }
         if !triggeredAlerts.isEmpty {
             // Success could be defined as alerts that triggered within their timeframe
-            let successfulAlerts = triggeredAlerts.filter { alert in
+            let successfulAlerts = triggeredAlerts.compactMap { (alert: PriceAlert) -> PriceAlert? in
                 if let expiresAt = alert.expiresAt,
                    let triggeredAt = alert.triggeredAt {
-                    return triggeredAt <= expiresAt
+                    return triggeredAt <= expiresAt ? alert : nil
+                } else {
+                    return alert
                 }
-                return true
             }
             successRate = Double(successfulAlerts.count) / Double(triggeredAlerts.count)
         } else {
@@ -369,7 +401,7 @@ protocol AlertService {
     func deleteAlert(_ id: String) async throws
 }
 
-class AlertService: AlertService {
+class DefaultAlertService: AlertService {
     func getAllAlerts() async throws -> [PriceAlert] {
         // Simulate API call
         try await Task.sleep(nanoseconds: 800_000_000)
@@ -377,36 +409,39 @@ class AlertService: AlertService {
         return [
             PriceAlert(
                 id: "alert-1",
+                userId: "user-123",
                 symbol: "AAPL",
-                alertType: .priceAbove,
-                targetPrice: 180.00,
-                percentChange: nil,
-                createdAt: Date().addingTimeInterval(-86400 * 3),
+                price: 180.00,
+                condition: .above,
+                message: "AAPL price alert",
                 isActive: true,
-                triggeredAt: nil,
-                expiresAt: Date().addingTimeInterval(86400 * 7)
+                createdAt: Date().addingTimeInterval(-86400 * 3),
+                updatedAt: Date().addingTimeInterval(-86400 * 3),
+                triggeredAt: nil
             ),
             PriceAlert(
                 id: "alert-2",
+                userId: "user-123",
                 symbol: "TSLA",
-                alertType: .priceBelow,
-                targetPrice: 240.00,
-                percentChange: nil,
-                createdAt: Date().addingTimeInterval(-86400 * 2),
+                price: 240.00,
+                condition: .below,
+                message: "TSLA price alert",
                 isActive: true,
-                triggeredAt: Date().addingTimeInterval(-3600),
-                expiresAt: nil
+                createdAt: Date().addingTimeInterval(-86400 * 2),
+                updatedAt: Date().addingTimeInterval(-86400 * 2),
+                triggeredAt: Date().addingTimeInterval(-3600)
             ),
             PriceAlert(
                 id: "alert-3",
+                userId: "user-123",
                 symbol: "NVDA",
-                alertType: .percentChange,
-                targetPrice: 0,
-                percentChange: 5.0,
-                createdAt: Date().addingTimeInterval(-86400),
+                price: 0,
+                condition: .crossesAbove,
+                message: "NVDA percent change alert",
                 isActive: true,
-                triggeredAt: nil,
-                expiresAt: Date().addingTimeInterval(86400 * 30)
+                createdAt: Date().addingTimeInterval(-86400),
+                updatedAt: Date().addingTimeInterval(-86400),
+                triggeredAt: nil
             )
         ]
     }
